@@ -28,6 +28,13 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'preferences/:travelId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/preferences/preferences-page.component').then((component) => component.PreferencesPageComponent),
+    title: 'NFT',
+  },
+  {
     path: 'preferences',
     canActivate: [authGuard],
     loadComponent: () =>
