@@ -1,0 +1,71 @@
+@startuml
+
+class User {
+    +email
+    +lastLogin
+    +rgpdConsent
+}
+
+class Travel {
+    +title
+    +destination
+    +description
+    +createdAt
+}
+
+class Photo {
+    +filename
+    +captureDate
+    +location
+    +qualityScore
+    +detectedPlace
+    +detectedScene
+    +isDuplicate
+}
+
+class DetectedObject {
+    +objectName
+    +confidenceScore
+}
+
+class Tag {
+    +label
+    +context
+    +source
+    +confidenceScore
+}
+
+class Episode {
+    +episodeNumber
+    +title
+    +locationName
+    +episodeDate
+    +introText
+    +outroText
+    +musicMood
+    +videoStatus
+}
+
+class EpisodeScene {
+    +sceneNumber
+    +voiceoverText
+    +screenText
+    +durationSeconds
+    +effect
+}
+
+User "1" -- "0..*" Travel : possède
+
+Travel "1" -- "0..*" Photo : contient
+Travel "1" -- "0..*" Episode : génère
+
+Photo "0..*" -- "0..*" DetectedObject : contient
+
+Travel "0..*" -- "0..*" Tag : est associé à
+Episode "0..*" -- "0..*" Tag : est associé à
+Photo "0..*" -- "0..*" Tag : est associé à
+
+Episode "1" *-- "1..*" EpisodeScene : est composé de
+EpisodeScene "0..1" --> "1" Photo : utilise
+
+@enduml 
