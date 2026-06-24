@@ -1,7 +1,5 @@
 package com.nft.backend.controller;
 
-import java.util.UUID;
-
 import com.nft.backend.dto.preference.PreferenceResponse;
 import com.nft.backend.dto.preference.SavePreferenceRequest;
 import com.nft.backend.service.PreferenceService;
@@ -25,13 +23,13 @@ public class PreferenceController {
 
     @PostMapping
     public PreferenceResponse savePreferences(
-            @PathVariable UUID travelId,
+            @PathVariable String travelId,
             @Valid @RequestBody SavePreferenceRequest request) {
         return preferenceService.save(travelId, request);
     }
 
     @GetMapping
-    public PreferenceResponse getPreferences(@PathVariable UUID travelId) {
+    public PreferenceResponse getPreferences(@PathVariable String travelId) {
         return preferenceService.getByTravel(travelId);
     }
 }

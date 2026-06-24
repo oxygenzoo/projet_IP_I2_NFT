@@ -1,60 +1,54 @@
 package com.nft.backend.service;
 
-import java.util.UUID;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.nft.backend.dto.preference.PreferenceResponse;
 import com.nft.backend.dto.preference.SavePreferenceRequest;
-import com.nft.backend.model.Preference;
-import com.nft.backend.model.Travel;
-import com.nft.backend.repository.PreferenceRepository;
-import com.nft.backend.repository.TravelRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PreferenceService {
 
-    private final PreferenceRepository preferenceRepository;
-    private final TravelRepository travelRepository;
+    private final Map<String, PreferenceResponse> preferencesByTravelId = new ConcurrentHashMap<>();
+    private final TravelCatalogService travelCatalogService;
 
-    public PreferenceService(PreferenceRepository preferenceRepository, TravelRepository travelRepository) {
-        this.preferenceRepository = preferenceRepository;
-        this.travelRepository = travelRepository;
+    public PreferenceService(TravelCatalogService travelCatalogService) {
+        this.travelCatalogService = travelCatalogService;
     }
 
-    @Transactional
-    public PreferenceResponse save(UUID travelId, SavePreferenceRequest request) {
-        Travel travel = findTravel(travelId);
-        Preference preference = preferenceRepository.findByTravelId(travelId)
-                .map((existingPreference) -> {
-                    existingPreference.update(request.style(), request.people(), request.moments(), request.tone());
-                    return existingPreference;
-                })
-                .orElseGet(() -> new Preference(
-                        travel,
-                        request.style(),
-                        request.people(),
-                        request.moments(),
-                        request.tone()));
+    public PreferenceResponse save(String travelId, SavePreferenceRequest request) {
+        ensureTravelExists(travelId);
 
-        return PreferenceResponse.fromEntity(preferenceRepository.save(preference));
+        PreferenceResponse current = preferencesByTravelId.get(travelId);
+        Instant now = Instant.now();
+        PreferenceResponse saved = new PreferenceResponse(
+                current == null ? travelId + "-preferences" : current.id(),
+                travelId,
+                request.style(),
+                request.people(),
+                request.moments(),
+                request.tone(),
+                current == null ? now : current.createdAt(),
+                now);
+
+        preferencesByTravelId.put(travelId, saved);
+        return saved;
     }
 
-    @Transactional(readOnly = true)
-    public PreferenceResponse getByTravel(UUID travelId) {
-        if (!travelRepository.existsById(travelId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found");
-        }
+    public PreferenceResponse getByTravel(String travelId) {
+        ensureTravelExists(travelId);
 
-        return preferenceRepository.findByTravelId(travelId)
-                .map(PreferenceResponse::fromEntity)
+        return java.util.Optional.ofNullable(preferencesByTravelId.get(travelId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preferences not found"));
     }
 
-    private Travel findTravel(UUID travelId) {
-        return travelRepository.findById(travelId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
+    private void ensureTravelExists(String travelId) {
+        if (travelCatalogService.getTravel(travelId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found");
+        }
     }
 }
