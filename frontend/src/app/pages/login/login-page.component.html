@@ -24,11 +24,37 @@
     <div class="login-card glass-panel">
       <div class="login-card__heading">
         <p class="eyebrow">Bienvenue</p>
-        <h2>Se connecter</h2>
-        <p>Entrez vos identifiants pour accéder à votre espace.</p>
+        <h2>{{ mode() === 'signup' ? 'Créer un compte' : 'Se connecter' }}</h2>
+        <p>
+          {{
+            mode() === 'signup'
+              ? 'Créez votre espace sécurisé avec Supabase Auth.'
+              : 'Entrez vos identifiants pour accéder à votre espace.'
+          }}
+        </p>
       </div>
 
       <form class="login-form" [formGroup]="loginForm" (ngSubmit)="submitLogin()" novalidate>
+        @if (mode() === 'signup') {
+          <label for="fullName">Nom</label>
+          <div class="input-wrap">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M20 21a8 8 0 0 0-16 0" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <input
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              autocomplete="name"
+              placeholder="Votre nom"
+            />
+          </div>
+          @if (loginForm.controls.fullName.touched && loginForm.controls.fullName.invalid) {
+            <p class="field-error">Saisissez au moins 2 caractères.</p>
+          }
+        }
+
         <label for="email">Email</label>
         <div class="input-wrap">
           <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -68,16 +94,20 @@
         <button class="btn btn--primary btn--wide login-submit" type="submit" [disabled]="isLoading()">
           @if (isLoading() && !activeProvider()) {
             <span class="spinner" aria-hidden="true"></span>
-            Connexion...
+            {{ mode() === 'signup' ? 'Création...' : 'Connexion...' }}
           } @else {
-            Se connecter
+            {{ mode() === 'signup' ? 'Créer mon compte' : 'Se connecter' }}
           }
         </button>
       </form>
 
       <p class="signup-link">
-        Pas encore de compte ?
-        <a href="/login?mode=signup" (click)="showSignupMessage($event)">Créer un compte</a>
+        {{ mode() === 'signup' ? 'Déjà un compte ?' : 'Pas encore de compte ?' }}
+        @if (mode() === 'signup') {
+          <a href="/login" (click)="switchMode($event, 'login')">Se connecter</a>
+        } @else {
+          <a href="/login?mode=signup" (click)="switchMode($event, 'signup')">Créer un compte</a>
+        }
       </p>
 
       <div class="divider"><span>ou continuer avec</span></div>
@@ -122,10 +152,10 @@
       </div>
 
       @if (statusMessage()) {
-        <p class="status-message" role="status">{{ statusMessage() }}</p>
+        <p class="status-message" [class.status-message--error]="statusTone() === 'error'" [class.status-message--success]="statusTone() === 'success'" role="status">
+          {{ statusMessage() }}
+        </p>
       }
-
-      <p class="mock-note">Démo front-end : aucun mot de passe ni token n'est enregistré.</p>
     </div>
   </section>
 </main>

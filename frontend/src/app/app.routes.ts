@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from './guards/auth.guard';
+
 export const routes: Routes = [
   {
     path: '',
@@ -9,6 +11,7 @@ export const routes: Routes = [
   },
   {
     path: 'home',
+    canActivate: [authGuard],
     loadComponent: () => import('./pages/home/home-page.component').then((component) => component.HomePageComponent),
     title: 'NFT',
   },
@@ -20,23 +23,27 @@ export const routes: Routes = [
   },
   {
     path: 'upload',
+    canActivate: [authGuard],
     loadComponent: () => import('./pages/upload/upload-page.component').then((component) => component.UploadPageComponent),
     title: 'NFT',
   },
   {
     path: 'preferences',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/preferences/preferences-page.component').then((component) => component.PreferencesPageComponent),
     title: 'NFT',
   },
   {
     path: 'generating',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/generating/generating-page.component').then((component) => component.GeneratingPageComponent),
     title: 'NFT',
   },
   {
     path: 'episode/:id',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/episode-detail/episode-detail-page.component').then(
         (component) => component.EpisodeDetailPageComponent,
@@ -45,6 +52,7 @@ export const routes: Routes = [
   },
   {
     path: 'player/:id',
+    canActivate: [authGuard],
     loadComponent: () => import('./pages/player/player-page.component').then((component) => component.PlayerPageComponent),
     title: 'NFT',
   },

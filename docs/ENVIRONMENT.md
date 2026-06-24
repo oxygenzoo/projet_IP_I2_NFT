@@ -2,16 +2,20 @@
 
 ## Vercel frontend
 
-Le deploiement Vercel publie uniquement le frontend Angular. Ajouter cette variable dans Vercel :
+Le deploiement Vercel publie uniquement le frontend Angular. Ajouter ces variables dans Vercel :
 
 ```text
 API_URL=https://URL_PUBLIQUE_DE_TON_BACKEND
+SUPABASE_URL=https://cyjkygaevdcippenlfed.supabase.co
+SUPABASE_ANON_KEY=...
 ```
 
 En local, `frontend/.env` contient :
 
 ```text
 API_URL=http://localhost:8080
+SUPABASE_URL=https://cyjkygaevdcippenlfed.supabase.co
+SUPABASE_ANON_KEY=...
 ```
 
 Le script `frontend/scripts/write-env.mjs` genere `frontend/src/environments/environment.generated.ts` avant `npm start`, `npm run build`, `npm run watch` et `npm test`.
@@ -69,8 +73,32 @@ SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_KEY=...
 ```
 
-Une fois le backend deploye, copier son URL Render dans Vercel :
+Une fois le backend deploye, copier son URL Render dans Vercel avec les infos publiques Supabase Auth :
 
 ```text
 API_URL=https://TON_BACKEND.onrender.com
+SUPABASE_URL=https://cyjkygaevdcippenlfed.supabase.co
+SUPABASE_ANON_KEY=...
 ```
+
+Ne jamais mettre `SUPABASE_SERVICE_KEY` dans Vercel. Cette clé reste uniquement côté backend Render.
+
+## Supabase Auth
+
+Dans Supabase, configurer les redirects :
+
+```text
+Authentication > URL Configuration
+Site URL = https://TON_FRONT.vercel.app
+Redirect URLs =
+  https://TON_FRONT.vercel.app/**
+  http://localhost:4200/**
+```
+
+Activer ensuite les providers souhaites dans :
+
+```text
+Authentication > Providers
+```
+
+La connexion email/mot de passe fonctionne avec le provider Email. Le bouton Google fonctionne seulement si le provider Google est active et configure dans Supabase.

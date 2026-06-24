@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Episode, Travel } from '../../models/travel.models';
+import { AuthService } from '../../services/auth.service';
 import { MockTravelService } from '../../services/mock-travel.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -10,6 +11,8 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
   templateUrl: './home-page.component.html',
 })
 export class HomePageComponent {
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly travelService = inject(MockTravelService);
 
   protected readonly user = this.travelService.getUser();
@@ -27,5 +30,10 @@ export class HomePageComponent {
 
   protected episodePlayerLink(episode: Episode): string[] {
     return ['/player', episode.id];
+  }
+
+  protected async logout(): Promise<void> {
+    await this.authService.logout();
+    await this.router.navigate(['/login']);
   }
 }
