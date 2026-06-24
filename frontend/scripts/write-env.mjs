@@ -37,9 +37,13 @@ try {
 }
 
 const apiUrl = process.env.API_URL || process.env.NG_APP_API_URL || 'http://localhost:8080';
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NG_APP_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NG_APP_SUPABASE_ANON_KEY || '';
 
 const content = `export const generatedEnvironment = {
   apiUrl: ${JSON.stringify(apiUrl)},
+  supabaseUrl: ${JSON.stringify(supabaseUrl)},
+  supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},
 } as const;
 `;
 
