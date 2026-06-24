@@ -82,19 +82,7 @@
     </div>
     <div class="card-row">
       @for (episode of recentEpisodes; track episode.id) {
-        <a class="episode-card" [routerLink]="['/episode', episode.id]">
-          <img [src]="episode.coverImage" [alt]="episode.title" loading="lazy" />
-          <div class="episode-card__body">
-            <span>S{{ episode.seasonNumber }}:E{{ episode.episodeNumber }}</span>
-            <strong>{{ episode.title }}</strong>
-            <p>{{ episode.location }} - {{ episode.duration }}</p>
-          </div>
-          @if (episode.progress > 0) {
-            <div class="progress-track progress-track--thin">
-              <span [style.width.%]="episode.progress"></span>
-            </div>
-          }
-        </a>
+        <app-episode-card [episode]="episode"></app-episode-card>
       }
     </div>
   </section>
@@ -125,13 +113,7 @@
     </div>
     <div class="card-row">
       @for (episode of recentEpisodes; track episode.id) {
-        <a class="episode-card episode-card--compact" [routerLink]="episodePlayerLink(episode)">
-          <img [src]="episode.videoStill" [alt]="episode.title" loading="lazy" />
-          <div class="episode-card__body">
-            <span>{{ episode.date }}</span>
-            <strong>{{ episode.title }}</strong>
-          </div>
-        </a>
+        <app-episode-card [episode]="episode" [compact]="true" destination="player"></app-episode-card>
       }
     </div>
   </section>

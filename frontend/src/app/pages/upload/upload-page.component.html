@@ -20,12 +20,24 @@
       </div>
       <h2>Deposez vos photos de voyage</h2>
       <p>Glissez votre galerie ici ou selectionnez un album depuis votre appareil.</p>
-      <button class="btn btn--primary" type="button" (click)="selectPhotos()">Importer mes photos</button>
+      <input
+        #photoInput
+        class="visually-hidden"
+        type="file"
+        accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
+        multiple
+        (change)="onFilesSelected($event)"
+      />
+      <button class="btn btn--primary" type="button" (click)="selectPhotos(photoInput)">Importer mes photos</button>
+
+      @if (errorMessage()) {
+        <p class="upload-error" role="alert">{{ errorMessage() }}</p>
+      }
 
       <div class="upload-counter">
         @if (selectedCount() > 0) {
           <strong>{{ selectedCount() }} photos selectionnees</strong>
-          <span>Bali, mai 2025 - tri IA pret a commencer</span>
+          <span>{{ selectedFileNames().join(', ') }} - tri IA pret a commencer</span>
         } @else {
           <strong>0 photo selectionnee</strong>
           <span>Formats JPG, PNG et HEIC simules</span>

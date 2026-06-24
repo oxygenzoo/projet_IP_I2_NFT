@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Episode, Travel } from '../../models/travel.models';
+import { Travel } from '../../models/travel.models';
 import { MockTravelService } from '../../services/mock-travel.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
 
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink, AppLogoComponent],
+  imports: [RouterLink, AppLogoComponent, EpisodeCardComponent],
   templateUrl: './home-page.component.html',
 })
 export class HomePageComponent {
@@ -23,9 +24,5 @@ export class HomePageComponent {
 
   protected travelPlayerLink(travel: Travel): string[] {
     return ['/episode', travel.episodes[0]?.id ?? '1'];
-  }
-
-  protected episodePlayerLink(episode: Episode): string[] {
-    return ['/player', episode.id];
   }
 }
