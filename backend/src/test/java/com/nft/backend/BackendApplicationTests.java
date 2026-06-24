@@ -44,4 +44,21 @@ class BackendApplicationTests {
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, containsString("GET")));
     }
+
+    @Test
+    void travelsEndpointReturnsBackendData() throws Exception {
+        mockMvc.perform(get("/api/travels"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].id").value("bali-2025"))
+                .andExpect(jsonPath("$[0].episodes[0].id").value("1"));
+    }
+
+    @Test
+    void episodesEndpointReturnsBackendData() throws Exception {
+        mockMvc.perform(get("/api/episodes"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].travelId").value("bali-2025"));
+    }
 }

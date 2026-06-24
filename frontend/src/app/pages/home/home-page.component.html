@@ -27,123 +27,144 @@
     </div>
   </header>
 
-  <section class="stream-hero" [style.--hero-image]="heroImage">
-    <div class="stream-hero__content">
-      <p class="eyebrow">Episode en reprise</p>
-      <h1>{{ featured.title }}</h1>
-      <p>{{ featured.tagline }}</p>
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Chargement des voyages...</h1>
+      <p>Connexion au backend en cours.</p>
+    </section>
+  } @else if (errorMessage()) {
+    <section class="api-state api-state--error glass-panel" role="alert">
+      <h1>API indisponible</h1>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn--primary" type="button" (click)="loadDashboard()">Réessayer</button>
+    </section>
+  } @else if (featured(); as featured) {
+    <section class="stream-hero" [style.--hero-image]="heroImage()">
+      <div class="stream-hero__content">
+        <p class="eyebrow">Episode en reprise</p>
+        <h1>{{ featured.title }}</h1>
+        <p>{{ featured.tagline }}</p>
 
-      <div class="metadata-row">
-        <span>{{ featured.episodeCount }} episodes</span>
-        <span>{{ featured.photoCount }} photos</span>
-        <span>{{ featured.duration }}</span>
-      </div>
-
-      <div class="hero-actions">
-        <a class="btn btn--primary" [routerLink]="['/player', featuredEpisode.id]">
-          <span class="play-icon"></span>
-          Lecture
-        </a>
-        <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail episode</a>
-      </div>
-
-      <div class="continue-line" aria-label="Progression de lecture">
-        <div>
-          <span>Reprendre</span>
-          <strong>{{ featured.remaining }}</strong>
+        <div class="metadata-row">
+          <span>{{ featured.episodeCount }} episodes</span>
+          <span>{{ featured.photoCount }} photos</span>
+          <span>{{ featured.duration }}</span>
         </div>
-        <div class="progress-track">
-          <span [style.width.%]="featured.progress"></span>
-        </div>
-      </div>
-    </div>
 
-    <aside class="season-card glass-panel">
-      <p>Saison 1</p>
-      <strong>{{ featured.destination }}</strong>
-      <span>{{ featured.moodTags.join(' / ') }}</span>
-    </aside>
-  </section>
-
-  <section id="series" class="content-rail">
-    <div class="rail-heading">
-      <h2>Mes series</h2>
-      <a routerLink="/upload">Nouvelle serie</a>
-    </div>
-    <div class="poster-row">
-      @for (travel of travels; track travel.id) {
-        <a class="travel-poster" [routerLink]="travelPlayerLink(travel)">
-          <img [src]="travel.posterImage" [alt]="travel.title" loading="lazy" />
-          <div>
-            <strong>{{ travel.title }}</strong>
-            <span>{{ travel.episodeCount }} episodes - {{ travel.country }}</span>
-          </div>
-        </a>
-      }
-    </div>
-  </section>
-
-  <section class="content-rail">
-    <div class="rail-heading">
-      <h2>Souvenirs recents</h2>
-      <span>{{ user.totalPhotos }} photos analysees</span>
-    </div>
-    <div class="card-row">
-      @for (episode of recentEpisodes; track episode.id) {
-        <a class="episode-card" [routerLink]="['/episode', episode.id]">
-          <img [src]="episode.coverImage" [alt]="episode.title" loading="lazy" />
-          <div class="episode-card__body">
-            <span>S{{ episode.seasonNumber }}:E{{ episode.episodeNumber }}</span>
-            <strong>{{ episode.title }}</strong>
-            <p>{{ episode.location }} - {{ episode.duration }}</p>
-          </div>
-          @if (episode.progress > 0) {
-            <div class="progress-track progress-track--thin">
-              <span [style.width.%]="episode.progress"></span>
-            </div>
+        <div class="hero-actions">
+          @if (featuredEpisode(); as featuredEpisode) {
+            <a class="btn btn--primary" [routerLink]="['/player', featuredEpisode.id]">
+              <span class="play-icon"></span>
+              Lecture
+            </a>
+            <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail episode</a>
           }
-        </a>
-      }
-    </div>
-  </section>
+        </div>
 
-  <section class="content-rail">
-    <div class="rail-heading">
-      <h2>Favoris</h2>
-      <span>Styles proches de vos voyages</span>
-    </div>
-    <div class="wide-card-row">
-      @for (travel of recommendedTravels; track travel.id) {
-        <a class="wide-card" [routerLink]="travelPlayerLink(travel)">
-          <img [src]="travel.coverImage" [alt]="travel.title" loading="lazy" />
+        <div class="continue-line" aria-label="Progression de lecture">
           <div>
-            <span>{{ travel.destination }}</span>
-            <strong>{{ travel.title }}</strong>
-            <p>{{ travel.description }}</p>
+            <span>Reprendre</span>
+            <strong>{{ featured.remaining }}</strong>
           </div>
-        </a>
-      }
-    </div>
-  </section>
-
-  <section class="content-rail content-rail--last">
-    <div class="rail-heading">
-      <h2>Mes episodes</h2>
-      <span>{{ user.totalEpisodes }} episodes generes</span>
-    </div>
-    <div class="card-row">
-      @for (episode of recentEpisodes; track episode.id) {
-        <a class="episode-card episode-card--compact" [routerLink]="episodePlayerLink(episode)">
-          <img [src]="episode.videoStill" [alt]="episode.title" loading="lazy" />
-          <div class="episode-card__body">
-            <span>{{ episode.date }}</span>
-            <strong>{{ episode.title }}</strong>
+          <div class="progress-track">
+            <span [style.width.%]="featured.progress"></span>
           </div>
-        </a>
-      }
-    </div>
-  </section>
+        </div>
+      </div>
 
-  <a class="floating-create" routerLink="/upload">+ Creer une nouvelle serie</a>
+      <aside class="season-card glass-panel">
+        <p>Saison 1</p>
+        <strong>{{ featured.destination }}</strong>
+        <span>{{ featured.moodTags.join(' / ') }}</span>
+      </aside>
+    </section>
 
+    <section id="series" class="content-rail">
+      <div class="rail-heading">
+        <h2>Mes series</h2>
+        <a routerLink="/upload">Nouvelle serie</a>
+      </div>
+      <div class="poster-row">
+        @for (travel of travels(); track travel.id) {
+          <a class="travel-poster" [routerLink]="travelPlayerLink(travel)">
+            <img [src]="travel.posterImage" [alt]="travel.title" loading="lazy" />
+            <div>
+              <strong>{{ travel.title }}</strong>
+              <span>{{ travel.episodeCount }} episodes - {{ travel.country }}</span>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="content-rail">
+      <div class="rail-heading">
+        <h2>Souvenirs recents</h2>
+        <span>{{ user.totalPhotos }} photos analysees</span>
+      </div>
+      <div class="card-row">
+        @for (episode of recentEpisodes(); track episode.id) {
+          <a class="episode-card" [routerLink]="['/episode', episode.id]">
+            <img [src]="episode.coverImage" [alt]="episode.title" loading="lazy" />
+            <div class="episode-card__body">
+              <span>S{{ episode.seasonNumber }}:E{{ episode.episodeNumber }}</span>
+              <strong>{{ episode.title }}</strong>
+              <p>{{ episode.location }} - {{ episode.duration }}</p>
+            </div>
+            @if (episode.progress > 0) {
+              <div class="progress-track progress-track--thin">
+                <span [style.width.%]="episode.progress"></span>
+              </div>
+            }
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="content-rail">
+      <div class="rail-heading">
+        <h2>Favoris</h2>
+        <span>Styles proches de vos voyages</span>
+      </div>
+      <div class="wide-card-row">
+        @for (travel of recommendedTravels(); track travel.id) {
+          <a class="wide-card" [routerLink]="travelPlayerLink(travel)">
+            <img [src]="travel.coverImage" [alt]="travel.title" loading="lazy" />
+            <div>
+              <span>{{ travel.destination }}</span>
+              <strong>{{ travel.title }}</strong>
+              <p>{{ travel.description }}</p>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="content-rail content-rail--last">
+      <div class="rail-heading">
+        <h2>Mes episodes</h2>
+        <span>{{ recentEpisodes().length }} episodes generes</span>
+      </div>
+      <div class="card-row">
+        @for (episode of recentEpisodes(); track episode.id) {
+          <a class="episode-card episode-card--compact" [routerLink]="episodePlayerLink(episode)">
+            <img [src]="episode.videoStill" [alt]="episode.title" loading="lazy" />
+            <div class="episode-card__body">
+              <span>{{ episode.date }}</span>
+              <strong>{{ episode.title }}</strong>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+
+    <a class="floating-create" routerLink="/upload">+ Creer une nouvelle serie</a>
+  } @else {
+    <section class="api-state glass-panel">
+      <h1>Aucun voyage</h1>
+      <p>Le backend a répondu, mais aucun voyage n’est disponible.</p>
+      <a class="btn btn--primary" routerLink="/upload">Créer une série</a>
+    </section>
+  }
 </main>
