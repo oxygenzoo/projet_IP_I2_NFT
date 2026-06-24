@@ -30,12 +30,16 @@ export class AuthService {
       return this.missingSupabaseConfigResult();
     }
 
-    const { error } = await client.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
+    try {
+      const { error } = await client.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    return this.toAuthResult(error, 'Connexion réussie.');
+      return this.toAuthResult(error, 'Connexion réussie.');
+    } catch (error) {
+      return this.toUnexpectedErrorResult(error);
+    }
   }
 
   async signup(credentials: SignupCredentials): Promise<AuthResult> {
@@ -45,30 +49,34 @@ export class AuthService {
       return this.missingSupabaseConfigResult();
     }
 
-    const redirectTo = this.getAuthRedirectUrl();
-    const { data, error } = await client.auth.signUp({
-      email: credentials.email,
-      password: credentials.password,
-      options: {
-        data: {
-          full_name: credentials.fullName ?? '',
+    try {
+      const redirectTo = this.getAuthRedirectUrl();
+      const { data, error } = await client.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          data: {
+            full_name: credentials.fullName ?? '',
+          },
+          emailRedirectTo: redirectTo,
         },
-        emailRedirectTo: redirectTo,
-      },
-    });
+      });
 
-    if (error) {
-      return this.toAuthResult(error);
+      if (error) {
+        return this.toAuthResult(error);
+      }
+
+      if (!data.session) {
+        return {
+          success: true,
+          message: 'Compte créé. Vérifiez vos emails pour confirmer votre inscription.',
+        };
+      }
+
+      return { success: true, message: 'Compte créé.' };
+    } catch (error) {
+      return this.toUnexpectedErrorResult(error);
     }
-
-    if (!data.session) {
-      return {
-        success: true,
-        message: 'Compte créé. Vérifiez vos emails pour confirmer votre inscription.',
-      };
-    }
-
-    return { success: true, message: 'Compte créé.' };
   }
 
   async loginWithSocialProvider(provider: SocialProvider): Promise<AuthResult> {
@@ -78,14 +86,18 @@ export class AuthService {
       return this.missingSupabaseConfigResult();
     }
 
-    const { error } = await client.auth.signInWithOAuth({
-      provider: provider as Provider,
-      options: {
-        redirectTo: this.getAuthRedirectUrl(),
-      },
-    });
+    try {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: provider as Provider,
+        options: {
+          redirectTo: this.getAuthRedirectUrl(),
+        },
+      });
 
-    return this.toAuthResult(error);
+      return this.toAuthResult(error);
+    } catch (error) {
+      return this.toUnexpectedErrorResult(error);
+    }
   }
 
   async logout(): Promise<void> {
@@ -155,7 +167,7 @@ export class AuthService {
 
     return {
       success: false,
-      message: this.translateAuthError(error.message),
+      message: this.translateAuthError(this.extractErrorMessage(error)),
     };
   }
 
@@ -174,10 +186,55 @@ export class AuthService {
       return 'Un compte existe déjà avec cette adresse email.';
     }
 
+    if (normalized.includes('signup') && normalized.includes('disabled')) {
+      return 'Les inscriptions email sont désactivées dans Supabase.';
+    }
+
+    if (normalized.includes('email provider') || normalized.includes('provider is not enabled')) {
+      return 'Le provider Email n’est pas activé dans Supabase.';
+    }
+
+    if (normalized.includes('captcha')) {
+      return 'Supabase demande une configuration captcha pour cette inscription.';
+    }
+
     if (normalized.includes('password')) {
       return 'Le mot de passe ne respecte pas les règles de sécurité.';
     }
 
+    if (!message || message === '{}') {
+      return 'Supabase a refusé la demande. Vérifiez que le provider Email est activé et que les inscriptions sont autorisées.';
+    }
+
     return message;
+  }
+
+  private toUnexpectedErrorResult(error: unknown): AuthResult {
+    return {
+      success: false,
+      message: this.translateAuthError(this.extractErrorMessage(error)),
+    };
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const maybeMessage = 'message' in error ? error.message : undefined;
+
+      if (typeof maybeMessage === 'string' && maybeMessage) {
+        return maybeMessage;
+      }
+
+      try {
+        return JSON.stringify(error);
+      } catch {
+        return '';
+      }
+    }
+
+    return typeof error === 'string' ? error : '';
   }
 }
