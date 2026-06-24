@@ -153,6 +153,22 @@ img {
   position: absolute;
 }
 
+.spinner {
+  animation: spin 700ms linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  border-top-color: #ffffff;
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .topbar {
   align-items: center;
   display: flex;
@@ -199,6 +215,35 @@ img {
 .player-page,
 .pricing-page {
   min-height: 100dvh;
+}
+
+.api-state {
+  display: grid;
+  gap: 1rem;
+  margin: 8rem auto 4rem;
+  max-width: 42rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.api-state h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.api-state p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.api-state .spinner {
+  justify-self: center;
+}
+
+.api-state--error {
+  border-color: rgba(255, 116, 116, 0.36);
 }
 
 .landing-hero {
