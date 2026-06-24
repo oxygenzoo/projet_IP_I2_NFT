@@ -49,6 +49,12 @@ export class UploadPageComponent implements OnDestroy {
     this.selectedImages.set(images.filter((_, imageIndex) => imageIndex !== index));
   }
 
+  protected preferencesLink(): string | string[] {
+    const travelId = this.draft.travelId();
+
+    return travelId ? ['/preferences', travelId] : '/preferences';
+  }
+
   protected formatFileSize(size: number): string {
     if (size < 1024 * 1024) {
       return `${Math.max(1, Math.round(size / 1024))} Ko`;
