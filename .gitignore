@@ -8,6 +8,7 @@
 # Env
 .env
 .env.local
+.env.*.local
 
 # Node / Angular
 node_modules/

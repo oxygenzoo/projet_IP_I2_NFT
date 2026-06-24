@@ -13,6 +13,12 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./pages/login/login-page.component').then((component) => component.LoginPageComponent),
+    title: 'Connexion | NFT',
+  },
+  {
     path: 'upload',
     loadComponent: () => import('./pages/upload/upload-page.component').then((component) => component.UploadPageComponent),
     title: 'NFT',
