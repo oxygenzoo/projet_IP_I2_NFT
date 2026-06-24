@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 interface PreferenceQuestion {
@@ -14,6 +15,9 @@ interface PreferenceQuestion {
   templateUrl: './preferences-page.component.html',
 })
 export class PreferencesPageComponent {
+  private readonly draft = inject(TravelDraftService);
+  private readonly router = inject(Router);
+
   protected readonly questions: PreferenceQuestion[] = [
     {
       id: 'style',
@@ -43,6 +47,8 @@ export class PreferencesPageComponent {
     moments: 'Paysages',
     tone: 'Inspirant',
   });
+  protected readonly selectedCount = computed(() => this.draft.selectedImages().length);
+  protected readonly errorMessage = signal('');
 
   protected select(questionId: string, option: string): void {
     this.selected.update((current) => ({
@@ -59,5 +65,15 @@ export class PreferencesPageComponent {
     const current = this.selected();
 
     return `${current['style']} · ${current['people']} · ${current['moments']} · ${current['tone']}`;
+  }
+
+  protected startGeneration(): void {
+    if (this.selectedCount() === 0) {
+      this.errorMessage.set('Ajoutez au moins une photo avant de lancer la génération.');
+      return;
+    }
+
+    this.draft.setPreferences(this.selected());
+    this.router.navigate(['/generating']);
   }
 }

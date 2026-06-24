@@ -1040,6 +1040,52 @@ img {
   background: currentColor;
 }
 
+.generation-alert,
+.generation-result {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.4rem auto 0;
+  max-width: 34rem;
+  padding: 1rem;
+}
+
+.generation-alert {
+  background: rgba(145, 35, 17, 0.28);
+  border: 1px solid rgba(255, 104, 70, 0.42);
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.generation-alert p,
+.generation-result p,
+.generation-result span {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.generation-alert strong,
+.generation-result strong {
+  color: #ffffff;
+}
+
+.generation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.generation-result {
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.generation-result .btn {
+  margin-top: 0.35rem;
+}
+
 .episode-hero {
   align-items: end;
   background-image:
