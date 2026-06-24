@@ -36,6 +36,21 @@
       <strong>{{ selectedSummary() }}</strong>
     </div>
 
-    <a class="btn btn--primary btn--wide" routerLink="/generating">Generer mon episode</a>
+    @if (errorMessage()) {
+      <div class="upload-errors" role="alert">
+        <strong>{{ errorMessage() }}</strong>
+      </div>
+    }
+
+    <button
+      class="btn btn--primary btn--wide"
+      [class.btn--disabled]="isSaving()"
+      [disabled]="isSaving()"
+      [attr.aria-busy]="isSaving()"
+      type="button"
+      (click)="startGeneration()"
+    >
+      {{ isSaving() ? 'Sauvegarde...' : 'Generer mon episode' }}
+    </button>
   </section>
 </main>

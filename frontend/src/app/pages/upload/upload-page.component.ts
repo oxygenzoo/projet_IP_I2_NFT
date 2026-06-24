@@ -1,11 +1,7 @@
-import { Component, computed, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
-
-interface SelectedImage {
-  file: File;
-  previewUrl: string;
-}
 
 @Component({
   selector: 'app-upload-page',
@@ -13,10 +9,12 @@ interface SelectedImage {
   templateUrl: './upload-page.component.html',
   styleUrl: './upload-page.component.scss',
 })
-export class UploadPageComponent implements OnDestroy {
+export class UploadPageComponent {
   static readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-  protected readonly selectedImages = signal<SelectedImage[]>([]);
+  private readonly draft = inject(TravelDraftService);
+
+  protected readonly selectedImages = this.draft.selectedImages;
   protected readonly selectedCount = computed(() => this.selectedImages().length);
   protected readonly errors = signal<string[]>([]);
   protected readonly isDragging = signal(false);
@@ -44,9 +42,13 @@ export class UploadPageComponent implements OnDestroy {
   }
 
   protected removeImage(index: number): void {
-    const images = this.selectedImages();
-    URL.revokeObjectURL(images[index].previewUrl);
-    this.selectedImages.set(images.filter((_, imageIndex) => imageIndex !== index));
+    this.draft.removeImage(index);
+  }
+
+  protected preferencesLink(): string | string[] {
+    const travelId = this.draft.travelId();
+
+    return travelId ? ['/preferences', travelId] : '/preferences';
   }
 
   protected formatFileSize(size: number): string {
@@ -57,18 +59,12 @@ export class UploadPageComponent implements OnDestroy {
     return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
   }
 
-  ngOnDestroy(): void {
-    for (const image of this.selectedImages()) {
-      URL.revokeObjectURL(image.previewUrl);
-    }
-  }
-
   private addFiles(fileList: FileList | null): void {
     if (!fileList?.length) {
       return;
     }
 
-    const validImages: SelectedImage[] = [];
+    const validFiles: File[] = [];
     const validationErrors: string[] = [];
 
     for (const file of Array.from(fileList)) {
@@ -82,13 +78,10 @@ export class UploadPageComponent implements OnDestroy {
         continue;
       }
 
-      validImages.push({
-        file,
-        previewUrl: URL.createObjectURL(file),
-      });
+      validFiles.push(file);
     }
 
     this.errors.set(validationErrors);
-    this.selectedImages.update((images) => [...images, ...validImages]);
+    this.draft.addFiles(validFiles);
   }
 }
