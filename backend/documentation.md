@@ -14,18 +14,21 @@ ALTER TABLESPACE pg_default OWNER TO postgres;
 
 ## Tables Principales
 
-### Table `users`
+### Table `public.profiles`
 
-Gère les utilisateurs de l'application.
+Gère les profils des utilisateurs de l'application (liée à auth.users).
 
 | Colonne | Type | Contrainte | Description |
 |---------|------|------------|-------------|
-| `id` | UUID | PRIMARY KEY DEFAULT gen_random_uuid() | Identifiant unique de l'utilisateur |
-| `email` | VARCHAR(255) | UNIQUE NOT NULL | Adresse email de l'utilisateur |
-| `password_hash` | TEXT | NOT NULL | Hash du mot de passe |
+| `id` | UUID | PRIMARY KEY, REFERENCES auth.users(id) ON DELETE CASCADE | Identifiant unique de l'utilisateur |
+| `email` | VARCHAR(255) | | Adresse email de l'utilisateur |
+| `full_name` | TEXT | | Nom complet de l'utilisateur |
+| `avatar_url` | TEXT | | URL de l'avatar |
 | `last_login` | TIMESTAMP | | Date du dernier accès |
 | `consent_rgpd` | BOOLEAN | DEFAULT FALSE | Consentement RGPD |
 | `consent_date` | TIMESTAMP | | Date du consentement |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | Date de création |
+| `updated_at` | TIMESTAMP | DEFAULT NOW() | Date de mise à jour |
 
 ---
 
@@ -36,7 +39,7 @@ Stocke les voyages créés par les utilisateurs.
 | Colonne | Type | Contrainte | Description |
 |---------|------|------------|-------------|
 | `id` | UUID | PRIMARY KEY DEFAULT gen_random_uuid() | Identifiant unique du voyage |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE CASCADE | Référence à l'utilisateur propriétaire |
+| `user_id` | UUID | REFERENCES public.profiles(id) ON DELETE CASCADE | Référence à l'utilisateur propriétaire |
 | `title` | VARCHAR(200) | NOT NULL | Titre du voyage |
 | `destination` | VARCHAR(200) | | Destination du voyage |
 | `description` | TEXT | | Description détaillée |
@@ -51,7 +54,7 @@ Contient les photos importées et leurs métadonnées enrichies.
 | Colonne | Type | Contrainte | Description |
 |---------|------|------------|-------------|
 | `id` | UUID | PRIMARY KEY DEFAULT gen_random_uuid() | Identifiant unique de la photo |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE CASCADE | Propriétaire de la photo |
+| `user_id` | UUID | REFERENCES public.profiles(id) ON DELETE CASCADE | Propriétaire de la photo |
 | `travel_id` | UUID | REFERENCES travels(id) ON DELETE CASCADE | Voyage associé |
 | `filename` | TEXT | NOT NULL | Nom du fichier |
 | `storage_url` | TEXT | NOT NULL | URL de stockage |
@@ -299,19 +302,19 @@ CREATE INDEX idx_tags_label ON tags(label);
 ## Diagramme des Relations
 
 ```
-users (1) ──── (n) travels (1) ──── (n) episodes (1) ──── (n) episode_scenes
-  │                   │                    │
-  │                   │                    ├── (n) episode_tags (n) ── tags
-  │                   │                    │
-  │                   └── (n) photos       │
-  │                        │               │
-  │                        ├── (n) photo_tags (n)
-  │                        │
-  │                        ├── (n) object_photos (n) ── detected_objects
-  │                        │
-  │                        └── (1) photos (duplicate_of)
-  │
-  └── (n) travels ──── (n) travel_tags (n) ── tags
+public.profiles (1) ──── (n) travels (1) ──── (n) episodes (1) ──── (n) episode_scenes
+       │                       │                    │
+       │                       │                    ├── (n) episode_tags (n) ── tags
+       │                       │                    │
+       │                       └── (n) photos       │
+       │                            │               │
+       │                            ├── (n) photo_tags (n)
+       │                            │
+       │                            ├── (n) object_photos (n) ── detected_objects
+       │                            │
+       │                            └── (1) photos (duplicate_of)
+       │
+       └── auth.users (1) ──── (1) public.profiles
 ```
 
 ---

@@ -1,18 +1,24 @@
-$$ LANGUAGE plpgsql;
+CREATE TABLE public.profiles (
+  id uuid not null,
+  email character varying(255) null,
+  full_name text null,
+  avatar_url text null,
+  last_login timestamp without time zone null,
+  consent_rgpd boolean null default false,
+  consent_date timestamp without time zone null,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  constraint profiles_pkey primary key (id),
+  constraint profiles_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
 
--- Tables
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    last_login TIMESTAMP,
-    consent_rgpd BOOLEAN DEFAULT FALSE,
-    consent_date TIMESTAMP
-);
+create trigger set_profiles_updated_at BEFORE
+update on profiles for EACH row
+execute FUNCTION set_updated_at ();
 
 CREATE TABLE travels (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     destination VARCHAR(200),
     description TEXT,
@@ -21,7 +27,7 @@ CREATE TABLE travels (
 
 CREATE TABLE photos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     travel_id UUID REFERENCES travels(id) ON DELETE CASCADE,
     filename TEXT NOT NULL,
     storage_url TEXT NOT NULL,
@@ -88,6 +94,7 @@ CREATE TABLE photo_tags (
     tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (photo_id, tag_id)
 );
+
 CREATE TABLE episodes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     travel_id UUID REFERENCES travels(id) ON DELETE CASCADE,
@@ -111,13 +118,12 @@ CREATE TABLE episodes (
     generated_at TIMESTAMP DEFAULT NOW(),
     rendered_at TIMESTAMP
 );
+
 CREATE TABLE episode_tags (
     episode_id UUID REFERENCES episodes(id) ON DELETE CASCADE,
     tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (episode_id, tag_id)
 );
-
-
 
 CREATE TABLE episode_scenes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,7 +136,6 @@ CREATE TABLE episode_scenes (
     effect VARCHAR(30)
 );
 
--- Indexes
 CREATE INDEX idx_photos_travel ON photos(travel_id);
 CREATE INDEX idx_photos_taken_at ON photos(taken_at);
 CREATE INDEX idx_photos_scene ON photos(scene_label);
@@ -149,7 +154,6 @@ CREATE INDEX idx_episode_tags_episode ON episode_tags(episode_id);
 CREATE INDEX idx_episode_tags_tag ON episode_tags(tag_id);
 CREATE INDEX idx_tags_label ON tags(label);
 
--- Fonctions
 CREATE OR REPLACE FUNCTION update_photo_metadata(
     p_photo_id UUID,
     p_nettete NUMERIC,
