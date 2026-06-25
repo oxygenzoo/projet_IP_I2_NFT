@@ -1,29 +1,35 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { MockTravelService } from '../../services/mock-travel.service';
+import { Component, OnDestroy, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { Episode, Travel } from '../../models/travel.models';
+import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 @Component({
   selector: 'app-player-page',
-  imports: [AppLogoComponent],
+  imports: [RouterLink, AppLogoComponent],
   templateUrl: './player-page.component.html',
 })
 export class PlayerPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
-  private readonly travelService = inject(MockTravelService);
+  private readonly travelApiService = inject(TravelApiService);
   private readonly platformId = inject(PLATFORM_ID);
   private intervalId?: ReturnType<typeof setInterval>;
+  private episodeSubscription?: Subscription;
+  private travelSubscription?: Subscription;
 
-  protected readonly episode =
-    this.travelService.getEpisode(this.route.snapshot.paramMap.get('id') ?? '1') ?? this.travelService.getEpisode('1')!;
-
-  protected readonly travel = this.travelService.getTravel(this.episode.travelId) ?? this.travelService.getFeaturedTravel();
+  protected readonly episode = signal<Episode | null>(null);
+  protected readonly travel = signal<Travel | null>(null);
+  protected readonly isLoading = signal(true);
+  protected readonly errorMessage = signal('');
   protected readonly playing = signal(true);
-  protected readonly progress = signal(this.episode.progress > 0 && this.episode.progress < 100 ? this.episode.progress : 8);
-  protected readonly stillImage = `url(${this.episode.videoStill})`;
+  protected readonly progress = signal(0);
+  protected readonly stillImage = computed(() => `url(${this.episode()?.videoStill ?? ''})`);
 
   ngOnInit(): void {
+    this.loadEpisode();
+
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
@@ -41,6 +47,9 @@ export class PlayerPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.episodeSubscription?.unsubscribe();
+    this.travelSubscription?.unsubscribe();
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = undefined;
@@ -53,5 +62,37 @@ export class PlayerPageComponent implements OnInit, OnDestroy {
     }
 
     this.playing.update((current) => !current);
+  }
+
+  private loadEpisode(): void {
+    const episodeId = this.route.snapshot.paramMap.get('id');
+
+    if (!episodeId) {
+      this.errorMessage.set('Episode introuvable.');
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.episodeSubscription = this.travelApiService.getEpisode(episodeId).subscribe({
+      next: (episode) => {
+        this.episode.set(episode);
+        this.progress.set(episode.progress > 0 && episode.progress < 100 ? episode.progress : 0);
+        this.loadTravel(episode.travelId);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.errorMessage.set("Cet episode n'existe pas dans votre espace.");
+        this.playing.set(false);
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  private loadTravel(travelId: string): void {
+    this.travelSubscription?.unsubscribe();
+    this.travelSubscription = this.travelApiService.getTravel(travelId).subscribe({
+      next: (travel) => this.travel.set(travel),
+      error: () => this.travel.set(null),
+    });
   }
 }

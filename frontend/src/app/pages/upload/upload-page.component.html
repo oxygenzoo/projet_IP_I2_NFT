@@ -7,10 +7,17 @@
     <div class="flow-heading">
       <p class="eyebrow">Import de voyage</p>
       <h1>Ajoutez les photos qui deviendront votre prochaine saison.</h1>
-      <p>Simulation V0: l import est visuel, sans backend et sans stockage reel.</p>
+      <p>Sélectionnez de vraies images depuis votre appareil. Elles restent locales tant que vous ne continuez pas.</p>
     </div>
 
-    <article class="upload-zone glass-panel" [class.upload-zone--ready]="selectedCount() > 0">
+    <article
+      class="upload-zone glass-panel"
+      [class.upload-zone--ready]="selectedCount() > 0"
+      [class.upload-zone--dragging]="isDragging()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
       <div class="upload-zone__icon">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M12 3v12" />
@@ -18,41 +25,81 @@
           <path d="M5 16v3h14v-3" />
         </svg>
       </div>
-      <h2>Deposez vos photos de voyage</h2>
-      <p>Glissez votre galerie ici ou selectionnez un album depuis votre appareil.</p>
+      <h2>Déposez vos photos de voyage</h2>
+      <p>Glissez vos images ici ou sélectionnez-les depuis votre appareil.</p>
+
+      <label class="btn btn--primary" for="photo-input">Importer mes photos</label>
       <input
-        #photoInput
-        class="visually-hidden"
+        id="photo-input"
+        class="file-input"
+        data-testid="photo-input"
         type="file"
-        accept=".jpg,.jpeg,.png,.heic,.heif,image/jpeg,image/png,image/heic,image/heif"
+        accept="image/*"
         multiple
-        (change)="onFilesSelected($event)"
+        (change)="onFileSelection($event)"
       />
-      <button class="btn btn--primary" type="button" (click)="selectPhotos(photoInput)">Importer mes photos</button>
 
-      @if (errorMessage()) {
-        <p class="upload-error" role="alert">{{ errorMessage() }}</p>
-      }
-
-      <div class="upload-counter">
+      <div class="upload-counter" aria-live="polite">
         @if (selectedCount() > 0) {
-          <strong>{{ selectedCount() }} photos selectionnees</strong>
-          <span>{{ selectedFileNames().join(', ') }} - tri IA pret a commencer</span>
+          <strong>
+            {{ selectedCount() }}
+            {{ selectedCount() === 1 ? 'photo sélectionnée' : 'photos sélectionnées' }}
+          </strong>
+          <span>JPG, PNG, WebP, HEIC… · 10 Mo maximum par image</span>
         } @else {
-          <strong>0 photo selectionnee</strong>
-          <span>Formats JPG, PNG et HEIC simules</span>
+          <strong>0 photo sélectionnée</strong>
+          <span>Images uniquement · 10 Mo maximum par image</span>
         }
       </div>
     </article>
 
+    @if (errors().length) {
+      <div class="upload-errors" role="alert">
+        <strong>Certains fichiers n’ont pas été ajoutés</strong>
+        <ul>
+          @for (error of errors(); track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (selectedImages().length) {
+      <ul class="photo-previews" aria-label="Photos sélectionnées">
+        @for (image of selectedImages(); track image.previewUrl; let index = $index) {
+          <li class="photo-preview">
+            <img [src]="image.previewUrl" [alt]="'Aperçu de ' + image.file.name" />
+            <div>
+              <strong [title]="image.file.name">{{ image.file.name }}</strong>
+              <span>{{ formatFileSize(image.file.size) }}</span>
+            </div>
+            <button
+              type="button"
+              [attr.aria-label]="'Retirer ' + image.file.name"
+              (click)="removeImage(index)"
+            >
+              ×
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
     <aside class="privacy-card">
       <span></span>
       <div>
-        <strong>Vos photos restent privees et securisees.</strong>
-        <p>Aucune authentification ni envoi serveur dans cette V0: tout est mocke pour la demonstration.</p>
+        <strong>Vos photos restent privées et sécurisées.</strong>
+        <p>Aucun fichier n’est envoyé au serveur à cette étape.</p>
       </div>
     </aside>
 
-    <a class="btn btn--primary btn--wide" routerLink="/preferences">Continuer</a>
+    <a
+      class="btn btn--primary btn--wide"
+      [class.btn--disabled]="selectedCount() === 0"
+      [attr.aria-disabled]="selectedCount() === 0"
+      [routerLink]="selectedCount() > 0 ? '/preferences' : null"
+    >
+      Continuer
+    </a>
   </section>
 </main>

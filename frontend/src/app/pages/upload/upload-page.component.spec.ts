@@ -4,8 +4,14 @@ import { UploadPageComponent } from './upload-page.component';
 
 describe('UploadPageComponent', () => {
   let fixture: ComponentFixture<UploadPageComponent>;
+  let input: HTMLInputElement;
 
   beforeEach(async () => {
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(
+      (file) => `blob:${(file as File).name}`,
+    );
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
     await TestBed.configureTestingModule({
       imports: [UploadPageComponent],
       providers: [provideRouter([])],
@@ -13,65 +19,79 @@ describe('UploadPageComponent', () => {
 
     fixture = TestBed.createComponent(UploadPageComponent);
     fixture.detectChanges();
+    input = fixture.nativeElement.querySelector('[data-testid="photo-input"]');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('crée le composant et affiche la zone d’upload', () => {
+    expect(fixture.componentInstance).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.upload-zone')).toBeTruthy();
+    expect(input).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('0 photo sélectionnée');
+  });
+
+  it('importe une image valide et affiche son aperçu', () => {
+    selectFiles([new File(['photo'], 'plage.jpg', { type: 'image/jpeg' })]);
+
+    expect(fixture.nativeElement.textContent).toContain('1 photo sélectionnée');
+    expect(fixture.nativeElement.textContent).toContain('plage.jpg');
+    expect(fixture.nativeElement.querySelectorAll('.photo-preview')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.upload-zone--ready')).toBeTruthy();
+  });
+
+  it('importe plusieurs formats d’image valides', () => {
+    selectFiles([
+      new File(['photo-1'], 'plage.jpg', { type: 'image/jpeg' }),
+      new File(['photo-2'], 'montagne.png', { type: 'image/png' }),
+      new File(['photo-3'], 'ville.webp', { type: 'image/webp' }),
+    ]);
+
+    expect(fixture.nativeElement.textContent).toContain('3 photos sélectionnées');
+    expect(fixture.nativeElement.querySelectorAll('.photo-preview')).toHaveLength(3);
+  });
+
+  it('refuse un fichier non image avec un message explicite', () => {
+    selectFiles([new File(['document'], 'voyage.pdf', { type: 'application/pdf' })]);
+
+    expect(fixture.nativeElement.querySelectorAll('.photo-preview')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'seuls les fichiers images sont acceptés',
+    );
+  });
+
+  it('refuse une image supérieure à 10 Mo', () => {
+    const oversizedImage = new File(['photo'], 'panorama.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(oversizedImage, 'size', {
+      value: UploadPageComponent.MAX_FILE_SIZE + 1,
+    });
+
+    selectFiles([oversizedImage]);
+
+    expect(fixture.nativeElement.querySelectorAll('.photo-preview')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'dépasse la limite de 10 Mo',
+    );
+  });
+
+  it('retire une image sélectionnée', () => {
+    selectFiles([new File(['photo'], 'plage.jpg', { type: 'image/jpeg' })]);
+
+    (fixture.nativeElement.querySelector('[aria-label="Retirer plage.jpg"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.photo-preview')).toHaveLength(0);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:plage.jpg');
   });
 
   function selectFiles(files: File[]): void {
-    const input = fixture.nativeElement.querySelector('input[type="file"]') as HTMLInputElement;
-    Object.defineProperty(input, 'files', { configurable: true, value: files });
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: files,
+    });
     input.dispatchEvent(new Event('change'));
     fixture.detectChanges();
   }
-
-  it('creates the component', () => {
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  it('renders the upload zone and file input', () => {
-    const element = fixture.nativeElement as HTMLElement;
-
-    expect(element.querySelector('.upload-zone')).toBeTruthy();
-    expect(element.querySelector('input[type="file"]')).toBeTruthy();
-    expect(element.querySelector('button')?.textContent).toContain('Importer mes photos');
-    expect(element.textContent).toContain('0 photo selectionnee');
-  });
-
-  it('opens the file picker when the import button is clicked', () => {
-    const input = fixture.nativeElement.querySelector('input[type="file"]') as HTMLInputElement;
-    const clickSpy = vi.spyOn(input, 'click');
-
-    (fixture.nativeElement.querySelector('button') as HTMLButtonElement).click();
-
-    expect(clickSpy).toHaveBeenCalledOnce();
-  });
-
-  it('accepts valid image files and displays their names', () => {
-    selectFiles([
-      new File(['photo-one'], 'bali.jpg', { type: 'image/jpeg' }),
-      new File(['photo-two'], 'temple.png', { type: 'image/png' }),
-    ]);
-
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.upload-zone--ready')).toBeTruthy();
-    expect(element.textContent).toContain('2 photos selectionnees');
-    expect(element.textContent).toContain('bali.jpg, temple.png');
-    expect(element.querySelector('[role="alert"]')).toBeNull();
-  });
-
-  it('rejects unsupported files and displays an explicit error', () => {
-    selectFiles([new File(['document'], 'notes.pdf', { type: 'application/pdf' })]);
-
-    const alert = fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement;
-    expect(alert.textContent).toContain('Format non pris en charge');
-    expect(fixture.nativeElement.textContent).toContain('0 photo selectionnee');
-  });
-
-  it('rejects images larger than 10 MB', () => {
-    const largeFile = new File(['image'], 'large.jpg', { type: 'image/jpeg' });
-    Object.defineProperty(largeFile, 'size', { value: 10 * 1024 * 1024 + 1 });
-
-    selectFiles([largeFile]);
-
-    const alert = fixture.nativeElement.querySelector('[role="alert"]') as HTMLElement;
-    expect(alert.textContent).toContain('moins de 10 Mo');
-  });
 });

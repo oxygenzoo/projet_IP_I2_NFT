@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: nft-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_APPLICATION_NAME
+        value: travel-app
+      - key: CORS_ALLOWED_METHODS
+        value: GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: DATABASE_INITIALIZATION_FAIL_TIMEOUT_MS
+        value: "-1"
+      - key: JPA_DDL_AUTO
+        value: none
+      - key: HIBERNATE_ALLOW_JDBC_METADATA_ACCESS
+        value: "false"
+      - key: HIBERNATE_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false

@@ -1,52 +1,87 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 @Component({
   selector: 'app-upload-page',
   imports: [RouterLink, AppLogoComponent],
   templateUrl: './upload-page.component.html',
+  styleUrl: './upload-page.component.scss',
 })
 export class UploadPageComponent {
-  protected readonly selectedCount = signal(0);
-  protected readonly selectedFileNames = signal<string[]>([]);
-  protected readonly errorMessage = signal('');
+  static readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-  private readonly acceptedTypes = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif']);
-  private readonly maxFileSize = 10 * 1024 * 1024;
+  private readonly draft = inject(TravelDraftService);
 
-  protected selectPhotos(input: HTMLInputElement): void {
-    input.click();
+  protected readonly selectedImages = this.draft.selectedImages;
+  protected readonly selectedCount = computed(() => this.selectedImages().length);
+  protected readonly errors = signal<string[]>([]);
+  protected readonly isDragging = signal(false);
+
+  protected onFileSelection(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.addFiles(input.files);
+    input.value = '';
   }
 
-  protected onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
+  protected onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(true);
+  }
 
-    this.errorMessage.set('');
-    this.selectedCount.set(0);
-    this.selectedFileNames.set([]);
+  protected onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(false);
+  }
 
-    if (files.length === 0) {
-      this.errorMessage.set('Selectionnez au moins une photo.');
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging.set(false);
+    this.addFiles(event.dataTransfer?.files ?? null);
+  }
+
+  protected removeImage(index: number): void {
+    this.draft.removeImage(index);
+  }
+
+  protected preferencesLink(): string | string[] {
+    const travelId = this.draft.travelId();
+
+    return travelId ? ['/preferences', travelId] : '/preferences';
+  }
+
+  protected formatFileSize(size: number): string {
+    if (size < 1024 * 1024) {
+      return `${Math.max(1, Math.round(size / 1024))} Ko`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
+  }
+
+  private addFiles(fileList: FileList | null): void {
+    if (!fileList?.length) {
       return;
     }
 
-    const invalidType = files.find((file) => !this.acceptedTypes.has(file.type));
-    if (invalidType) {
-      this.errorMessage.set('Format non pris en charge. Utilisez JPG, PNG ou HEIC.');
-      input.value = '';
-      return;
+    const validFiles: File[] = [];
+    const validationErrors: string[] = [];
+
+    for (const file of Array.from(fileList)) {
+      if (!file.type.startsWith('image/')) {
+        validationErrors.push(`${file.name} : seuls les fichiers images sont acceptés.`);
+        continue;
+      }
+
+      if (file.size > UploadPageComponent.MAX_FILE_SIZE) {
+        validationErrors.push(`${file.name} : le fichier dépasse la limite de 10 Mo.`);
+        continue;
+      }
+
+      validFiles.push(file);
     }
 
-    const oversizedFile = files.find((file) => file.size > this.maxFileSize);
-    if (oversizedFile) {
-      this.errorMessage.set('Chaque photo doit peser moins de 10 Mo.');
-      input.value = '';
-      return;
-    }
-
-    this.selectedCount.set(files.length);
-    this.selectedFileNames.set(files.map((file) => file.name));
+    this.errors.set(validationErrors);
+    this.draft.addFiles(validFiles);
   }
 }
