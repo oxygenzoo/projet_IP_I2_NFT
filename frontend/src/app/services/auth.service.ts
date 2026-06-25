@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AuthError, createClient, Provider, Session, SupabaseClient, User } from '@supabase/supabase-js';
+import { AuthError, createClient, Provider, Session, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
 
 import { environment } from '../../environments/environment';
 
@@ -17,6 +17,21 @@ export interface SignupCredentials extends LoginCredentials {
 export interface AuthResult {
   success: boolean;
   message?: string;
+}
+
+export interface ConnectedProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+  initials: string;
+  plan: string;
+}
+
+export interface UpdateProfileInput {
+  fullName: string;
+  email: string;
+  avatarUrl: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -109,9 +124,41 @@ export class AuthService {
     return data.session;
   }
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(): Promise<SupabaseUser | null> {
     const { data } = (await this.supabase?.auth.getUser()) ?? { data: { user: null } };
     return data.user;
+  }
+
+  async getCurrentProfile(): Promise<ConnectedProfile | null> {
+    const user = await this.getCurrentUser();
+    return user ? this.toConnectedProfile(user) : null;
+  }
+
+  async updateProfile(profile: UpdateProfileInput): Promise<AuthResult> {
+    const client = this.requireClient();
+
+    if (!client) {
+      return this.missingSupabaseConfigResult();
+    }
+
+    try {
+      const fullName = profile.fullName.trim();
+      const email = profile.email.trim();
+      const avatarUrl = profile.avatarUrl.trim();
+      const { error } = await client.auth.updateUser({
+        email,
+        data: {
+          full_name: fullName,
+          name: fullName,
+          avatar_url: avatarUrl,
+          picture: avatarUrl,
+        },
+      });
+
+      return this.toAuthResult(error, 'Profil mis à jour.');
+    } catch (error) {
+      return this.toUnexpectedErrorResult(error);
+    }
   }
 
   async isAuthenticated(): Promise<boolean> {
@@ -214,6 +261,51 @@ export class AuthService {
       success: false,
       message: this.translateAuthError(this.extractErrorMessage(error)),
     };
+  }
+
+  private toConnectedProfile(user: SupabaseUser): ConnectedProfile {
+    const metadata = user.user_metadata ?? {};
+    const email = user.email ?? '';
+    const name = this.firstText(metadata, ['full_name', 'name', 'user_name', 'preferred_username'])
+      || this.nameFromEmail(email)
+      || 'Voyageur';
+    const avatarUrl = this.firstText(metadata, ['avatar_url', 'picture']);
+
+    return {
+      id: user.id,
+      email,
+      name,
+      avatarUrl: avatarUrl || null,
+      initials: this.initialsFromName(name),
+      plan: this.firstText(metadata, ['plan']) || 'Découverte',
+    };
+  }
+
+  private firstText(metadata: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = metadata[key];
+
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim();
+      }
+    }
+
+    return '';
+  }
+
+  private nameFromEmail(email: string): string {
+    return email.split('@')[0]?.replace(/[._-]+/g, ' ').trim() ?? '';
+  }
+
+  private initialsFromName(name: string): string {
+    const initials = name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('');
+
+    return initials || 'NF';
   }
 
   private extractErrorMessage(error: unknown): string {

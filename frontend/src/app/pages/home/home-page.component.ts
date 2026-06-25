@@ -3,8 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
-import { AuthService } from '../../services/auth.service';
-import { MockTravelService } from '../../services/mock-travel.service';
+import { AuthService, ConnectedProfile } from '../../services/auth.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -16,22 +15,31 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 export class HomePageComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly travelService = inject(MockTravelService);
   private readonly travelApiService = inject(TravelApiService);
 
-  protected readonly user = this.travelService.getUser();
+  protected readonly profile = signal<ConnectedProfile | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
   protected readonly travels = signal<Travel[]>([]);
   protected readonly episodes = signal<Episode[]>([]);
   protected readonly featured = computed(() => this.travels().find((travel) => travel.featured) ?? this.travels()[0] ?? null);
-  protected readonly featuredEpisode = computed(() => this.featured()?.episodes[0] ?? this.episodes()[0] ?? null);
+  protected readonly featuredEpisode = computed(() => this.featured()?.episodes[0] ?? null);
   protected readonly recentEpisodes = computed(() => this.episodes().slice(0, 6));
   protected readonly recommendedTravels = computed(() => this.travels().filter((travel) => !travel.featured));
   protected readonly heroImage = computed(() => `url(${this.featured()?.heroImage ?? ''})`);
+  protected readonly profileName = computed(() => this.profile()?.name ?? 'Voyageur');
+  protected readonly profileInitials = computed(() => this.profile()?.initials ?? 'NF');
+  protected readonly profileAvatarUrl = computed(() => this.profile()?.avatarUrl ?? '');
+  protected readonly totalPhotos = computed(() => this.travels().reduce((total, travel) => total + travel.photoCount, 0));
+  protected readonly totalEpisodes = computed(() => this.episodes().length);
 
   ngOnInit(): void {
+    void this.loadProfile();
     this.loadDashboard();
+  }
+
+  private async loadProfile(): Promise<void> {
+    this.profile.set(await this.authService.getCurrentProfile());
   }
 
   protected loadDashboard(): void {
@@ -57,7 +65,8 @@ export class HomePageComponent implements OnInit {
   }
 
   protected travelPlayerLink(travel: Travel): string[] {
-    return ['/episode', travel.episodes[0]?.id ?? '1'];
+    const firstEpisode = travel.episodes[0];
+    return firstEpisode ? ['/episode', firstEpisode.id] : ['/home'];
   }
 
   protected episodePlayerLink(episode: Episode): string[] {

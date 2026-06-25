@@ -4,17 +4,17 @@
 
     <div class="stream-header__actions">
       <div class="mentor-greeting">
-        <span>Bonjour Seb !</span>
+        <span>Bonjour {{ profileName() }} !</span>
       </div>
       <a class="upgrade-button" routerLink="/pricing" aria-label="Voir les offres premium">
         <span aria-hidden="true">↑</span>
       </a>
-      <button class="icon-button" type="button" aria-label="Notifications">
+      <a class="icon-button" routerLink="/notifications" aria-label="Notifications">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2Z" />
           <path d="M10 20a2 2 0 0 0 4 0" />
         </svg>
-      </button>
+      </a>
       <button class="icon-button" type="button" aria-label="Déconnexion" title="Déconnexion" (click)="logout()">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M10 17l5-5-5-5" />
@@ -23,7 +23,13 @@
           <path d="M14 21h5a2 2 0 0 0 2-2" />
         </svg>
       </button>
-      <img [src]="user.avatarUrl" [alt]="user.name" class="avatar" />
+      <a class="profile-link" routerLink="/profile" aria-label="Ouvrir le profil">
+        @if (profileAvatarUrl()) {
+          <img [src]="profileAvatarUrl()" [alt]="profileName()" class="avatar" />
+        } @else {
+          <span class="avatar avatar--initials" aria-hidden="true">{{ profileInitials() }}</span>
+        }
+      </a>
     </div>
   </header>
 
@@ -101,7 +107,7 @@
     <section class="content-rail">
       <div class="rail-heading">
         <h2>Souvenirs recents</h2>
-        <span>{{ user.totalPhotos }} photos analysees</span>
+        <span>{{ totalPhotos() }} photos analysees</span>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -118,6 +124,11 @@
               </div>
             }
           </a>
+        } @empty {
+          <article class="empty-rail">
+            <strong>Aucun souvenir genere</strong>
+            <span>Vos prochains episodes apparaitront ici.</span>
+          </article>
         }
       </div>
     </section>
@@ -137,6 +148,11 @@
               <p>{{ travel.description }}</p>
             </div>
           </a>
+        } @empty {
+          <article class="empty-rail empty-rail--wide">
+            <strong>Aucun favori pour le moment</strong>
+            <span>Ils seront calcules depuis vos voyages.</span>
+          </article>
         }
       </div>
     </section>
@@ -144,7 +160,7 @@
     <section class="content-rail content-rail--last">
       <div class="rail-heading">
         <h2>Mes episodes</h2>
-        <span>{{ recentEpisodes().length }} episodes generes</span>
+        <span>{{ totalEpisodes() }} episodes generes</span>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -155,6 +171,11 @@
               <strong>{{ episode.title }}</strong>
             </div>
           </a>
+        } @empty {
+          <article class="empty-rail">
+            <strong>Aucun episode</strong>
+            <span>Quand vous en aurez, ils seront listes ici.</span>
+          </article>
         }
       </div>
     </section>
