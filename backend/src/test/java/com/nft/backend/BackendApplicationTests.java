@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,8 +52,7 @@ class BackendApplicationTests {
         mockMvc.perform(get("/api/travels"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].id").value("bali-2025"))
-                .andExpect(jsonPath("$[0].episodes[0].id").value("1"));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -60,11 +60,23 @@ class BackendApplicationTests {
         mockMvc.perform(get("/api/episodes"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].travelId").value("bali-2025"));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    void canSaveCompleteQuestionnaireForTravel() throws Exception {
+    void travelDetailReturnsNotFoundWithoutDemoData() throws Exception {
+        mockMvc.perform(get("/api/travels/{id}", "bali-2025"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void episodeDetailReturnsNotFoundWithoutDemoData() throws Exception {
+        mockMvc.perform(get("/api/episodes/{id}", "1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void refusesQuestionnaireForUnknownTravel() throws Exception {
         mockMvc.perform(post("/api/travels/{travelId}/preferences", "bali-2025")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -75,12 +87,7 @@ class BackendApplicationTests {
                                   "tone": "Inspirant"
                                 }
                                 """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.travelId").value("bali-2025"))
-                .andExpect(jsonPath("$.style").value("Cinematographique"))
-                .andExpect(jsonPath("$.people").value("Tout le monde"))
-                .andExpect(jsonPath("$.moments").value("Paysages"))
-                .andExpect(jsonPath("$.tone").value("Inspirant"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -92,30 +99,13 @@ class BackendApplicationTests {
     }
 
     @Test
-    void canReloadSavedPreferences() throws Exception {
-        mockMvc.perform(post("/api/travels/{travelId}/preferences", "italy-2024")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "style": "Documentaire",
-                                  "people": "Couple",
-                                  "moments": "Culture",
-                                  "tone": "Nostalgique"
-                                }
-                                """))
-                .andExpect(status().isOk());
-
+    void preferencesReturnNotFoundWithoutTravel() throws Exception {
         mockMvc.perform(get("/api/travels/{travelId}/preferences", "italy-2024"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.travelId").value("italy-2024"))
-                .andExpect(jsonPath("$.style").value("Documentaire"))
-                .andExpect(jsonPath("$.people").value("Couple"))
-                .andExpect(jsonPath("$.moments").value("Culture"))
-                .andExpect(jsonPath("$.tone").value("Nostalgique"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void preferencesAreAssociatedWithTheRequestedTravelOnly() throws Exception {
+    void preferencesAreNotStoredForDemoTravels() throws Exception {
         mockMvc.perform(post("/api/travels/{travelId}/preferences", "bali-2025")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -126,14 +116,9 @@ class BackendApplicationTests {
                                   "tone": "Fun"
                                 }
                                 """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.travelId").value("bali-2025"));
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/api/travels/{travelId}/preferences", "bali-2025"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.people").value("Famille"));
-
-        mockMvc.perform(get("/api/travels/{travelId}/preferences", "kyrgyzstan-2025"))
                 .andExpect(status().isNotFound());
     }
 }

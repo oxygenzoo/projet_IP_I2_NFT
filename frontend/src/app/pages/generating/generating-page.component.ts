@@ -46,7 +46,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
         this.completed.set(this.steps);
         this.clearTimers();
         this.redirectId = setTimeout(() => {
-          this.router.navigate(['/episode', '1']);
+          this.router.navigate(['/home']);
         }, 700);
       }
     }, 520);
