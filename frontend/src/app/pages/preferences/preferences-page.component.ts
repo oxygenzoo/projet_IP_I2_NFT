@@ -1,3 +1,5 @@
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -18,6 +20,9 @@ interface PreferenceQuestion {
   imports: [RouterLink, AppLogoComponent],
   templateUrl: './preferences-page.component.html',
 })
+export class PreferencesPageComponent {
+  private readonly draft = inject(TravelDraftService);
+  private readonly router = inject(Router);
 export class PreferencesPageComponent implements OnInit, OnDestroy {
   private readonly draft = inject(TravelDraftService);
   private readonly preferenceApi = inject(PreferenceApiService);
@@ -114,6 +119,8 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.draft.setPreferences(this.selected());
+    this.router.navigate(['/generating']);
     const preferences = this.currentPreferences();
 
     if (!this.isQuestionnaireComplete(preferences)) {

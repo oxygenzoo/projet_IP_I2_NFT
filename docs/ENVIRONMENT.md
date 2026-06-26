@@ -37,6 +37,8 @@ SUPABASE_URL=https://cyjkygaevdcippenlfed.supabase.co
 SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_KEY=...
 
+AI_SERVICE_URL=http://localhost:8000
+
 JWT_SECRET=...
 JWT_EXPIRATION_MS=86400000
 
@@ -51,6 +53,26 @@ SMTP_PASSWORD=...
 
 Ne jamais mettre les vraies valeurs de `DATABASE_PASSWORD`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET` ou `SMTP_PASSWORD` dans Git.
 
+## Service IA Python
+
+Ces variables sont lues par `ai-service/app/main.py` et les modules du pipeline IA.
+
+```text
+AI_WORKDIR=workdir
+AI_RENDER_VIDEO=false
+AI_TOP_PHOTOS=50
+AI_MAX_EPISODES=6
+
+AI_LLM_API_KEY=...
+GROQ_API_KEY=...
+GOOGLE_VISION_KEY=...
+GEMINI_API_KEY=...
+```
+
+`AI_RENDER_VIDEO=false` genere le rapport photo et le script narratif sans rendre de MP4. Mettre `true` seulement si le service dispose d'assez de CPU/RAM.
+
+Ne jamais mettre de cle Groq, Gemini ou Google Vision dans le code. Utiliser uniquement les variables Render/locales.
+
 ## Render backend gratuit
 
 Le fichier `render.yaml` permet de deployer le backend Spring Boot sur un Web Service Render gratuit.
@@ -60,6 +82,7 @@ Dans Render, renseigner au minimum :
 ```text
 CORS_ALLOWED_ORIGINS=https://TON_FRONT.vercel.app,http://localhost:4200
 JWT_SECRET=...
+AI_SERVICE_URL=https://TON_AI_SERVICE.onrender.com
 ```
 
 Puis, quand la base Supabase est utilisee par le code :

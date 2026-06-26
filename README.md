@@ -152,7 +152,7 @@ python -m compileall .
 Si un point d'entree FastAPI est ajoute :
 
 ```bash
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 URL par defaut :

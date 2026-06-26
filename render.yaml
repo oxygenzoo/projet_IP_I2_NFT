@@ -35,7 +35,31 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
+      - key: AI_SERVICE_URL
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: SMTP_PASSWORD
+        sync: false
+  - type: web
+    name: nft-ai-service
+    runtime: docker
+    plan: free
+    rootDir: ai-service
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: AI_RENDER_VIDEO
+        value: false
+      - key: AI_TOP_PHOTOS
+        value: 50
+      - key: AI_MAX_EPISODES
+        value: 6
+      - key: AI_LLM_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_VISION_KEY
+        sync: false
+      - key: GEMINI_API_KEY
         sync: false

@@ -5,30 +5,50 @@
 
   <section class="generation-shell">
     <div class="ai-core" aria-hidden="true"></div>
-    <p class="eyebrow">Generation IA simulee</p>
+    <p class="eyebrow">Generation IA</p>
     <h1>Votre voyage devient une serie.</h1>
     <p class="generation-copy">
       Never Forget your Trip analyse les images, choisit les moments forts et assemble un episode pret a regarder.
     </p>
 
-    <div class="generation-meter" aria-label="Progression de generation">
-      <strong>{{ percent() }}%</strong>
-      <div class="progress-track">
-        <span [style.width.%]="percent()"></span>
+    @if (errorMessage()) {
+      <div class="generation-alert generation-alert--error" role="alert">
+        <strong>Generation impossible</strong>
+        <p>{{ errorMessage() }}</p>
       </div>
-    </div>
+      <div class="generation-actions">
+        <button class="btn btn--primary" type="button" (click)="retry()">Reessayer</button>
+        <a class="btn btn--glass" routerLink="/upload">Retour import</a>
+      </div>
+    } @else {
+      <div class="generation-meter" aria-label="Progression de generation">
+        <strong>{{ percent() }}%</strong>
+        <div class="progress-track">
+          <span [style.width.%]="percent()"></span>
+        </div>
+      </div>
 
-    <div class="generation-steps">
-      @for (step of steps; track step; let index = $index) {
-        <div
-          class="generation-step"
-          [class.generation-step--done]="completed().includes(step)"
-          [class.generation-step--active]="activeIndex() === index"
-        >
-          <span></span>
-          <p>{{ step }}</p>
+      <div class="generation-steps">
+        @for (step of steps; track step; let index = $index) {
+          <div
+            class="generation-step"
+            [class.generation-step--done]="completed().includes(step)"
+            [class.generation-step--active]="activeIndex() === index"
+          >
+            <span></span>
+            <p>{{ step }}</p>
+          </div>
+        }
+      </div>
+
+      @if (result()) {
+        <div class="generation-result glass-panel">
+          <p>Episode pret</p>
+          <strong>{{ firstEpisodeTitle() }}</strong>
+          <span>{{ result()?.script?.nb_episodes || 1 }} episode(s) cree(s)</span>
+          <a class="btn btn--primary" routerLink="/home">Voir mes voyages</a>
         </div>
       }
-    </div>
+    }
   </section>
 </main>

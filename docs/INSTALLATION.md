@@ -244,6 +244,10 @@ Lancer le backend :
 ```
 ./mvnw spring-boot:run
 ```
+Si le backend doit appeler le service IA local :
+```
+AI_SERVICE_URL=http://localhost:8000 ./mvnw spring-boot:run
+```
 Par défaut, l’API sera disponible sur :
 
 http://localhost:8080
@@ -278,7 +282,7 @@ python -m compileall .
 ```
 Lancer le service IA si un fichier principal existe, par exemple :
 ```
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 Le service IA sera disponible sur :
 
@@ -319,8 +323,14 @@ API_URL=http://localhost:8080
 
 Exemple pour le service IA :
 
-UPLOAD_DIR=uploads
-GENERATED_DIR=generated
+AI_WORKDIR=workdir
+AI_RENDER_VIDEO=false
+AI_TOP_PHOTOS=50
+AI_MAX_EPISODES=6
+AI_LLM_API_KEY=
+GROQ_API_KEY=
+GOOGLE_VISION_KEY=
+GEMINI_API_KEY=
 
 Chaque développeur doit créer ses propres fichiers .env.
 
@@ -349,13 +359,13 @@ ng serve
 Terminal 2 — Backend
 ```
 cd backend
-./mvnw spring-boot:run
+AI_SERVICE_URL=http://localhost:8000 ./mvnw spring-boot:run
 ```
 Terminal 3 — Service IA
 ```
 cd ai-service
 source .venv/bin/activate
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 Adresses locales :
 ```

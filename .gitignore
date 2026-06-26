@@ -27,3 +27,4 @@ __pycache__/
 # Media
 uploads/
 generated/
+ai-service/workdir/
