@@ -21,6 +21,14 @@ services:
         sync: false
       - key: DATABASE_PASSWORD
         sync: false
+      - key: DATABASE_INITIALIZATION_FAIL_TIMEOUT_MS
+        value: "-1"
+      - key: JPA_DDL_AUTO
+        value: none
+      - key: HIBERNATE_ALLOW_JDBC_METADATA_ACCESS
+        value: "false"
+      - key: HIBERNATE_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY

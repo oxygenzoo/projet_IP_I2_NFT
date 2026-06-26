@@ -6,6 +6,7 @@ import { DraftImage, TravelPreferences } from '../models/generation.models';
 export class TravelDraftService {
   readonly selectedImages = signal<DraftImage[]>([]);
   readonly preferences = signal<TravelPreferences>({});
+  readonly travelId = signal<string | null>(null);
 
   addFiles(files: File[]): void {
     const images = files.map((file) => ({
@@ -31,6 +32,10 @@ export class TravelDraftService {
     this.preferences.set({ ...preferences });
   }
 
+  setTravelId(travelId: string | null): void {
+    this.travelId.set(travelId);
+  }
+
   clear(): void {
     for (const image of this.selectedImages()) {
       URL.revokeObjectURL(image.previewUrl);
@@ -38,5 +43,6 @@ export class TravelDraftService {
 
     this.selectedImages.set([]);
     this.preferences.set({});
+    this.travelId.set(null);
   }
 }

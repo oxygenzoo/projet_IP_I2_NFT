@@ -1,0 +1,58 @@
+<main class="notifications-page">
+  <header class="stream-header stream-header--floating">
+    <app-logo [compact]="true"></app-logo>
+    <div class="stream-header__nav">
+      <a routerLink="/home">Accueil</a>
+      <a routerLink="/profile">Profil</a>
+      <a routerLink="/upload">Créer</a>
+    </div>
+  </header>
+
+  <section class="notifications-shell">
+    <div class="notifications-heading">
+      <div>
+        <p class="eyebrow">Notifications</p>
+        <h1>Activité récente</h1>
+        <p>{{ unreadCount() }} non lue{{ unreadCount() > 1 ? 's' : '' }}</p>
+      </div>
+
+      <button class="btn btn--glass" type="button" [disabled]="unreadCount() === 0" (click)="markAllAsRead()">
+        Tout marquer comme lu
+      </button>
+    </div>
+
+    <div class="notifications-list">
+      @for (notification of notifications(); track notification.id) {
+        <article class="notification-item" [class.notification-item--unread]="!notification.read">
+          <span
+            class="notification-icon"
+            [class.notification-icon--video]="notification.kind === 'video'"
+            [class.notification-icon--share]="notification.kind === 'share'"
+            [class.notification-icon--account]="notification.kind === 'account'"
+            aria-hidden="true"
+          ></span>
+          <div class="notification-content">
+            <div>
+              <h2>{{ notification.title }}</h2>
+              <span>{{ notification.timeLabel }}</span>
+            </div>
+            <p>{{ notification.description }}</p>
+            <div class="notification-actions">
+              @if (notification.link) {
+                <a class="btn btn--ghost" [routerLink]="notification.link" (click)="markAsRead(notification.id)">Ouvrir</a>
+              }
+              @if (!notification.read) {
+                <button class="btn btn--ghost" type="button" (click)="markAsRead(notification.id)">Marquer comme lu</button>
+              }
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <section class="api-state glass-panel">
+          <h1>Aucune notification</h1>
+          <p>Les alertes liées à vos vidéos et liens partagés apparaîtront ici.</p>
+        </section>
+      }
+    </div>
+  </section>
+</main>

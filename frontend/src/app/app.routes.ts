@@ -28,6 +28,28 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/profile/profile-page.component').then((component) => component.ProfilePageComponent),
+    title: 'Profil | NFT',
+  },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/notifications/notifications-page.component').then(
+        (component) => component.NotificationsPageComponent,
+      ),
+    title: 'Notifications | NFT',
+  },
+  {
+    path: 'preferences/:travelId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/preferences/preferences-page.component').then((component) => component.PreferencesPageComponent),
+    title: 'NFT',
+  },
+  {
     path: 'preferences',
     canActivate: [authGuard],
     loadComponent: () =>

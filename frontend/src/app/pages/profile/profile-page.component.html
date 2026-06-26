@@ -1,0 +1,95 @@
+<main class="profile-page">
+  <header class="stream-header stream-header--floating">
+    <app-logo [compact]="true"></app-logo>
+    <div class="stream-header__nav">
+      <a routerLink="/home">Accueil</a>
+      <a routerLink="/upload">Creer</a>
+      <a routerLink="/pricing">Tarifs</a>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Chargement du profil...</h1>
+    </section>
+  } @else if (profile(); as profile) {
+    <section class="profile-shell">
+      <form class="profile-hero profile-hero--editable" [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+        <div class="profile-identity">
+          <label class="profile-avatar-edit">
+            @if (avatarUrl()) {
+              <img class="profile-avatar" [src]="avatarUrl()" [alt]="profile.name" />
+            } @else {
+              <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ initials() }}</span>
+            }
+            <input type="file" accept="image/*" aria-label="Changer la photo de profil" (change)="onAvatarSelection($event)" />
+            <span>Changer</span>
+          </label>
+
+          <div class="profile-identity-fields">
+            <p class="eyebrow">Profil</p>
+            <label>
+              Nom
+              <input class="profile-name-input" type="text" formControlName="fullName" autocomplete="name" />
+            </label>
+            @if (profileForm.controls.fullName.touched && profileForm.controls.fullName.invalid) {
+              <p class="form-error">Indiquez au moins 2 caractères.</p>
+            }
+
+            <label>
+              Email
+              <input type="email" formControlName="email" autocomplete="email" />
+            </label>
+            @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+              <p class="form-error">Indiquez un email valide.</p>
+            }
+            @if (avatarError()) {
+              <p class="form-error">{{ avatarError() }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="profile-hero-actions">
+          <button class="btn btn--primary" type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Sauvegarde...' : 'Enregistrer' }}
+          </button>
+          <button class="btn btn--ghost" type="button" (click)="logout()">Déconnexion</button>
+        </div>
+
+        @if (feedbackMessage()) {
+          <p class="form-success profile-hero-message">{{ feedbackMessage() }}</p>
+        }
+        @if (errorMessage()) {
+          <p class="form-error profile-hero-message">{{ errorMessage() }}</p>
+        }
+      </form>
+
+      <section class="profile-stat-grid" aria-label="Statistiques du profil">
+        <article>
+          <strong>{{ travelCount() }}</strong>
+          <span>Voyages</span>
+        </article>
+        <article>
+          <strong>{{ episodeCount() }}</strong>
+          <span>Episodes</span>
+        </article>
+        <article>
+          <strong>{{ photoCount() }}</strong>
+          <span>Photos</span>
+        </article>
+      </section>
+
+      <section class="profile-grid">
+        <article class="profile-panel">
+          <div class="profile-panel__heading">
+            <h2>Abonnement</h2>
+            <span>{{ profile.plan }}</span>
+          </div>
+          <p class="profile-copy">Votre formule actuelle détermine le volume d'épisodes et d'exports disponibles.</p>
+          <a class="btn btn--glass" routerLink="/pricing">Augmenter mon abonnement</a>
+        </article>
+      </section>
+    </section>
+  }
+</main>

@@ -4,17 +4,17 @@
 
     <div class="stream-header__actions">
       <div class="mentor-greeting">
-        <span>Bonjour Seb !</span>
+        <span>Bonjour {{ profileName() }} !</span>
       </div>
       <a class="upgrade-button" routerLink="/pricing" aria-label="Voir les offres premium">
         <span aria-hidden="true">↑</span>
       </a>
-      <button class="icon-button" type="button" aria-label="Notifications">
+      <a class="icon-button" routerLink="/notifications" aria-label="Notifications">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16l-2-2Z" />
           <path d="M10 20a2 2 0 0 0 4 0" />
         </svg>
-      </button>
+      </a>
       <button class="icon-button" type="button" aria-label="Déconnexion" title="Déconnexion" (click)="logout()">
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M10 17l5-5-5-5" />
@@ -23,7 +23,13 @@
           <path d="M14 21h5a2 2 0 0 0 2-2" />
         </svg>
       </button>
-      <img [src]="user.avatarUrl" [alt]="user.name" class="avatar" />
+      <a class="profile-link" routerLink="/profile" aria-label="Ouvrir le profil">
+        @if (profileAvatarUrl()) {
+          <img [src]="profileAvatarUrl()" [alt]="profileName()" class="avatar" />
+        } @else {
+          <span class="avatar avatar--initials" aria-hidden="true">{{ profileInitials() }}</span>
+        }
+      </a>
     </div>
   </header>
 
@@ -39,69 +45,60 @@
       <p>{{ errorMessage() }}</p>
       <button class="btn btn--primary" type="button" (click)="loadDashboard()">Réessayer</button>
     </section>
-  } @else if (featured(); as featured) {
-    <section class="stream-hero" [style.--hero-image]="heroImage()">
-      <div class="stream-hero__content">
-        <p class="eyebrow">Episode en reprise</p>
-        <h1>{{ featured.title }}</h1>
-        <p>{{ featured.tagline }}</p>
+  } @else {
+    @if (featured(); as featured) {
+      <section class="stream-hero" [style.--hero-image]="heroImage()">
+        <div class="stream-hero__content">
+          <p class="eyebrow">Episode en reprise</p>
+          <h1>{{ featured.title }}</h1>
+          <p>{{ featured.tagline }}</p>
 
-        <div class="metadata-row">
-          <span>{{ featured.episodeCount }} episodes</span>
-          <span>{{ featured.photoCount }} photos</span>
-          <span>{{ featured.duration }}</span>
-        </div>
-
-        <div class="hero-actions">
-          @if (featuredEpisode(); as featuredEpisode) {
-            <a class="btn btn--primary" [routerLink]="['/player', featuredEpisode.id]">
-              <span class="play-icon"></span>
-              Lecture
-            </a>
-            <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail episode</a>
-          }
-        </div>
-
-        <div class="continue-line" aria-label="Progression de lecture">
-          <div>
-            <span>Reprendre</span>
-            <strong>{{ featured.remaining }}</strong>
+          <div class="metadata-row">
+            <span>{{ featured.episodeCount }} episodes</span>
+            <span>{{ featured.photoCount }} photos</span>
+            <span>{{ featured.duration }}</span>
           </div>
-          <div class="progress-track">
-            <span [style.width.%]="featured.progress"></span>
+
+          <div class="hero-actions">
+            @if (featuredEpisode(); as featuredEpisode) {
+              <a class="btn btn--primary" [routerLink]="['/player', featuredEpisode.id]">
+                <span class="play-icon"></span>
+                Lecture
+              </a>
+              <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail episode</a>
+            }
           </div>
-        </div>
-      </div>
 
-      <aside class="season-card glass-panel">
-        <p>Saison 1</p>
-        <strong>{{ featured.destination }}</strong>
-        <span>{{ featured.moodTags.join(' / ') }}</span>
-      </aside>
-    </section>
-
-    <section id="series" class="content-rail">
-      <div class="rail-heading">
-        <h2>Mes series</h2>
-        <a routerLink="/upload">Nouvelle serie</a>
-      </div>
-      <div class="poster-row">
-        @for (travel of travels(); track travel.id) {
-          <a class="travel-poster" [routerLink]="travelPlayerLink(travel)">
-            <img [src]="travel.posterImage" [alt]="travel.title" loading="lazy" />
+          <div class="continue-line" aria-label="Progression de lecture">
             <div>
-              <strong>{{ travel.title }}</strong>
-              <span>{{ travel.episodeCount }} episodes - {{ travel.country }}</span>
+              <span>Reprendre</span>
+              <strong>{{ featured.remaining }}</strong>
             </div>
-          </a>
-        }
-      </div>
-    </section>
+            <div class="progress-track">
+              <span [style.width.%]="featured.progress"></span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="season-card glass-panel">
+          <p>Saison 1</p>
+          <strong>{{ featured.destination }}</strong>
+          <span>{{ featured.moodTags.join(' / ') }}</span>
+        </aside>
+      </section>
+    } @else {
+      <section class="home-empty-intro">
+        <p class="eyebrow">Votre espace voyage</p>
+        <h1>Aucun voyage pour le moment</h1>
+        <p>Vos souvenirs, episodes et favoris apparaitront dans les sections ci-dessous.</p>
+        <a class="btn btn--primary" routerLink="/upload">Creer un voyage</a>
+      </section>
+    }
 
     <section class="content-rail">
       <div class="rail-heading">
         <h2>Souvenirs recents</h2>
-        <span>{{ user.totalPhotos }} photos analysees</span>
+        <span>{{ totalPhotos() }} photos analysees</span>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -118,6 +115,11 @@
               </div>
             }
           </a>
+        } @empty {
+          <article class="empty-rail">
+            <strong>Aucun souvenir genere</strong>
+            <span>Vos prochains episodes apparaitront ici.</span>
+          </article>
         }
       </div>
     </section>
@@ -137,6 +139,11 @@
               <p>{{ travel.description }}</p>
             </div>
           </a>
+        } @empty {
+          <article class="empty-rail empty-rail--wide">
+            <strong>Aucun favori pour le moment</strong>
+            <span>Ils seront calcules depuis vos voyages.</span>
+          </article>
         }
       </div>
     </section>
@@ -144,7 +151,7 @@
     <section class="content-rail content-rail--last">
       <div class="rail-heading">
         <h2>Mes episodes</h2>
-        <span>{{ recentEpisodes().length }} episodes generes</span>
+        <span>{{ totalEpisodes() }} episodes generes</span>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -155,16 +162,15 @@
               <strong>{{ episode.title }}</strong>
             </div>
           </a>
+        } @empty {
+          <article class="empty-rail">
+            <strong>Aucun episode</strong>
+            <span>Quand vous en aurez, ils seront listes ici.</span>
+          </article>
         }
       </div>
     </section>
 
     <a class="floating-create" routerLink="/upload">+ Creer une nouvelle serie</a>
-  } @else {
-    <section class="api-state glass-panel">
-      <h1>Aucun voyage</h1>
-      <p>Le backend a répondu, mais aucun voyage n’est disponible.</p>
-      <a class="btn btn--primary" routerLink="/upload">Créer une série</a>
-    </section>
   }
 </main>

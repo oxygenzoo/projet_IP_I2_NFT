@@ -1,49 +1,62 @@
-<main class="player-page" [style.--still-image]="stillImage">
+<main class="player-page" [style.--still-image]="stillImage()">
   <header class="player-topbar">
     <app-logo [compact]="true"></app-logo>
   </header>
 
-  <section class="fake-player" aria-label="Lecteur video de demonstration">
-    <div class="player-shine"></div>
-    <button
-      class="player-center-button"
-      [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
-      type="button"
-      (click)="togglePlayback()"
-    >
-      @if (playing()) {
-        <span class="control-icon control-icon--pause" aria-hidden="true"></span>
-      } @else {
-        <span class="control-icon control-icon--play" aria-hidden="true"></span>
-      }
-    </button>
-  </section>
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Chargement du lecteur...</h1>
+    </section>
+  } @else if (errorMessage()) {
+    <section class="api-state api-state--error glass-panel" role="alert">
+      <h1>Lecture indisponible</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn btn--primary" routerLink="/home">Retour à l'accueil</a>
+    </section>
+  } @else if (episode(); as episode) {
+    <section class="fake-player" aria-label="Lecteur video">
+      <div class="player-shine"></div>
+      <button
+        class="player-center-button"
+        [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
+        type="button"
+        (click)="togglePlayback()"
+      >
+        @if (playing()) {
+          <span class="control-icon control-icon--pause" aria-hidden="true"></span>
+        } @else {
+          <span class="control-icon control-icon--play" aria-hidden="true"></span>
+        }
+      </button>
+    </section>
 
-  <footer class="player-controls">
-    <div class="player-title">
-      <span>{{ travel.title }}</span>
-      <strong>{{ episode.title }}</strong>
-    </div>
-
-    <button
-      class="round-control"
-      [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
-      type="button"
-      (click)="togglePlayback()"
-    >
-      @if (playing()) {
-        <span class="control-icon control-icon--pause" aria-hidden="true"></span>
-      } @else {
-        <span class="control-icon control-icon--play" aria-hidden="true"></span>
-      }
-    </button>
-
-    <div class="player-progress" aria-label="Barre de progression">
-      <span>{{ progress().toFixed(0) }}%</span>
-      <div class="progress-track">
-        <span [style.width.%]="progress()"></span>
+    <footer class="player-controls">
+      <div class="player-title">
+        <span>{{ travel()?.title ?? 'Votre voyage' }}</span>
+        <strong>{{ episode.title }}</strong>
       </div>
-      <span>{{ episode.duration }}</span>
-    </div>
-  </footer>
+
+      <button
+        class="round-control"
+        [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
+        type="button"
+        (click)="togglePlayback()"
+      >
+        @if (playing()) {
+          <span class="control-icon control-icon--pause" aria-hidden="true"></span>
+        } @else {
+          <span class="control-icon control-icon--play" aria-hidden="true"></span>
+        }
+      </button>
+
+      <div class="player-progress" aria-label="Barre de progression">
+        <span>{{ progress().toFixed(0) }}%</span>
+        <div class="progress-track">
+          <span [style.width.%]="progress()"></span>
+        </div>
+        <span>{{ episode.duration }}</span>
+      </div>
+    </footer>
+  }
 </main>

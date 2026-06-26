@@ -44,6 +44,15 @@
 
     <button class="btn btn--primary btn--wide" type="button" (click)="startGeneration()">
       Generer mon episode
+    <button
+      class="btn btn--primary btn--wide"
+      [class.btn--disabled]="isSaving()"
+      [disabled]="isSaving()"
+      [attr.aria-busy]="isSaving()"
+      type="button"
+      (click)="startGeneration()"
+    >
+      {{ isSaving() ? 'Sauvegarde...' : 'Generer mon episode' }}
     </button>
   </section>
 </main>
