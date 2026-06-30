@@ -6,10 +6,11 @@ import { Episode, Travel } from '../../models/travel.models';
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
 
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink, AppLogoComponent],
+  imports: [RouterLink, AppLogoComponent, EpisodeCardComponent],
   templateUrl: './home-page.component.html',
 })
 export class HomePageComponent implements OnInit {
@@ -67,10 +68,6 @@ export class HomePageComponent implements OnInit {
   protected travelPlayerLink(travel: Travel): string[] {
     const firstEpisode = travel.episodes[0];
     return firstEpisode ? ['/episode', firstEpisode.id] : ['/home'];
-  }
-
-  protected episodePlayerLink(episode: Episode): string[] {
-    return ['/player', episode.id];
   }
 
   protected async logout(): Promise<void> {
