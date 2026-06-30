@@ -61,7 +61,7 @@
         <span>Photos</span>
       </div>
       <div>
-        <strong>{{ episode.scenes.length }}</strong>
+        <strong>{{ sortedScenes().length }}</strong>
         <span>Scenes</span>
       </div>
     </aside>
@@ -69,26 +69,50 @@
 
   <section class="scene-section">
     <div class="rail-heading">
-      <h2>Liste des scenes</h2>
-      <span>Montage IA propose</span>
+      <h2>Timeline de l'épisode</h2>
+      <span>Scènes générées par IA</span>
     </div>
-    <div class="scene-timeline">
-      @for (scene of episode.scenes; track scene.id) {
-        <article class="scene-card">
-          <img [src]="scene.imageUrl" [alt]="scene.title" loading="lazy" />
-          <div>
-            <span>{{ scene.timecode }}</span>
-            <h3>{{ scene.title }}</h3>
-            <p>{{ scene.description }}</p>
-          </div>
-        </article>
-      } @empty {
-        <article class="empty-rail empty-rail--wide">
-          <strong>Aucune scene</strong>
-          <span>Les scenes apparaitront quand l'episode sera genere.</span>
-        </article>
-      }
-    </div>
+
+    @if (isScenesLoading()) {
+      <article class="timeline-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <strong>Chargement de la timeline...</strong>
+      </article>
+    } @else if (scenesErrorMessage()) {
+      <article class="timeline-state timeline-state--error glass-panel" role="alert">
+        <strong>Timeline indisponible</strong>
+        <span>{{ scenesErrorMessage() }}</span>
+      </article>
+    } @else {
+      <div class="scene-timeline">
+        @for (scene of sortedScenes(); track scene.id; let index = $index) {
+          <article class="scene-card">
+            <div class="scene-card__media">
+              @if (sceneImage(scene, episode); as imageUrl) {
+                <img [src]="imageUrl" [alt]="scene.title || 'Photo de la scène ' + (index + 1)" loading="lazy" />
+              } @else {
+                <div class="scene-card__placeholder" aria-label="Photo indisponible">
+                  <span>Image indisponible</span>
+                </div>
+              }
+            </div>
+            <div class="scene-card__body">
+              <div class="scene-card__topline">
+                <span class="scene-card__meta">{{ sceneMeta(scene, index) }}</span>
+                <span [class]="sceneStatusClass(scene, episode)">{{ sceneStatusLabel(scene, episode) }}</span>
+              </div>
+              <h3>{{ scene.title || 'Scène ' + (index + 1) }}</h3>
+              <p>{{ sceneVoiceOver(scene) }}</p>
+            </div>
+          </article>
+        } @empty {
+          <article class="empty-rail empty-rail--wide">
+            <strong>Aucune scène générée pour cet épisode.</strong>
+            <span>La timeline apparaîtra dès que l'IA aura produit les scènes.</span>
+          </article>
+        }
+      </div>
+    }
   </section>
   }
 </main>

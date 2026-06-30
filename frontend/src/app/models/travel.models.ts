@@ -7,12 +7,23 @@ export interface User {
   totalEpisodes: number;
 }
 
+export type SceneGenerationStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
 export interface Scene {
   id: string;
-  title: string;
-  timecode: string;
-  description: string;
-  imageUrl: string;
+  title?: string;
+  timecode?: string;
+  description?: string;
+  imageUrl?: string;
+  voiceOverText?: string;
+  voiceoverText?: string;
+  narrationText?: string;
+  status?: SceneGenerationStatus;
+  order?: number | string;
+  sceneOrder?: number | string;
+  position?: number | string;
+  duration?: number | string;
+  createdAt?: string;
 }
 
 export interface Episode {

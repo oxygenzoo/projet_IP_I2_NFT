@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_URL } from '../config/api.config';
-import { Episode, Travel } from '../models/travel.models';
+import { Episode, Scene, Travel } from '../models/travel.models';
 
 @Injectable({
   providedIn: 'root',
@@ -28,5 +28,9 @@ export class TravelApiService {
 
   getEpisode(id: string): Observable<Episode> {
     return this.http.get<Episode>(`${this.apiUrl}/api/episodes/${id}`);
+  }
+
+  getEpisodeScenes(episodeId: string): Observable<Scene[]> {
+    return this.http.get<Scene[]>(`${this.apiUrl}/api/episodes/${episodeId}/scenes`);
   }
 }
