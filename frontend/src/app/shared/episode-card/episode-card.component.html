@@ -1,0 +1,31 @@
+<a
+  class="episode-card"
+  [class.episode-card--compact]="compact()"
+  [routerLink]="link"
+  (click)="selectEpisode()"
+>
+  <img
+    [src]="compact() ? episode().videoStill : episode().coverImage"
+    [alt]="episode().title"
+    loading="lazy"
+  />
+  <div class="episode-card__body">
+    <span>
+      @if (compact()) {
+        {{ episode().date }}
+      } @else {
+        S{{ episode().seasonNumber }}:E{{ episode().episodeNumber }}
+      }
+    </span>
+    <strong>{{ episode().title }}</strong>
+    @if (!compact()) {
+      <p>{{ episode().summary }}</p>
+      <p>{{ episode().location }} - {{ episode().duration }}</p>
+    }
+  </div>
+  @if (!compact() && episode().progress > 0) {
+    <div class="progress-track progress-track--thin" aria-label="Progression de lecture">
+      <span [style.width.%]="episode().progress"></span>
+    </div>
+  }
+</a>

@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_URL } from '../config/api.config';
-import { Episode, Travel } from '../models/travel.models';
+import { Episode, Scene, Travel } from '../models/travel.models';
 
 @Injectable({
   providedIn: 'root',
