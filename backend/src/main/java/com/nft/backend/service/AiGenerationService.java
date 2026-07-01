@@ -11,6 +11,8 @@ import com.nft.backend.dto.episode.CreateEpisodeRequest;
 import com.nft.backend.dto.generation.GenerationResponse;
 import com.nft.backend.dto.photo.PhotoMetadataRequest;
 import com.nft.backend.model.EpisodeStatus;
+import com.nft.backend.model.Photo;
+import com.nft.backend.repository.PhotoRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -30,16 +32,19 @@ public class AiGenerationService {
     private final TravelCatalogService travelCatalogService;
     private final PhotoService photoService;
     private final EpisodeService episodeService;
+    private final PhotoRepository photoRepository;
 
     public AiGenerationService(
             @Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl,
             TravelCatalogService travelCatalogService,
             PhotoService photoService,
-            EpisodeService episodeService) {
+            EpisodeService episodeService,
+            PhotoRepository photoRepository) {
         this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
         this.travelCatalogService = travelCatalogService;
         this.photoService = photoService;
         this.episodeService = episodeService;
+        this.photoRepository = photoRepository;
     }
 
     public GenerationResponse generateEpisode(
@@ -175,6 +180,7 @@ public class AiGenerationService {
         }
 
         Map<String, Object> episode = firstEpisode(response.script());
+        List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
         episodeService.create(travelUuid, new CreateEpisodeRequest(
                 numberValue(episode.get("episode_numero"), 1),
                 cleanOrDefault(stringValue(episode.get("episode_titre")), "Episode genere"),
@@ -184,7 +190,9 @@ public class AiGenerationService {
                 "Generation IA terminee.",
                 cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
                 EpisodeStatus.READY),
-                firstVideoUrl(response));
+                firstVideoUrl(response),
+                generatedScenes(episode),
+                photos);
     }
 
     private UUID parseTravelId(String travelId) {
@@ -234,6 +242,23 @@ public class AiGenerationService {
         }
 
         return cleanOrDefault(response.videos().getFirst(), "");
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<EpisodeService.GeneratedSceneRequest> generatedScenes(Map<String, Object> episode) {
+        Object scenesValue = episode.get("scenes");
+        if (!(scenesValue instanceof List<?> scenes)) {
+            return List.of();
+        }
+
+        return scenes.stream()
+                .filter((scene) -> scene instanceof Map<?, ?>)
+                .map((scene) -> (Map<String, Object>) scene)
+                .map((scene) -> new EpisodeService.GeneratedSceneRequest(
+                        numberValue(scene.get("scene_numero"), 1),
+                        safeFilename(stringValue(scene.get("photo_fichier"))),
+                        cleanOrDefault(stringValue(scene.get("voix_off")), stringValue(scene.get("texte_ecran")))))
+                .toList();
     }
 
     private int numberValue(Object value, int fallback) {

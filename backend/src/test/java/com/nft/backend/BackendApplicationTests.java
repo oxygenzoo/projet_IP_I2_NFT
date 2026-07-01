@@ -526,6 +526,11 @@ class BackendApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shareToken", not(nullValue())));
 
+        mockMvc.perform(get("/api/public/episodes/{shareToken}", episode.getId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(episode.getId().toString()))
+                .andExpect(jsonPath("$.title").value("Arrivee"));
+
         mockMvc.perform(get("/api/public/episodes/{shareToken}", "invalid-token"))
                 .andExpect(status().isNotFound());
     }

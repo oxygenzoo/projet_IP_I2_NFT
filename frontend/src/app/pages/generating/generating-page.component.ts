@@ -60,6 +60,27 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
     return this.result()?.script?.episodes?.[0]?.episode_titre ?? 'Episode genere';
   }
 
+  protected videoUrl(): string {
+    return this.result()?.videos?.[0] ?? '';
+  }
+
+  protected episodeCount(): number {
+    return this.result()?.script?.nb_episodes ?? 1;
+  }
+
+  protected sceneCount(): number {
+    return this.result()?.script?.episodes?.[0]?.scenes?.length ?? 0;
+  }
+
+  protected photoCount(): number {
+    return this.draft.selectedImages().length;
+  }
+
+  protected estimatedDuration(): string {
+    const seconds = Math.max(20, 10 + this.sceneCount() * 4);
+    return seconds < 60 ? `${seconds} s` : `${Math.max(1, Math.round(seconds / 60))} min`;
+  }
+
   private startGeneration(): void {
     const images = this.draft.selectedImages();
 
@@ -104,9 +125,6 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
         this.completed.set(this.steps);
         this.isGenerating.set(false);
         this.clearTimers();
-        this.redirectId = setTimeout(() => {
-          this.router.navigate(['/home']);
-        }, 700);
       },
       error: (error: Error) => {
         this.errorMessage.set(error.message);

@@ -42,11 +42,29 @@
       </div>
 
       @if (result()) {
-        <div class="generation-result glass-panel">
-          <p>Episode pret</p>
+        <div class="generation-result generation-result--complete glass-panel">
+          <p>Video terminee</p>
           <strong>{{ firstEpisodeTitle() }}</strong>
-          <span>{{ result()?.script?.nb_episodes || 1 }} episode(s) cree(s)</span>
-          <a class="btn btn--primary" routerLink="/home">Voir mes voyages</a>
+          @if (videoUrl()) {
+            <video class="generation-preview" [src]="videoUrl()" controls playsinline preload="metadata"></video>
+          } @else {
+            <div class="video-empty-card">
+              <strong>Video non disponible</strong>
+              <span>Le script est pret, mais aucun fichier video n'a ete renvoye.</span>
+            </div>
+          }
+          <div class="generation-result__meta">
+            <span>{{ photoCount() }} photos</span>
+            <span>{{ sceneCount() }} scenes</span>
+            <span>{{ estimatedDuration() }}</span>
+            <span>{{ episodeCount() }} episode</span>
+          </div>
+          <div class="generation-actions">
+            <a class="btn btn--primary" routerLink="/home">Voir sur l'accueil</a>
+            @if (videoUrl()) {
+              <a class="btn btn--glass" [href]="videoUrl()" target="_blank" rel="noreferrer">Ouvrir la video</a>
+            }
+          </div>
         </div>
       }
     }

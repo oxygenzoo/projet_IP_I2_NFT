@@ -9,7 +9,9 @@ import com.nft.backend.dto.episode.CreateEpisodeRequest;
 import com.nft.backend.dto.episode.EpisodeResponse;
 import com.nft.backend.dto.episode.UpdateEpisodeRequest;
 import com.nft.backend.model.Episode;
+import com.nft.backend.model.EpisodeScene;
 import com.nft.backend.model.EpisodeStatus;
+import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.TravelRepository;
@@ -26,6 +28,9 @@ public class EpisodeService {
     private final EpisodeRepository episodeRepository;
     private final TravelRepository travelRepository;
 
+    public record GeneratedSceneRequest(int order, String photoFilename, String voiceOverText) {
+    }
+
     public EpisodeService(EpisodeRepository episodeRepository, TravelRepository travelRepository) {
         this.episodeRepository = episodeRepository;
         this.travelRepository = travelRepository;
@@ -38,6 +43,16 @@ public class EpisodeService {
 
     @Transactional
     public EpisodeResponse create(UUID travelId, CreateEpisodeRequest request, String videoUrl) {
+        return create(travelId, request, videoUrl, List.of(), List.of());
+    }
+
+    @Transactional
+    public EpisodeResponse create(
+            UUID travelId,
+            CreateEpisodeRequest request,
+            String videoUrl,
+            List<GeneratedSceneRequest> scenes,
+            List<Photo> photos) {
         Travel travel = findTravel(travelId);
         Episode episode = new Episode(
                 travel,
@@ -52,6 +67,19 @@ public class EpisodeService {
 
         if (videoUrl != null && !videoUrl.isBlank()) {
             episode.updateExport("ready", videoUrl);
+        }
+
+        for (GeneratedSceneRequest scene : scenes) {
+            episode.addScene(new EpisodeScene(
+                    episode,
+                    scene.order(),
+                    photoFor(scene.photoFilename(), photos),
+                    null,
+                    scene.voiceOverText(),
+                    "souvenir",
+                    "completed",
+                    false,
+                    null));
         }
 
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));
@@ -108,7 +136,7 @@ public class EpisodeService {
         Episode episode = findEpisodeForTravel(travelId, episodeId);
 
         if (episode.getShareToken() == null || episode.getShareToken().isBlank()) {
-            episode.enableSharing(newShareToken());
+            episode.enableSharing(episode.getId().toString());
         }
 
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));
@@ -116,7 +144,12 @@ public class EpisodeService {
 
     @Transactional(readOnly = true)
     public EpisodeResponse getPublicEpisode(String shareToken) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found");
+        try {
+            return EpisodeResponse.fromEntity(episodeRepository.findById(UUID.fromString(shareToken))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found")));
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found", exception);
+        }
     }
 
     @Transactional
@@ -156,5 +189,16 @@ public class EpisodeService {
         byte[] bytes = new byte[32];
         SECURE_RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private Photo photoFor(String filename, List<Photo> photos) {
+        if (filename == null || filename.isBlank()) {
+            return null;
+        }
+
+        return photos.stream()
+                .filter((photo) -> filename.equalsIgnoreCase(photo.getFilename()))
+                .findFirst()
+                .orElse(null);
     }
 }

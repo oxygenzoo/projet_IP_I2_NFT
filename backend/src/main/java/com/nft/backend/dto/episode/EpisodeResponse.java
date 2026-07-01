@@ -36,7 +36,7 @@ public record EpisodeResponse(
                 episode.getMusicMood(),
                 episode.getStatus(),
                 episode.getShareToken(),
-                episode.getExportStatus(),
+                episode.getVideoUrl() == null || episode.getVideoUrl().isBlank() ? episode.getExportStatus() : "ready",
                 episode.getVideoUrl(),
                 episode.getGeneratedAt());
     }

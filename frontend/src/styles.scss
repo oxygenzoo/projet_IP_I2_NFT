@@ -725,6 +725,40 @@ img {
   margin-top: 0.5rem;
 }
 
+.home-preview-card {
+  align-self: end;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.home-preview-card video,
+.home-preview-card .video-empty-card {
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border-radius: 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.home-preview-card__body {
+  padding: 1rem;
+}
+
+.home-preview-card__body p {
+  color: var(--muted);
+  margin: 0 0 0.25rem;
+}
+
+.home-preview-card__body strong,
+.home-preview-card__body span {
+  display: block;
+}
+
+.home-preview-card__body span {
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
 .content-rail {
   max-width: none;
   overflow: hidden;
@@ -845,10 +879,28 @@ img {
 }
 
 .episode-card img,
+.episode-card__media,
+.episode-card__placeholder,
 .wide-card img {
   aspect-ratio: 16 / 9;
   object-fit: cover;
   width: 100%;
+}
+
+.episode-card__media {
+  background: #000000;
+  display: block;
+}
+
+.episode-card__placeholder {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--muted);
+  display: grid;
+  font-weight: 800;
+  justify-items: center;
+  padding: 1rem;
+  text-align: center;
 }
 
 .episode-card p,
@@ -1264,6 +1316,33 @@ img {
   margin-top: 0.35rem;
 }
 
+.generation-result--complete {
+  max-width: 46rem;
+}
+
+.generation-preview {
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border-radius: 0.8rem;
+  width: 100%;
+}
+
+.generation-result__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.generation-result__meta span {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  padding: 0.45rem 0.7rem;
+}
+
 .episode-hero {
   align-items: end;
   background-image:
@@ -1347,6 +1426,9 @@ img {
   border-color: rgba(255, 197, 51, 0.36);
 }
 
+.scene-card__media,
+.scene-card__media img,
+.scene-card__placeholder,
 .scene-media,
 .scene-media img,
 .scene-ai-placeholder {
@@ -1355,10 +1437,12 @@ img {
   width: 100%;
 }
 
+.scene-card__media img,
 .scene-media img {
   object-fit: cover;
 }
 
+.scene-card__placeholder,
 .scene-ai-placeholder {
   align-items: center;
   background:
@@ -1371,6 +1455,10 @@ img {
   min-height: 9rem;
   padding: 1rem;
   text-align: center;
+}
+
+.scene-card__placeholder {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .scene-ai-placeholder strong {
@@ -1690,6 +1778,12 @@ img {
   font-size: 0.9rem;
   font-weight: 850;
   justify-self: end;
+}
+
+.public-video-shell {
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: 0 4.5vw 5rem;
 }
 
 .profile-page {
@@ -2338,9 +2432,11 @@ img {
   }
 
   .hero-preview,
-  .season-card {
+  .season-card,
+  .home-preview-card {
     justify-self: start;
     max-width: 30rem;
+    width: 100%;
   }
 
   .pricing-grid {
@@ -2381,7 +2477,7 @@ img {
   }
 
   .player-controls {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .player-title {
@@ -2394,6 +2490,29 @@ img {
 
   .floating-create {
     bottom: 1rem;
+  }
+
+  .stream-header {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .stream-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .content-rail {
+    overflow: visible;
+  }
+
+  .card-row,
+  .wide-card-row {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    margin-inline: 0;
+    overflow: visible;
+    padding-inline: 0;
   }
 }
 
@@ -2477,8 +2596,10 @@ img {
   .landing-hero,
   .stream-hero,
   .episode-hero {
-    min-height: 88dvh;
+    min-height: auto;
+    padding-bottom: 2rem;
     padding-inline: 1rem;
+    padding-top: 7rem;
   }
 
   .landing-hero {
@@ -2510,7 +2631,7 @@ img {
 
   .card-row,
   .wide-card-row {
-    grid-auto-columns: 17rem;
+    grid-auto-columns: minmax(0, 1fr);
   }
 
   .final-cta,
@@ -2563,5 +2684,58 @@ img {
   .upload-zone {
     min-height: 23rem;
     padding: 1.25rem;
+  }
+
+  .stream-header {
+    position: sticky;
+    padding-block: 0.8rem 1rem;
+  }
+
+  .stream-header__actions {
+    gap: 0.45rem;
+  }
+
+  .mentor-greeting {
+    display: none;
+  }
+
+  .episode-card,
+  .wide-card,
+  .video-empty-card {
+    border-radius: 0.65rem;
+  }
+
+  .generation-page {
+    align-items: flex-start;
+    padding: 5rem 1rem 2rem;
+  }
+
+  .generation-actions,
+  .generation-result__meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .generation-actions .btn {
+    width: 100%;
+  }
+
+  .video-player {
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .video-player__media,
+  .video-player__empty {
+    border-radius: 0.75rem;
+    max-height: 58dvh;
+  }
+
+  .player-controls {
+    padding: 1rem;
+  }
+
+  .public-video-shell {
+    padding-inline: 1rem;
   }
 }

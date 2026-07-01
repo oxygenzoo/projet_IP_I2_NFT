@@ -156,6 +156,10 @@ public class Episode {
         return scenes;
     }
 
+    public void addScene(EpisodeScene scene) {
+        scenes.add(scene);
+    }
+
     public void update(
             int episodeNumber,
             String title,

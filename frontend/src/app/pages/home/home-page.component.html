@@ -117,10 +117,27 @@
           }
         </div>
 
-        <aside class="season-card glass-panel">
-          <p>Saison 1</p>
-          <strong>{{ featured.destination }}</strong>
-          <span>{{ featured.moodTags.join(' / ') }}</span>
+        <aside class="home-preview-card glass-panel">
+          @if (featuredEpisode(); as previewEpisode) {
+            @if (previewEpisode.videoUrl) {
+              <video [src]="previewEpisode.videoUrl" [poster]="previewEpisode.videoStill || previewEpisode.coverImage" muted playsinline preload="metadata"></video>
+            } @else {
+              <div class="video-empty-card">
+                <strong>Aucune vidéo pour l'instant</strong>
+                <span>La preview apparaîtra après génération.</span>
+              </div>
+            }
+            <div class="home-preview-card__body">
+              <p>Derniere video</p>
+              <strong>{{ previewEpisode.title }}</strong>
+              <span>{{ previewEpisode.photoCount }} photos · {{ previewEpisode.duration }} · {{ previewEpisode.scenes.length }} scenes</span>
+            </div>
+          } @else {
+            <div class="video-empty-card">
+              <strong>Aucune vidéo pour l'instant</strong>
+              <span>Importez vos photos pour créer une première vidéo.</span>
+            </div>
+          }
         </aside>
       </section>
     } @else {

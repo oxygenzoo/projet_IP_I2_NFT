@@ -26,9 +26,26 @@
         <p>{{ episode.summary || episode.introText }}</p>
         <div class="metadata-row">
           <span>{{ episode.location || episode.locationName }}</span>
+          @if (episode.videoUrl) {
+            <span>Video disponible</span>
+          }
           <span>Lecture seule</span>
+        </div>
+        <div class="hero-actions">
+          @if (episode.videoUrl) {
+            <a class="btn btn--primary" [href]="episode.videoUrl" target="_blank" rel="noreferrer">
+              <span class="play-icon"></span>
+              Regarder
+            </a>
+          }
         </div>
       </div>
     </section>
+
+    @if (episode.videoUrl) {
+      <section class="public-video-shell">
+        <video class="video-player__media" [src]="episode.videoUrl" controls playsinline preload="metadata"></video>
+      </section>
+    }
   }
 </main>

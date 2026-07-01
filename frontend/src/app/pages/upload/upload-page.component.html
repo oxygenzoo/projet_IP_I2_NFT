@@ -106,7 +106,7 @@
       class="btn btn--primary btn--wide"
       [class.btn--disabled]="selectedCount() === 0 || !consentGiven()"
       [attr.aria-disabled]="selectedCount() === 0 || !consentGiven()"
-      [routerLink]="selectedCount() > 0 && consentGiven() ? '/preferences' : null"
+      [routerLink]="selectedCount() > 0 && consentGiven() ? preferencesLink() : null"
     >
       Continuer
     </a>

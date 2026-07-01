@@ -4,11 +4,26 @@
   [routerLink]="link"
   (click)="selectEpisode()"
 >
-  <img
-    [src]="compact() ? episode().videoStill : episode().coverImage"
-    [alt]="episode().title"
-    loading="lazy"
-  />
+  @if (episode().videoUrl) {
+    <video
+      class="episode-card__media"
+      [src]="episode().videoUrl"
+      [poster]="episode().videoStill || episode().coverImage"
+      muted
+      playsinline
+      preload="metadata"
+    ></video>
+  } @else if (episode().videoStill || episode().coverImage) {
+    <img
+      [src]="compact() ? episode().videoStill : episode().coverImage"
+      [alt]="episode().title"
+      loading="lazy"
+    />
+  } @else {
+    <div class="episode-card__placeholder">
+      <span>Aucune vidéo pour l'instant</span>
+    </div>
+  }
   <div class="episode-card__body">
     <span>
       @if (compact()) {

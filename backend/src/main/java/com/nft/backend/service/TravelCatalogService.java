@@ -85,6 +85,7 @@ public class TravelCatalogService {
         if (!videoUrl.isBlank()) {
             episode.updateExport("ready", videoUrl);
         }
+        addGeneratedScenes(episode, firstEpisode(response));
 
         return toTravelDto(travelRepository.findById(episode.getTravel().getId()).orElse(travel));
     }
@@ -95,7 +96,10 @@ public class TravelCatalogService {
                 .map((episode) -> toEpisodeDto(episode, false))
                 .toList();
 
-        int photoCount = travel.getPhotos() == null ? 0 : travel.getPhotos().size();
+        int persistedPhotoCount = travel.getPhotos() == null ? 0 : travel.getPhotos().size();
+        int photoCount = persistedPhotoCount > 0
+                ? persistedPhotoCount
+                : episodes.stream().mapToInt((episode) -> episode.scenes().size()).sum();
         String cover = travel.getPhotos() == null || travel.getPhotos().isEmpty()
                 ? ""
                 : travel.getPhotos().getFirst().getImageUrl();
@@ -130,6 +134,12 @@ public class TravelCatalogService {
     }
 
     private EpisodeDto toEpisodeDto(Episode episode, boolean includeScenes) {
+        int sceneCount = episode.getScenes() == null ? 0 : episode.getScenes().size();
+        int photoCount = episode.getTravel().getPhotos() == null ? sceneCount : episode.getTravel().getPhotos().size();
+        String cover = episode.getTravel().getPhotos() == null || episode.getTravel().getPhotos().isEmpty()
+                ? ""
+                : episode.getTravel().getPhotos().getFirst().getImageUrl();
+
         return new EpisodeDto(
                 episode.getId().toString(),
                 episode.getTravel().getId().toString(),
@@ -138,15 +148,15 @@ public class TravelCatalogService {
                 episode.getTitle(),
                 valueOrDefault(episode.getMusicMood(), ""),
                 valueOrDefault(episode.getIntroText(), ""),
-                "3 min",
+                durationFor(sceneCount),
                 valueOrDefault(episode.getLocationName(), ""),
                 formatDate(episode.getEpisodeDate()),
-                0,
-                "",
-                "",
+                photoCount,
+                cover,
+                cover,
                 episode.getStatus() == EpisodeStatus.READY ? 100 : 0,
                 "",
-                valueOrDefault(episode.getExportStatus(), "idle"),
+                exportStatusFor(episode),
                 valueOrDefault(episode.getVideoUrl(), ""),
                 List.of(),
                 includeScenes
@@ -197,7 +207,36 @@ public class TravelCatalogService {
     private String firstEpisodeSummary(GenerationResponse response) {
         Map<String, Object> episode = firstEpisode(response);
         Object value = episode.get("resume");
-        return value instanceof String summary ? summary : "";
+        if (value instanceof String summary && !summary.isBlank()) {
+            return summary;
+        }
+
+        Object intro = episode.get("intro");
+        return intro instanceof String introText ? introText : "";
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addGeneratedScenes(Episode episode, Map<String, Object> generatedEpisode) {
+        Object scenesValue = generatedEpisode.get("scenes");
+        if (!(scenesValue instanceof List<?> scenes)) {
+            return;
+        }
+
+        for (Object sceneValue : scenes) {
+            if (sceneValue instanceof Map<?, ?> rawScene) {
+                Map<String, Object> scene = (Map<String, Object>) rawScene;
+                episode.addScene(new EpisodeScene(
+                        episode,
+                        numberValue(scene.get("scene_numero"), episode.getScenes().size() + 1),
+                        null,
+                        null,
+                        stringValue(scene.get("voix_off")),
+                        "souvenir",
+                        "completed",
+                        false,
+                        null));
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -220,6 +259,31 @@ public class TravelCatalogService {
         }
 
         return valueOrDefault(response.videos().getFirst(), "");
+    }
+
+    private int numberValue(Object value, int fallback) {
+        return value instanceof Number number ? number.intValue() : fallback;
+    }
+
+    private String stringValue(Object value) {
+        return value instanceof String text ? text : "";
+    }
+
+    private String exportStatusFor(Episode episode) {
+        if (episode.getVideoUrl() != null && !episode.getVideoUrl().isBlank()) {
+            return "ready";
+        }
+
+        return valueOrDefault(episode.getExportStatus(), "idle");
+    }
+
+    private String durationFor(int sceneCount) {
+        int seconds = Math.max(20, 10 + sceneCount * 4);
+        if (seconds < 60) {
+            return seconds + " s";
+        }
+
+        return Math.max(1, Math.round(seconds / 60f)) + " min";
     }
 
     private String valueOrDefault(String value, String fallback) {
