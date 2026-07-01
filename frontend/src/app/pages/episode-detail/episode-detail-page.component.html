@@ -38,9 +38,27 @@
           <span class="play-icon"></span>
           Lecture
         </a>
-        <button class="btn btn--glass" type="button">Partager</button>
+        <button class="btn btn--glass" type="button" (click)="shareEpisode()">Partager</button>
+        <button
+          class="btn btn--glass"
+          type="button"
+          [disabled]="isExporting()"
+          [attr.aria-busy]="isExporting()"
+          (click)="exportEpisode()"
+        >
+          {{ isExporting() ? 'Export...' : 'Exporter' }}
+        </button>
         <a class="btn btn--ghost" routerLink="/home">Retour</a>
       </div>
+      @if (shareMessage()) {
+        <p class="episode-action-state">{{ shareMessage() }}</p>
+      }
+      @if (exportMessage()) {
+        <p class="episode-action-state">{{ exportMessage() }}</p>
+      }
+      @if (episode.videoUrl && episode.exportStatus === 'ready') {
+        <a class="episode-action-state" [href]="episode.videoUrl">Video accessible</a>
+      }
     </div>
   </section>
 
@@ -61,7 +79,7 @@
         <span>Photos</span>
       </div>
       <div>
-        <strong>{{ episode.scenes.length }}</strong>
+        <strong>{{ sortedScenes().length }}</strong>
         <span>Scenes</span>
       </div>
     </aside>
@@ -73,13 +91,33 @@
       <span>Montage IA propose</span>
     </div>
     <div class="scene-timeline">
-      @for (scene of episode.scenes; track scene.id) {
-        <article class="scene-card">
-          <img [src]="scene.imageUrl" [alt]="scene.title" loading="lazy" />
-          <div>
-            <span>{{ scene.timecode }}</span>
+      @for (scene of sortedScenes(); track scene.id; let index = $index) {
+        <article class="scene-card" [class.scene-card--ai]="scene.isAiReconstructed">
+          <div class="scene-media">
+            @if (scene.isAiReconstructed) {
+              <div class="scene-ai-placeholder" role="img" [attr.aria-label]="scene.title">
+                <strong>IA</strong>
+                <span>Image reconstruite</span>
+              </div>
+            } @else {
+              <img [src]="scene.imageUrl" [alt]="scene.title" loading="lazy" />
+            }
+          </div>
+          <div class="scene-card__body">
+            <div class="scene-meta">
+              <span>#{{ sceneOrder(scene, index) }}</span>
+              <span>{{ scene.timecode }}</span>
+              <span>{{ sceneType(scene) }}</span>
+              <span>{{ sceneStatus(scene) }}</span>
+            </div>
             <h3>{{ scene.title }}</h3>
-            <p>{{ scene.description }}</p>
+            <p>{{ sceneVoiceOver(scene) }}</p>
+            @if (scene.isAiReconstructed) {
+              <strong class="ai-badge">Reconstitué par IA</strong>
+              @if (scene.aiPrompt) {
+                <small class="scene-prompt">Prompt: {{ scene.aiPrompt }}</small>
+              }
+            }
           </div>
         </article>
       } @empty {
@@ -89,6 +127,69 @@
         </article>
       }
     </div>
+
+    @if (isScenesLoading()) {
+      <article class="timeline-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <strong>Chargement de la timeline...</strong>
+      </article>
+    } @else if (scenesErrorMessage()) {
+      <article class="timeline-state timeline-state--error glass-panel" role="alert">
+        <strong>Timeline indisponible</strong>
+        <span>{{ scenesErrorMessage() }}</span>
+      </article>
+    } @else {
+      <div class="scene-timeline">
+        @for (scene of sortedScenes(); track scene.id; let index = $index) {
+          <article class="scene-card" [class.scene-card--ai]="isAiReconstructed(scene)">
+            <div class="scene-card__media">
+              @if (sceneImage(scene, episode); as imageUrl) {
+                <img [src]="imageUrl" [alt]="sceneImageAlt(scene, index)" loading="lazy" />
+                @if (isAiReconstructed(scene)) {
+                  <span class="ai-reconstruction-badge">Reconstitu&eacute; par IA</span>
+                }
+              } @else if (isAiReconstructed(scene)) {
+                <div class="scene-card__placeholder scene-card__placeholder--ai" aria-label="Image reconstituee par IA">
+                  <span class="ai-placeholder__icon" aria-hidden="true">IA</span>
+                  <strong>Image g&eacute;n&eacute;r&eacute;e / reconstitu&eacute;e par IA</strong>
+                  <small>Pas une photo originale</small>
+                </div>
+              } @else {
+                <div class="scene-card__placeholder" aria-label="Photo indisponible">
+                  <span>Image indisponible</span>
+                </div>
+              }
+            </div>
+            <div class="scene-card__body">
+              <div class="scene-card__topline">
+                <span class="scene-card__meta">{{ sceneMeta(scene, index) }}</span>
+                @if (isAiReconstructed(scene)) {
+                  <span class="ai-reconstruction-badge">Reconstitu&eacute; par IA</span>
+                }
+                <span [class]="sceneStatusClass(scene, episode)">{{ sceneStatusLabel(scene, episode) }}</span>
+              </div>
+              <h3>{{ scene.title || 'Scène ' + (index + 1) }}</h3>
+              <p>{{ sceneVoiceOver(scene) }}</p>
+              @if (isAiReconstructed(scene)) {
+                <p class="ai-reconstruction-notice">
+                  Cette sc&egrave;ne est une reconstitution IA, pas une photo originale.
+                </p>
+                @if (scene.aiPrompt) {
+                  <p class="ai-reconstruction-prompt">
+                    <strong>Prompt IA :</strong> {{ scene.aiPrompt }}
+                  </p>
+                }
+              }
+            </div>
+          </article>
+        } @empty {
+          <article class="empty-rail empty-rail--wide">
+            <strong>Aucune scène générée pour cet épisode.</strong>
+            <span>La timeline apparaîtra dès que l'IA aura produit les scènes.</span>
+          </article>
+        }
+      </div>
+    }
   </section>
   }
 </main>

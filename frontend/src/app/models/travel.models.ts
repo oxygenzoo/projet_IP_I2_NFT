@@ -7,12 +7,20 @@ export interface User {
   totalEpisodes: number;
 }
 
+export type SceneGenerationStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
 export interface Scene {
   id: string;
+  order?: number;
   title: string;
   timecode: string;
-  description: string;
-  imageUrl: string;
+  description?: string;
+  voiceOverText?: string;
+  type?: 'intro' | 'souvenir' | 'transition' | 'conclusion';
+  generationStatus?: string;
+  imageUrl?: string | null;
+  isAiReconstructed?: boolean;
+  aiPrompt?: string | null;
 }
 
 export interface Episode {
@@ -25,12 +33,19 @@ export interface Episode {
   summary: string;
   duration: string;
   location: string;
+  locationName?: string;
   date: string;
+  episodeDate?: string;
+  introText?: string;
   photoCount: number;
   coverImage: string;
   videoStill: string;
   progress: number;
   remaining: string;
+  status?: string;
+  shareToken?: string;
+  exportStatus?: 'idle' | 'pending' | 'ready' | 'failed' | string;
+  videoUrl?: string;
   scenes: Scene[];
 }
 

@@ -23,6 +23,8 @@ export interface GenerationResponse {
   };
   videos: string[];
   workdir: string;
+}
+
 export interface TravelPreferenceResponse extends TravelPreferences {
   id: string;
   travelId: string;

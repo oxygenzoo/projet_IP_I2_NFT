@@ -12,7 +12,7 @@ export class GenerationApiService {
 
   readonly lastResult = signal<GenerationResponse | null>(null);
 
-  createEpisode(images: DraftImage[], preferences: TravelPreferences): Observable<GenerationResponse> {
+  createEpisode(images: DraftImage[], preferences: TravelPreferences, travelId?: string | null): Observable<GenerationResponse> {
     const formData = new FormData();
 
     for (const image of images) {
@@ -22,6 +22,9 @@ export class GenerationApiService {
     formData.append('title', preferences['title'] || 'Mon voyage');
     formData.append('destination', preferences['destination'] || '');
     formData.append('preferences', JSON.stringify(preferences));
+    if (travelId) {
+      formData.append('travelId', travelId);
+    }
 
     return this.http.post<GenerationResponse>(`${this.apiUrl}/api/generation/jobs`, formData).pipe(
       tap((result) => this.lastResult.set(result)),
@@ -53,9 +56,9 @@ export class GenerationApiService {
     }
 
     if (error.status === 0) {
-      return 'API indisponible. Vérifiez que le backend et le service IA sont démarrés.';
+      return 'IA indisponible : génération suspendue. Vos épisodes déjà prêts restent lisibles.';
     }
 
-    return 'La génération IA a échoué. Réessayez dans un instant.';
+    return 'La génération IA a échoué. Vos épisodes déjà prêts restent lisibles.';
   }
 }

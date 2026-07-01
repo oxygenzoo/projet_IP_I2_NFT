@@ -1,9 +1,16 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { Episode, Travel } from '../../models/travel.models';
+import { Episode, Scene, Travel } from '../../models/travel.models';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+
+const STATUS_LABELS: Record<SceneGenerationStatus, string> = {
+  pending: 'En attente',
+  generating: 'En génération',
+  completed: 'Générée',
+  failed: 'Échec',
+};
 
 @Component({
   selector: 'app-episode-detail-page',
@@ -15,12 +22,22 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   private readonly travelApiService = inject(TravelApiService);
   private episodeSubscription?: Subscription;
   private travelSubscription?: Subscription;
+  private shareSubscription?: Subscription;
+  private exportSubscription?: Subscription;
 
   protected readonly episode = signal<Episode | null>(null);
   protected readonly travel = signal<Travel | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
+  protected readonly shareMessage = signal('');
+  protected readonly exportMessage = signal('');
+  protected readonly isExporting = signal(false);
   protected readonly coverImage = computed(() => `url(${this.episode()?.coverImage ?? ''})`);
+  protected readonly sortedScenes = computed(() =>
+    [...(this.episode()?.scenes ?? [])].sort(
+      (left, right) => (left.order ?? 0) - (right.order ?? 0),
+    ),
+  );
 
   ngOnInit(): void {
     const episodeId = this.route.snapshot.paramMap.get('id');
@@ -34,6 +51,7 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     this.episodeSubscription = this.travelApiService.getEpisode(episodeId).subscribe({
       next: (episode) => {
         this.episode.set(episode);
+        this.loadScenes(episode);
         this.loadTravel(episode.travelId);
         this.isLoading.set(false);
       },
@@ -47,6 +65,51 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.episodeSubscription?.unsubscribe();
     this.travelSubscription?.unsubscribe();
+    this.shareSubscription?.unsubscribe();
+    this.exportSubscription?.unsubscribe();
+  }
+
+  protected shareEpisode(): void {
+    const episode = this.episode();
+
+    if (!episode) {
+      return;
+    }
+
+    this.shareMessage.set('');
+    this.shareSubscription?.unsubscribe();
+    this.shareSubscription = this.travelApiService.shareEpisode(episode.travelId, episode.id).subscribe({
+      next: (sharedEpisode) => {
+        this.episode.set({ ...episode, ...sharedEpisode });
+        this.copyShareLink(sharedEpisode.shareToken);
+      },
+      error: () => this.shareMessage.set('Partage impossible pour le moment.'),
+    });
+  }
+
+  protected exportEpisode(): void {
+    const episode = this.episode();
+
+    if (!episode || this.isExporting()) {
+      return;
+    }
+
+    this.isExporting.set(true);
+    this.exportMessage.set('Export en cours...');
+    this.exportSubscription?.unsubscribe();
+    this.exportSubscription = this.travelApiService.exportEpisode(episode.travelId, episode.id).subscribe({
+      next: (exportedEpisode) => {
+        this.episode.set({ ...episode, ...exportedEpisode });
+        this.isExporting.set(false);
+        this.exportMessage.set(
+          exportedEpisode.exportStatus === 'ready' ? 'Export prêt.' : 'L’export a échoué.',
+        );
+      },
+      error: () => {
+        this.isExporting.set(false);
+        this.exportMessage.set('L’export a échoué.');
+      },
+    });
   }
 
   private loadTravel(travelId: string): void {
@@ -55,5 +118,17 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
       next: (travel) => this.travel.set(travel),
       error: () => this.travel.set(null),
     });
+  }
+
+  private copyShareLink(shareToken: string | undefined): void {
+    if (!shareToken || typeof window === 'undefined') {
+      this.shareMessage.set('Lien généré.');
+      return;
+    }
+
+    const link = `${window.location.origin}/shared/episode/${shareToken}`;
+    navigator.clipboard?.writeText(link)
+      .then(() => this.shareMessage.set('Lien copié.'))
+      .catch(() => this.shareMessage.set(link));
   }
 }

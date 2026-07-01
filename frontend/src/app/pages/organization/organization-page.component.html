@@ -1,0 +1,32 @@
+<main class="landing-page">
+  <nav class="stream-header stream-header--floating">
+    <app-logo [compact]="true"></app-logo>
+    <div class="stream-header__nav">
+      <a routerLink="/">Accueil</a>
+      <a routerLink="/pricing">Tarifs</a>
+    </div>
+  </nav>
+
+  <section class="landing-hero">
+    <div class="landing-hero__content">
+      <p class="eyebrow">Organisations</p>
+      <h1>NFT pour groupes, colonies, EHPAD et associations.</h1>
+      <p>
+        Créez un épisode souvenir clair à partir des photos d’un séjour, avec consentement, partage privé et export.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn--primary" routerLink="/pricing">Voir les tarifs</a>
+        <a class="btn btn--glass" href="mailto:contact@neverforgetyourtrip.com">Contact</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="episode-layout">
+    @for (audience of audiences; track audience[0]) {
+      <article class="glass-panel episode-summary">
+        <p class="eyebrow">{{ audience[0] }}</p>
+        <h2>{{ audience[1] }}</h2>
+      </article>
+    }
+  </section>
+</main>

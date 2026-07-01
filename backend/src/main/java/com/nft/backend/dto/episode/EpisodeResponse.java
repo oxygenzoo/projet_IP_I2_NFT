@@ -18,6 +18,9 @@ public record EpisodeResponse(
         String outroText,
         String musicMood,
         EpisodeStatus status,
+        String shareToken,
+        String exportStatus,
+        String videoUrl,
         Instant generatedAt) {
 
     public static EpisodeResponse fromEntity(Episode episode) {
@@ -32,6 +35,9 @@ public record EpisodeResponse(
                 episode.getOutroText(),
                 episode.getMusicMood(),
                 episode.getStatus(),
+                episode.getShareToken(),
+                episode.getExportStatus(),
+                episode.getVideoUrl(),
                 episode.getGeneratedAt());
     }
 }

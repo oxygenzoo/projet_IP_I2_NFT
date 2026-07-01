@@ -3,7 +3,10 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": false
+    "analytics": false,
+    "cache": {
+      "environment": "ci"
+    }
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -24,6 +27,8 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "ssr": false,
+            "prerender": false,
             "assets": [
               {
                 "glob": "**/*",

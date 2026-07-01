@@ -57,6 +57,7 @@ export const mockEpisodes: Episode[] = [
       {
         id: 'scene-1',
         title: 'Arrivee',
+        order: 1,
         timecode: '00:00',
         description: "Sortie de l aeroport, chaleur immediate, premiere image du voyage.",
         imageUrl: images.baliHero,
@@ -64,13 +65,26 @@ export const mockEpisodes: Episode[] = [
       {
         id: 'scene-2',
         title: 'Decouverte',
+        order: 2,
         timecode: '03:20',
         description: 'Les rues de Denpasar defilent comme une introduction de serie.',
         imageUrl: images.baliBeach,
       },
       {
+        id: 'scene-ai-001',
+        title: 'Moment manquant reconstitue',
+        episodeId: '1',
+        order: 3,
+        imageUrl: null,
+        voiceOverText: "Meme si aucune photo n'a capture ce moment, l'IA reconstitue l'ambiance du voyage.",
+        status: 'completed',
+        isAiReconstructed: true,
+        aiPrompt: 'Reconstituer un moment manquant du voyage avec une ambiance realiste, chaude et cinematographique.',
+      },
+      {
         id: 'scene-3',
         title: 'Premiere randonnee',
+        order: 4,
         timecode: '07:10',
         description: 'Les rizieres d Ubud donnent au recit son premier grand plan.',
         imageUrl: images.baliRice,
@@ -78,6 +92,7 @@ export const mockEpisodes: Episode[] = [
       {
         id: 'scene-4',
         title: 'Rencontre locale',
+        order: 5,
         timecode: '11:40',
         description: 'Une conversation avec un guide transforme les photos en souvenir vivant.',
         imageUrl: images.baliRice,
@@ -85,6 +100,7 @@ export const mockEpisodes: Episode[] = [
       {
         id: 'scene-5',
         title: 'Coucher de soleil',
+        order: 6,
         timecode: '15:05',
         description: 'La plage devient le generique de fin du premier episode.',
         imageUrl: images.baliBeach,

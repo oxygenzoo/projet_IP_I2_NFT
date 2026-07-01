@@ -2,8 +2,11 @@ package com.nft.backend.model;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -13,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -48,12 +52,24 @@ public class Episode {
     @Column(name = "music_mood", length = 200)
     private String musicMood;
 
+    @Column(name = "share_token", unique = true, length = 80)
+    private String shareToken;
+
+    @Column(name = "export_status", length = 20)
+    private String exportStatus = "idle";
+
+    @Column(name = "video_url")
+    private String videoUrl;
+
     @Convert(converter = EpisodeStatusConverter.class)
     @Column(name = "video_status", nullable = false, length = 20)
     private EpisodeStatus status = EpisodeStatus.DRAFT;
 
     @Column(name = "generated_at", nullable = false, updatable = false)
     private Instant generatedAt = Instant.now();
+
+    @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EpisodeScene> scenes = new ArrayList<>();
 
     protected Episode() {
     }
@@ -115,12 +131,28 @@ public class Episode {
         return musicMood;
     }
 
+    public String getShareToken() {
+        return shareToken;
+    }
+
+    public String getExportStatus() {
+        return exportStatus;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
     public EpisodeStatus getStatus() {
         return status;
     }
 
     public Instant getGeneratedAt() {
         return generatedAt;
+    }
+
+    public List<EpisodeScene> getScenes() {
+        return scenes;
     }
 
     public void update(
@@ -144,5 +176,14 @@ public class Episode {
 
     public void changeStatus(EpisodeStatus status) {
         this.status = status;
+    }
+
+    public void enableSharing(String shareToken) {
+        this.shareToken = shareToken;
+    }
+
+    public void updateExport(String exportStatus, String videoUrl) {
+        this.exportStatus = exportStatus;
+        this.videoUrl = videoUrl;
     }
 }
