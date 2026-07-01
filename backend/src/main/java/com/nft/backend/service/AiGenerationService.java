@@ -19,6 +19,7 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -104,6 +105,11 @@ public class AiGenerationService {
             }
 
             return response;
+        } catch (RestClientResponseException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Erreur du service IA: " + cleanOrDefault(exception.getResponseBodyAsString(), exception.getMessage()),
+                    exception);
         } catch (RestClientException exception) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY,
