@@ -1,14 +1,12 @@
 package com.nft.backend.service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
 
 import com.nft.backend.dto.generation.GenerationResponse;
 import com.nft.backend.dto.travel.EpisodeDto;
@@ -19,128 +17,184 @@ import org.springframework.stereotype.Service;
 @Service
 public class TravelCatalogService {
 
-    private static final DateTimeFormatter FRENCH_DATE = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH);
-    private static final String GENERATED_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23242b68'/%3E%3Cstop offset='0.55' stop-color='%23842f68'/%3E%3Cstop offset='1' stop-color='%23ffc533'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1200' height='800' fill='url(%23g)'/%3E%3Ccircle cx='930' cy='150' r='190' fill='rgba(255,255,255,0.16)'/%3E%3Cpath d='M0 610 210 470 390 560 620 370 820 515 1200 295v505H0z' fill='rgba(5,5,5,0.32)'/%3E%3C/svg%3E";
+    private static final String BALI_HERO =
+            "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=85";
+    private static final String BALI_BEACH =
+            "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=1200&q=85";
+    private static final String BALI_RICE =
+            "https://images.unsplash.com/photo-1555400038-63f5ba517a47?auto=format&fit=crop&w=1200&q=85";
+    private static final String BALI_TEMPLE =
+            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=85";
 
-    private final List<TravelDto> travels = new CopyOnWriteArrayList<>();
-    private final List<EpisodeDto> episodes = new CopyOnWriteArrayList<>();
+    private static final List<EpisodeDto> EPISODES = List.of(
+            episode(
+                    "1",
+                    1,
+                    "Arrivee et premieres lumieres",
+                    "L'arrivee, puis la decouverte",
+                    "Un episode inspirant a Bali, de Denpasar aux premieres rizieres d'Ubud.",
+                    "18 min",
+                    "Denpasar, Ubud",
+                    "12 mai 2025",
+                    127,
+                    BALI_HERO,
+                    BALI_BEACH,
+                    62,
+                    "7 min restantes",
+                    List.of("arrivee a Denpasar", "route vers Ubud", "premiere riziere"),
+                    List.of(
+                            scene("scene-1", 1, "Arrivee", "00:00", "La chaleur de Denpasar ouvre le voyage.", "intro", BALI_HERO),
+                            scene("scene-2", 2, "Route vers Ubud", "03:20", "Les scooters et les offrandes donnent le rythme.", "souvenir", BALI_BEACH),
+                            scene("scene-3", 3, "Premiere riziere", "07:10", "Les lignes vertes d'Ubud deviennent le premier grand plan.", "souvenir", BALI_RICE),
+                            scene("scene-4", 4, "Marche du soir", "11:40", "Les voix et les sourires replacent les photos dans le recit.", "transition", BALI_TEMPLE),
+                            scene("scene-5", 5, "Promesse de saison", "15:05", "Le coucher du soleil ferme l'episode comme une invitation.", "conclusion", BALI_BEACH))),
+            episode(
+                    "2",
+                    2,
+                    "Immersion et souvenir fort",
+                    "Temples, rizieres et image reconstruite",
+                    "Un episode emotionnel a Bali qui rassemble les temples, les marches et un souvenir manquant reconstruit.",
+                    "21 min",
+                    "Ubud, Canggu",
+                    "14 mai 2025",
+                    156,
+                    BALI_RICE,
+                    BALI_RICE,
+                    0,
+                    "21 min restantes",
+                    List.of("temple d'Ubud", "diner partage", "souvenir reconstruit"),
+                    List.of(
+                            scene("scene-6", 1, "Matin calme", "00:00", "Ubud se reveille lentement autour du temple.", "intro", BALI_TEMPLE),
+                            scene("scene-7", 2, "Immersion", "04:15", "Les portraits et les gestes quotidiens prennent le dessus.", "souvenir", BALI_RICE),
+                            aiScene(
+                                    "scene-8",
+                                    3,
+                                    "Photo manquante",
+                                    "08:35",
+                                    "L'IA signale clairement une reconstitution du souvenir absent.",
+                                    "transition",
+                                    "Reconstituer une ruelle d'Ubud au crepuscule, style carnet de voyage, sans personne identifiable."),
+                            scene("scene-9", 4, "Diner partage", "13:20", "Le repas devient le moment fort de l'episode.", "souvenir", BALI_BEACH),
+                            scene("scene-10", 5, "Souvenir ancre", "18:45", "La conclusion relie l'immersion au reste du voyage.", "conclusion", BALI_HERO))));
+
+    private static final TravelDto BALI_TRAVEL = new TravelDto(
+            "bali-2025",
+            "Bali 2025",
+            "Bali",
+            "Indonesie",
+            2025,
+            "Arrivee, decouverte et immersion dans une saison de demonstration.",
+            "Une demo V2 avec synopsis, timelines ordonnees et scene IA explicite.",
+            BALI_BEACH,
+            BALI_HERO,
+            BALI_RICE,
+            "39 min",
+            EPISODES.size(),
+            283,
+            62,
+            "7 min restantes",
+            true,
+            List.of("Cinematographique", "Emotionnel", "Aventure"),
+            EPISODES);
 
     public List<TravelDto> getTravels() {
-        return List.copyOf(travels);
+        return List.of(BALI_TRAVEL);
     }
 
     public Optional<TravelDto> getTravel(String id) {
-        return travels.stream().filter((travel) -> travel.id().equals(id)).findFirst();
+        return getTravels().stream()
+                .filter((travel) -> travel.id().equals(id))
+                .findFirst();
     }
 
     public List<EpisodeDto> getEpisodes() {
-        return List.copyOf(episodes);
+        return EPISODES;
     }
 
     public Optional<EpisodeDto> getEpisode(String id) {
-        return episodes.stream().filter((episode) -> episode.id().equals(id)).findFirst();
+        return EPISODES.stream()
+                .filter((episode) -> episode.id().equals(id))
+                .findFirst();
     }
 
-    public void registerGeneration(
-            GenerationResponse generation,
-            String fallbackTitle,
-            String destination,
+    private static EpisodeDto episode(
+            String id,
+            int episodeNumber,
+            String title,
+            String subtitle,
+            String summary,
+            String duration,
+            String location,
+            String date,
             int photoCount,
-            List<String> filenames) {
-        String jobId = cleanOrDefault(generation.job_id(), UUID.randomUUID().toString());
-        String travelId = "travel-" + jobId;
-        String episodeId = "episode-" + jobId;
-        Map<String, Object> script = generation.script() == null ? Map.of() : generation.script();
-        Map<String, Object> firstEpisode = firstEpisode(script);
-        String title = cleanOrDefault(stringValue(script.get("voyage")), cleanOrDefault(fallbackTitle, "Mon voyage"));
-        String episodeTitle = cleanOrDefault(stringValue(firstEpisode.get("episode_titre")), "Episode 1 - " + title);
-        String location = cleanOrDefault(stringValue(firstEpisode.get("lieu")), cleanOrDefault(destination, "Votre voyage"));
-        String date = cleanOrDefault(stringValue(firstEpisode.get("date")), FRENCH_DATE.format(LocalDate.now()));
-        List<SceneDto> scenes = scenesFromFilenames(filenames);
+            String coverImage,
+            String videoStill,
+            int progress,
+            String remaining,
+            List<String> keyMoments,
+            List<SceneDto> scenes) {
+        List<SceneDto> orderedScenes = scenes.stream()
+                .sorted(Comparator.comparingInt(SceneDto::order))
+                .toList();
+        validateTimeline(orderedScenes);
 
-        EpisodeDto episode = new EpisodeDto(
-                episodeId,
-                travelId,
+        return new EpisodeDto(
+                id,
+                "bali-2025",
                 1,
-                numberValue(firstEpisode.get("episode_numero"), 1),
-                episodeTitle,
-                location,
-                cleanOrDefault(generation.message(), "Episode cree depuis vos photos."),
-                "2 min",
+                episodeNumber,
+                title,
+                subtitle,
+                summary,
+                duration,
                 location,
                 date,
                 photoCount,
-                GENERATED_IMAGE,
-                GENERATED_IMAGE,
-                100,
-                "Pret a regarder",
-                scenes);
-
-        TravelDto travel = new TravelDto(
-                travelId,
-                title,
-                location,
-                location,
-                LocalDate.now().getYear(),
-                "Votre episode souvenir est pret.",
-                cleanOrDefault(generation.message(), "Une serie personnelle creee depuis vos photos."),
-                GENERATED_IMAGE,
-                GENERATED_IMAGE,
-                GENERATED_IMAGE,
-                "2 min",
-                1,
-                photoCount,
-                100,
-                "Pret a regarder",
-                true,
-                List.of("Personnel", "Souvenir"),
-                List.of(episode),
-                null,
-                null,
-                null,
-                null);
-
-        travels.add(0, travel);
-        episodes.add(0, episode);
+                coverImage,
+                videoStill,
+                progress,
+                remaining,
+                keyMoments,
+                orderedScenes);
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> firstEpisode(Map<String, Object> script) {
-        Object episodesValue = script.get("episodes");
+    private static SceneDto scene(
+            String id,
+            int order,
+            String title,
+            String timecode,
+            String voiceOverText,
+            String type,
+            String imageUrl) {
+        return new SceneDto(id, order, title, timecode, voiceOverText, type, "generated", imageUrl, false, null);
+    }
 
-        if (episodesValue instanceof List<?> episodeList && !episodeList.isEmpty()
-                && episodeList.get(0) instanceof Map<?, ?> episode) {
-            return (Map<String, Object>) episode;
+    private static SceneDto aiScene(
+            String id,
+            int order,
+            String title,
+            String timecode,
+            String voiceOverText,
+            String type,
+            String aiPrompt) {
+        return new SceneDto(id, order, title, timecode, voiceOverText, type, "ai_reconstructed", null, true, aiPrompt);
+    }
+
+    private static void validateTimeline(List<SceneDto> scenes) {
+        Set<Integer> orders = new HashSet<>();
+        boolean hasIntro = false;
+        boolean hasConclusion = false;
+
+        for (SceneDto scene : scenes) {
+            if (!orders.add(scene.order())) {
+                throw new IllegalStateException("Duplicate scene order");
+            }
+            hasIntro = hasIntro || "intro".equals(scene.type());
+            hasConclusion = hasConclusion || "conclusion".equals(scene.type());
         }
 
-        return Map.of();
-    }
-
-    private List<SceneDto> scenesFromFilenames(List<String> filenames) {
-        List<SceneDto> scenes = new ArrayList<>();
-        List<String> safeFilenames = filenames == null ? List.of() : filenames;
-
-        for (int index = 0; index < Math.min(safeFilenames.size(), 6); index++) {
-            scenes.add(new SceneDto(
-                    "scene-" + (index + 1),
-                    "Souvenir " + (index + 1),
-                    "00:" + String.format(Locale.ROOT, "%02d", index * 12),
-                    safeFilenames.get(index),
-                    GENERATED_IMAGE));
+        if (!hasIntro || !hasConclusion) {
+            throw new IllegalStateException("Timeline must contain intro and conclusion");
         }
-
-        return scenes;
-    }
-
-    private String stringValue(Object value) {
-        return value instanceof String text ? text : "";
-    }
-
-    private int numberValue(Object value, int fallback) {
-        return value instanceof Number number ? number.intValue() : fallback;
-    }
-
-    private String cleanOrDefault(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value.trim();
     }
 }

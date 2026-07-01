@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { Episode, Scene, SceneGenerationStatus, Travel } from '../../models/travel.models';
+import { Episode, Scene, Travel } from '../../models/travel.models';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -32,7 +32,11 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   protected readonly isScenesLoading = signal(false);
   protected readonly scenesErrorMessage = signal('');
   protected readonly coverImage = computed(() => `url(${this.episode()?.coverImage ?? ''})`);
-  protected readonly sortedScenes = computed(() => this.sortScenes(this.scenes()));
+  protected readonly sortedScenes = computed(() =>
+    [...(this.episode()?.scenes ?? [])].sort(
+      (left, right) => (left.order ?? 0) - (right.order ?? 0),
+    ),
+  );
 
   ngOnInit(): void {
     const episodeId = this.route.snapshot.paramMap.get('id');
@@ -216,5 +220,25 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
       next: (travel) => this.travel.set(travel),
       error: () => this.travel.set(null),
     });
+  }
+
+  protected sceneOrder(scene: Scene, index: number): number {
+    return scene.order ?? index + 1;
+  }
+
+  protected sceneVoiceOver(scene: Scene): string {
+    return scene.voiceOverText ?? scene.description ?? '';
+  }
+
+  protected sceneType(scene: Scene): string {
+    return scene.type ?? 'souvenir';
+  }
+
+  protected sceneStatus(scene: Scene): string {
+    if (scene.isAiReconstructed) {
+      return 'IA reconstruite';
+    }
+
+    return scene.generationStatus === 'generated' || !scene.generationStatus ? 'Generee' : scene.generationStatus;
   }
 }

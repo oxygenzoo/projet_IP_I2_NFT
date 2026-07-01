@@ -18,5 +18,6 @@ public record EpisodeDto(
         String videoStill,
         int progress,
         String remaining,
+        List<String> keyMoments,
         List<SceneDto> scenes) {
 }
