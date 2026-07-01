@@ -18,6 +18,8 @@ public record EpisodeDto(
         String videoStill,
         int progress,
         String remaining,
+        String exportStatus,
+        String videoUrl,
         List<String> keyMoments,
         List<SceneDto> scenes) {
 }

@@ -133,6 +133,27 @@ class BackendApplicationTests {
     }
 
     @Test
+    void episodeDetailExposesVideoUrlForPlayer() throws Exception {
+        Episode episode = new Episode(
+                travelRepository.save(new Travel("Bali", "Bali", "Production")),
+                1,
+                "Arrivee",
+                "Ubud",
+                null,
+                "Resume",
+                "",
+                "Cinematographique",
+                EpisodeStatus.READY);
+        episode.updateExport("ready", "https://cdn.example.com/videos/episode.mp4");
+        Episode savedEpisode = episodeRepository.save(episode);
+
+        mockMvc.perform(get("/api/episodes/{id}", savedEpisode.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exportStatus").value("ready"))
+                .andExpect(jsonPath("$.videoUrl").value("https://cdn.example.com/videos/episode.mp4"));
+    }
+
+    @Test
     void travelDetailReturnsNotFoundForUnknownId() throws Exception {
         mockMvc.perform(get("/api/travels/{id}", "bali-2025"))
                 .andExpect(status().isNotFound());

@@ -81,6 +81,10 @@ public class TravelCatalogService {
                 "",
                 "Cinematographique",
                 EpisodeStatus.READY));
+        String videoUrl = firstVideoUrl(response);
+        if (!videoUrl.isBlank()) {
+            episode.updateExport("ready", videoUrl);
+        }
 
         return toTravelDto(travelRepository.findById(episode.getTravel().getId()).orElse(travel));
     }
@@ -139,9 +143,11 @@ public class TravelCatalogService {
                 formatDate(episode.getEpisodeDate()),
                 0,
                 "",
-                valueOrDefault(episode.getVideoUrl(), ""),
+                "",
                 episode.getStatus() == EpisodeStatus.READY ? 100 : 0,
+                "",
                 valueOrDefault(episode.getExportStatus(), "idle"),
+                valueOrDefault(episode.getVideoUrl(), ""),
                 List.of(),
                 includeScenes
                         ? episode.getScenes().stream()
@@ -206,6 +212,14 @@ public class TravelCatalogService {
         }
 
         return Map.of();
+    }
+
+    private String firstVideoUrl(GenerationResponse response) {
+        if (response == null || response.videos() == null || response.videos().isEmpty()) {
+            return "";
+        }
+
+        return valueOrDefault(response.videos().getFirst(), "");
     }
 
     private String valueOrDefault(String value, String fallback) {
