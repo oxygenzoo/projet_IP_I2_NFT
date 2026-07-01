@@ -1204,18 +1204,28 @@ img {
 
 .scene-timeline {
   display: grid;
-  gap: 0.85rem;
+  gap: 1rem;
+  position: relative;
+}
+
+.scene-timeline::before {
+  background: linear-gradient(180deg, rgba(255, 197, 51, 0.55), rgba(255, 79, 139, 0.22), transparent);
+  content: "";
+  inset: 0 auto 0 5.5rem;
+  position: absolute;
+  width: 2px;
 }
 
 .scene-card {
-  align-items: center;
+  align-items: stretch;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
   display: grid;
   gap: 1rem;
-  grid-template-columns: 11rem minmax(0, 1fr);
+  grid-template-columns: 12rem minmax(0, 1fr);
   overflow: hidden;
+  position: relative;
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -1283,6 +1293,55 @@ img {
   color: var(--gold);
   font-size: 0.8rem;
   font-weight: 850;
+}
+
+.ai-reconstruction-badge {
+  background: linear-gradient(135deg, rgba(74, 93, 255, 0.92), rgba(255, 197, 51, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 950;
+  padding: 0.35rem 0.62rem;
+  text-transform: uppercase;
+}
+
+.scene-card__media > .ai-reconstruction-badge {
+  left: 0.8rem;
+  position: absolute;
+  top: 0.8rem;
+  z-index: 2;
+}
+
+.scene-status {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0.35rem 0.62rem;
+}
+
+.scene-status--pending {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scene-status--generating {
+  background: rgba(74, 93, 255, 0.24);
+  border-color: rgba(74, 93, 255, 0.42);
+}
+
+.scene-status--completed {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.38);
+  color: #a7f3d0;
+}
+
+.scene-status--failed {
+  background: rgba(248, 113, 113, 0.2);
+  border-color: rgba(248, 113, 113, 0.42);
+  color: #fecaca;
 }
 
 .scene-card p {

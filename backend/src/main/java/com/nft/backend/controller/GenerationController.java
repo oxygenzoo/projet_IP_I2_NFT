@@ -27,7 +27,8 @@ public class GenerationController {
             @RequestPart("images") List<MultipartFile> images,
             @RequestParam(defaultValue = "Mon voyage") String title,
             @RequestParam(defaultValue = "") String destination,
-            @RequestParam(defaultValue = "{}") String preferences) {
-        return aiGenerationService.generateEpisode(images, title, destination, preferences);
+            @RequestParam(defaultValue = "{}") String preferences,
+            @RequestParam(required = false) String travelId) {
+        return aiGenerationService.generateEpisode(images, title, destination, preferences, travelId);
     }
 }

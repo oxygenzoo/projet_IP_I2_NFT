@@ -1,5 +1,7 @@
 package com.nft.backend.dto.travel;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public record TravelDto(
@@ -20,5 +22,9 @@ public record TravelDto(
         String remaining,
         boolean featured,
         List<String> moodTags,
-        List<EpisodeDto> episodes) {
+        List<EpisodeDto> episodes,
+        String userId,
+        LocalDate startDate,
+        LocalDate endDate,
+        Instant createdAt) {
 }

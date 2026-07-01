@@ -3,9 +3,12 @@ package com.nft.backend.service;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.nft.backend.dto.generation.GenerationResponse;
 import com.nft.backend.dto.travel.EpisodeDto;
 import com.nft.backend.dto.travel.SceneDto;
 import com.nft.backend.dto.travel.TravelDto;

@@ -7,6 +7,8 @@ export interface User {
   totalEpisodes: number;
 }
 
+export type SceneGenerationStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
 export interface Scene {
   id: string;
   order?: number;
