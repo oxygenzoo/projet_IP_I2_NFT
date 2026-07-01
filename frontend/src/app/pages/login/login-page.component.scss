@@ -5,23 +5,22 @@
 
 .login-page {
   background:
-    radial-gradient(circle at 13% 18%, rgba(74, 93, 255, 0.3), transparent 25rem),
-    radial-gradient(circle at 88% 76%, rgba(255, 197, 51, 0.18), transparent 25rem),
-    radial-gradient(circle at 62% 5%, rgba(255, 79, 139, 0.2), transparent 22rem),
-    #050505;
+    linear-gradient(90deg, rgba(5, 5, 5, 0.88) 0%, rgba(5, 5, 5, 0.58) 48%, rgba(5, 5, 5, 0.82) 100%),
+    linear-gradient(0deg, rgba(5, 5, 5, 0.92) 0%, rgba(5, 5, 5, 0.18) 54%, rgba(5, 5, 5, 0.72) 100%),
+    url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=85");
+  background-position: center;
+  background-size: cover;
   min-height: 100dvh;
   overflow: hidden;
   position: relative;
 }
 
 .login-page::before {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 3.5rem 3.5rem;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(74, 93, 255, 0.24), transparent 24rem),
+    radial-gradient(circle at 84% 82%, rgba(255, 197, 51, 0.18), transparent 24rem);
   content: "";
   inset: 0;
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
   pointer-events: none;
   position: absolute;
 }
@@ -81,9 +80,10 @@
 
 .login-feature {
   align-items: center;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 12, 22, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
+  backdrop-filter: blur(18px);
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
@@ -112,6 +112,9 @@
 }
 
 .login-card {
+  background: rgba(8, 16, 30, 0.68);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 1.25rem;
   padding: clamp(1.35rem, 4vw, 2rem);
   width: 100%;
@@ -145,8 +148,8 @@
 
 .input-wrap {
   align-items: center;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.8rem;
   display: flex;
   min-height: 3.35rem;
@@ -193,6 +196,26 @@
   color: #ff9a9a;
   font-size: 0.78rem;
   margin: 0.35rem 0 0;
+}
+
+.forgot-password-link {
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 800;
+  justify-self: end;
+  margin-top: 0.65rem;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 197, 51, 0.58);
+  text-underline-offset: 0.22rem;
+}
+
+.forgot-password-link:disabled {
+  cursor: wait;
+  opacity: 0.62;
 }
 
 .login-submit {

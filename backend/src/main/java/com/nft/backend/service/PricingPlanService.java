@@ -15,8 +15,8 @@ public class PricingPlanService {
                         "Starter",
                         "0 EUR",
                         "pour commencer",
-                        "Premier episode pour decouvrir la generation de souvenirs.",
-                        List.of("1 voyage", "1 episode", "Export standard"),
+                        "Premier souvenir pour découvrir la génération de souvenirs.",
+                        List.of("1 voyage", "1 souvenir", "Export standard"),
                         false,
                         "Decouverte"),
                 new PricingPlanDto(
@@ -24,8 +24,8 @@ public class PricingPlanService {
                         "Voyage complet",
                         "9 EUR",
                         "par voyage",
-                        "Un voyage transforme en saison partageable.",
-                        List.of("Jusqu'a 6 episodes", "Selection IA", "Lien de partage", "Export video si disponible"),
+                        "Un voyage transformé en souvenir partageable.",
+                        List.of("Jusqu'à 6 souvenirs", "Sélection IA", "Lien de partage", "Export vidéo si disponible"),
                         true,
                         "Le plus choisi"),
                 new PricingPlanDto(
@@ -36,14 +36,14 @@ public class PricingPlanService {
                         "Pour conserver plusieurs voyages et exports dans le temps.",
                         List.of("Voyages multiples", "Historique complet", "Exports prioritaires", "Support groupe"),
                         false,
-                        "Regulier"),
+                        "Régulier"),
                 new PricingPlanDto(
                         "organization",
                         "Organisation",
                         "Sur devis",
                         "equipes",
-                        "Offre adaptee aux groupes, associations et sejours organises.",
-                        List.of("Espace administrateur", "Gestion multi-voyages", "Accompagnement", "Facturation dediee"),
+                        "Offre adaptée aux groupes, associations et séjours organisés.",
+                        List.of("Espace administrateur", "Gestion multi-voyages", "Accompagnement", "Facturation dédiée"),
                         false,
                         "Groupes"));
     }

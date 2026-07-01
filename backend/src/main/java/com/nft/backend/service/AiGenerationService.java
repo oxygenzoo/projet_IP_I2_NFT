@@ -183,11 +183,11 @@ public class AiGenerationService {
         List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
         episodeService.create(travelUuid, new CreateEpisodeRequest(
                 numberValue(episode.get("episode_numero"), 1),
-                cleanOrDefault(stringValue(episode.get("episode_titre")), "Episode genere"),
+                cleanOrDefault(stringValue(episode.get("episode_titre")), "Souvenir généré"),
                 cleanOrDefault(stringValue(episode.get("lieu")), ""),
                 parseDate(stringValue(episode.get("date"))),
                 cleanOrDefault(response.message(), ""),
-                "Generation IA terminee.",
+                "Génération IA terminée.",
                 cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
                 EpisodeStatus.READY),
                 firstVideoUrl(response),

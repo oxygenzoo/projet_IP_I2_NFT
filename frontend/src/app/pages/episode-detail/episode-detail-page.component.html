@@ -11,19 +11,19 @@
   @if (isLoading()) {
     <section class="api-state glass-panel" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
-      <h1>Chargement de l'episode...</h1>
+      <h1>Chargement du souvenir...</h1>
     </section>
   } @else if (errorMessage()) {
     <section class="api-state api-state--error glass-panel" role="alert">
-      <h1>Episode introuvable</h1>
+      <h1>Souvenir introuvable</h1>
       <p>{{ errorMessage() }}</p>
       <a class="btn btn--primary" routerLink="/home">Retour à l'accueil</a>
     </section>
   } @else if (episode(); as episode) {
   <section class="episode-hero" [style.--cover-image]="coverImage()">
     <div class="episode-hero__content">
-      <p class="eyebrow">{{ travel()?.title ?? 'Votre voyage' }} - Saison {{ episode.seasonNumber }}</p>
-      <h1>Episode {{ episode.episodeNumber }}:<br />{{ episode.title }}</h1>
+      <p class="eyebrow">{{ travel()?.title ?? 'Votre voyage' }} - Voyage {{ episode.seasonNumber }}</p>
+      <h1>Souvenir {{ episode.episodeNumber }}:<br />{{ episode.title }}</h1>
       <p>{{ episode.summary }}</p>
 
       <div class="metadata-row">
@@ -147,7 +147,7 @@
           </article>
         } @empty {
           <article class="empty-rail empty-rail--wide">
-            <strong>Aucune scène générée pour cet épisode.</strong>
+            <strong>Aucune scène générée pour ce souvenir.</strong>
             <span>La timeline apparaîtra dès que l'IA aura produit les scènes.</span>
           </article>
         }

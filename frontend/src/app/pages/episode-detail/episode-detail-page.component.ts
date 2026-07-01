@@ -43,7 +43,7 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     const episodeId = this.route.snapshot.paramMap.get('id');
 
     if (!episodeId) {
-      this.errorMessage.set('Episode introuvable.');
+      this.errorMessage.set('Souvenir introuvable.');
       this.isLoading.set(false);
       return;
     }
@@ -55,7 +55,7 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set("Cet episode n'existe pas dans votre espace.");
+        this.errorMessage.set("Ce souvenir n'existe pas dans votre espace.");
         this.isLoading.set(false);
       },
     });

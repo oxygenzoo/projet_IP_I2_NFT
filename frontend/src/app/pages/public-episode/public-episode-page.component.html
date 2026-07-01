@@ -10,18 +10,18 @@
   @if (isLoading()) {
     <section class="api-state glass-panel" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
-      <h1>Chargement de l'episode...</h1>
+      <h1>Chargement du souvenir...</h1>
     </section>
   } @else if (errorMessage()) {
     <section class="api-state api-state--error glass-panel" role="alert">
-      <h1>Episode indisponible</h1>
+      <h1>Souvenir indisponible</h1>
       <p>{{ errorMessage() }}</p>
       <a class="btn btn--primary" routerLink="/">Retour</a>
     </section>
   } @else if (episode(); as episode) {
     <section class="episode-hero" [style.--cover-image]="coverImage()">
       <div class="episode-hero__content">
-        <p class="eyebrow">Episode partage</p>
+        <p class="eyebrow">Souvenir partage</p>
         <h1>{{ episode.title }}</h1>
         <p>{{ episode.summary || episode.introText }}</p>
         <div class="metadata-row">

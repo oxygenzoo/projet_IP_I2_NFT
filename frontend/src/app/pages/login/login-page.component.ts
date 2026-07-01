@@ -67,6 +67,26 @@ export class LoginPageComponent implements OnInit {
     await this.completeAuth(result.success, result.message);
   }
 
+  protected async resetPassword(): Promise<void> {
+    const email = this.loginForm.controls.email.value.trim();
+
+    if (!email || this.loginForm.controls.email.invalid) {
+      this.statusTone.set('error');
+      this.statusMessage.set('Entrez votre email pour recevoir le lien de réinitialisation.');
+      this.loginForm.controls.email.markAsTouched();
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.clearStatus();
+
+    const result = await this.authService.sendPasswordReset(email);
+
+    this.isLoading.set(false);
+    this.statusTone.set(result.success ? 'success' : 'error');
+    this.statusMessage.set(result.message ?? '');
+  }
+
   protected switchMode(event: Event, mode: 'login' | 'signup'): void {
     event.preventDefault();
     this.setMode(mode);

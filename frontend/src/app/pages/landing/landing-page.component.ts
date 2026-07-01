@@ -14,15 +14,15 @@ export class LandingPageComponent {
   protected readonly benefits = [
     {
       title: 'Retrouver ses souvenirs',
-      text: 'Les photos cachees dans la galerie deviennent une histoire claire, rangee par saisons.',
+      text: 'Les photos cachées dans la galerie deviennent un souvenir clair, rangé par voyage.',
     },
     {
       title: 'Partager avec ses proches',
-      text: 'Un format episode simple a montrer, plus vivant qu un album photo interminable.',
+      text: 'Un format souvenir simple à montrer, plus vivant qu’un album photo interminable.',
     },
     {
       title: 'Revivre son voyage',
-      text: 'La narration, le rythme et les scenes recréent l emotion du depart.',
+      text: 'La narration, le rythme et les scènes recréent l’émotion du départ.',
     },
   ];
 }

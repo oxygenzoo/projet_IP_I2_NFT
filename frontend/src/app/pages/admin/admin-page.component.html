@@ -21,7 +21,7 @@
       <section class="api-state glass-panel" aria-live="polite">
         <span class="spinner" aria-hidden="true"></span>
         <h1>Chargement admin...</h1>
-        <p>Lecture des voyages et episodes.</p>
+        <p>Lecture des voyages et souvenirs.</p>
       </section>
     } @else if (errorMessage()) {
       <section class="api-state api-state--error glass-panel" role="alert">
@@ -37,7 +37,7 @@
         </article>
         <article>
           <strong>{{ episodes().length }}</strong>
-          <span>Episodes</span>
+          <span>Souvenirs</span>
         </article>
         <article>
           <strong>{{ totalPhotos() }}</strong>
@@ -63,7 +63,7 @@
                   <span>{{ travel.destination || travel.country || 'Destination non renseignee' }}</span>
                 </div>
                 <div>
-                  <span>{{ travel.episodeCount }} episodes</span>
+                  <span>{{ travel.episodeCount }} souvenirs</span>
                   <span>{{ travel.photoCount }} photos</span>
                 </div>
               </div>
@@ -78,7 +78,7 @@
 
         <article class="admin-panel">
           <div class="admin-panel__heading">
-            <h2>Episodes</h2>
+            <h2>Souvenirs</h2>
             <span>{{ episodes().length }} total</span>
           </div>
           <div class="admin-list">
@@ -96,7 +96,7 @@
               </div>
             } @empty {
               <div class="admin-empty">
-                <strong>Aucun episode</strong>
+                <strong>Aucun souvenir</strong>
                 <span>Les statuts IA apparaitront apres generation.</span>
               </div>
             }

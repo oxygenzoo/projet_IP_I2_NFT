@@ -23,7 +23,7 @@ export class NotificationsPageComponent {
     {
       id: 'video-ready',
       title: 'Votre vidéo est prête',
-      description: 'Le montage de votre dernier souvenir est disponible dans vos épisodes.',
+      description: 'Le montage de votre dernier souvenir est disponible dans vos souvenirs.',
       timeLabel: 'Il y a 8 min',
       kind: 'video',
       read: false,

@@ -25,7 +25,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
     'Analyse des photos',
     'Selection des meilleurs souvenirs',
     'Creation du recit',
-    'Assemblage de l episode',
+    'Assemblage du souvenir',
     'Finalisation',
   ];
 
@@ -57,7 +57,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   }
 
   protected firstEpisodeTitle(): string {
-    return this.result()?.script?.episodes?.[0]?.episode_titre ?? 'Episode genere';
+    return this.result()?.script?.episodes?.[0]?.episode_titre ?? 'Souvenir genere';
   }
 
   protected videoUrl(): string {

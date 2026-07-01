@@ -23,6 +23,13 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'library',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/library/library-page.component').then((component) => component.LibraryPageComponent),
+    title: 'Bibliothèque | NFT',
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login-page.component').then((component) => component.LoginPageComponent),

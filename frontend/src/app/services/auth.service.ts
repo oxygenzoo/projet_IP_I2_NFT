@@ -115,6 +115,24 @@ export class AuthService {
     }
   }
 
+  async sendPasswordReset(email: string): Promise<AuthResult> {
+    const client = this.requireClient();
+
+    if (!client) {
+      return this.missingSupabaseConfigResult();
+    }
+
+    try {
+      const { error } = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: this.getAuthRedirectUrl(),
+      });
+
+      return this.toAuthResult(error, 'Email de réinitialisation envoyé.');
+    } catch (error) {
+      return this.toUnexpectedErrorResult(error);
+    }
+  }
+
   async logout(): Promise<void> {
     await this.supabase?.auth.signOut();
   }

@@ -10,44 +10,58 @@
   <section class="landing-hero" [style.--hero-image]="heroImage">
     <div class="landing-hero__content">
       <p class="eyebrow">Never Forget your Trip</p>
-      <h1>Vos voyages.<br />Vos histoires.<br />En episodes.</h1>
-      <p class="hero-copy">Devenez l'acteur principal de votre série personnelle !</p>
+      <h1>Transformez vos voyages en souvenirs vidéo.</h1>
+      <p class="hero-copy">
+        Never Forget Your Trip sélectionne les meilleurs moments et vous crée un souvenir prêt à partager en un claquement de doigts.
+      </p>
       <div class="hero-actions">
-        <a class="btn btn--primary" routerLink="/upload">Commencer à créer</a>
-        <a class="btn btn--ghost" routerLink="/login">Se connecter</a>
+        <a class="btn btn--primary" routerLink="/login">Commencer maintenant !</a>
+        <a class="btn btn--ghost" routerLink="/pricing">Voir les tarifs</a>
       </div>
     </div>
   </section>
 
   <section class="section-grid">
     <article class="story-panel story-panel--problem">
-      <p class="eyebrow">Le probleme</p>
-      <h2>Des milliers de photos oubliées dans un telephone.</h2>
+      <p class="eyebrow">Le problème</p>
+      <h2>Des milliers de photos oubliées dans un téléphone.</h2>
       <p>
-        Chaque voyage finit souvent dans une galerie immense: des captures magnifiques, des moments flous,
-        des visages importants, puis plus rien. Never Forget your Trip redonne une forme regardable a cette memoire brute.
+        Chaque voyage finit souvent dans une galerie immense : des captures magnifiques, des moments flous,
+        des visages importants, puis plus rien. Never Forget your Trip redonne une forme regardable à cette mémoire brute.
       </p>
     </article>
 
     <article class="story-panel story-panel--solution">
       <p class="eyebrow">La solution</p>
-      <h2>Photos → IA → Serie premium.</h2>
-      <div class="pipeline" aria-label="Transformation des photos en serie">
+      <h2>Photos → IA → Souvenir premium.</h2>
+      <div class="pipeline" aria-label="Transformation des photos en souvenir">
         <span>Photos</span>
         <i></i>
         <span>IA</span>
         <i></i>
-        <span>Episode</span>
+        <span>Souvenir</span>
       </div>
       <p>
-        L IA trie les meilleurs souvenirs, detecte les moments forts et reconstruit un recit sous forme de
-        saison, comme une plateforme de streaming personnelle.
+        L’IA trie les meilleurs souvenirs, détecte les moments forts et reconstruit un récit sous forme de
+        voyage vidéo personnel.
       </p>
     </article>
   </section>
 
+  <section class="demo-section">
+    <div class="demo-copy">
+      <p class="eyebrow">Démo vidéo</p>
+      <h2>Découvrez le rendu avant de créer votre souvenir.</h2>
+    </div>
+    <div class="demo-video-placeholder" aria-label="Vidéo YouTube de démonstration à venir">
+      <span class="play-icon"></span>
+      <strong>Démo bientôt disponible</strong>
+      <p>Le lien YouTube sera ajouté ici.</p>
+    </div>
+  </section>
+
   <section class="benefits-section">
-    <p class="eyebrow">Pourquoi ca marche</p>
+    <p class="eyebrow">Pourquoi ça marche</p>
     <h2>Le souvenir devient un format que tout le monde comprend.</h2>
     <div class="benefit-grid">
       @for (benefit of benefits; track benefit.title) {
@@ -58,13 +72,5 @@
         </article>
       }
     </div>
-  </section>
-
-  <section class="final-cta">
-    <div>
-      <p class="eyebrow">Creation IA</p>
-      <h2>Transformez un voyage en premier episode.</h2>
-    </div>
-    <a class="btn btn--primary" routerLink="/upload">Commencer à créer</a>
   </section>
 </main>

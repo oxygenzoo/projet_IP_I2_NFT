@@ -7,9 +7,9 @@
   <section class="login-shell" aria-labelledby="login-title">
     <div class="login-intro">
       <p class="eyebrow">Votre espace voyage</p>
-      <h1 id="login-title">Retrouvez toutes vos histoires.</h1>
+      <h1 id="login-title">Retrouvez tous vos souvenirs.</h1>
       <p>
-        Connectez-vous pour reprendre vos épisodes, retrouver vos souvenirs et créer votre prochaine série.
+        Connectez-vous pour reprendre vos souvenirs, retrouver vos voyages et créer votre prochaine video.
       </p>
 
       <div class="login-feature" aria-hidden="true">
@@ -89,6 +89,11 @@
         </div>
         @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
           <p class="field-error">Le mot de passe doit contenir au moins 6 caractères.</p>
+        }
+        @if (mode() === 'login') {
+          <button class="forgot-password-link" type="button" [disabled]="isLoading()" (click)="resetPassword()">
+            Mot de passe oublié ?
+          </button>
         }
 
         <button class="btn btn--primary btn--wide login-submit" type="submit" [disabled]="isLoading()">

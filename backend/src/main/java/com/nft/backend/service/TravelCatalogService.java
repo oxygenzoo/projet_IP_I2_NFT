@@ -69,7 +69,7 @@ public class TravelCatalogService {
         Travel travel = travelRepository.save(new Travel(
                 valueOrDefault(title, "Mon voyage"),
                 valueOrDefault(destination, ""),
-                response == null ? "" : valueOrDefault(response.message(), "Episode genere par IA.")));
+                response == null ? "" : valueOrDefault(response.message(), "Souvenir généré par IA.")));
 
         Episode episode = episodeRepository.save(new Episode(
                 travel,
@@ -110,16 +110,16 @@ public class TravelCatalogService {
                 valueOrDefault(travel.getDestination(), ""),
                 valueOrDefault(travel.getDestination(), ""),
                 Year.now().getValue(),
-                "Serie souvenir",
+                "Voyage souvenir",
                 valueOrDefault(travel.getDescription(), ""),
                 cover,
                 cover,
                 cover,
-                episodes.size() + " episode(s)",
+                episodes.size() + " souvenir(s)",
                 episodes.size(),
                 photoCount,
                 episodes.isEmpty() ? 0 : 100,
-                episodes.isEmpty() ? "A generer" : "Pret",
+                episodes.isEmpty() ? "À générer" : "Prêt",
                 false,
                 List.of("IA", "Souvenirs"),
                 episodes,
@@ -201,7 +201,7 @@ public class TravelCatalogService {
     private String firstEpisodeTitle(GenerationResponse response) {
         Map<String, Object> episode = firstEpisode(response);
         Object value = episode.get("episode_titre");
-        return value instanceof String title && !title.isBlank() ? title : "Episode genere";
+        return value instanceof String title && !title.isBlank() ? title : "Souvenir généré";
     }
 
     private String firstEpisodeSummary(GenerationResponse response) {
