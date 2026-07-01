@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { Episode, Scene, Travel } from '../../models/travel.models';
+import { Episode, Scene, SceneGenerationStatus, Travel } from '../../models/travel.models';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -51,7 +51,6 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     this.episodeSubscription = this.travelApiService.getEpisode(episodeId).subscribe({
       next: (episode) => {
         this.episode.set(episode);
-        this.loadScenes(episode);
         this.loadTravel(episode.travelId);
         this.isLoading.set(false);
       },
@@ -110,6 +109,55 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
         this.exportMessage.set('L’export a échoué.');
       },
     });
+  }
+
+  protected sceneOrder(scene: Scene, index: number): number {
+    return scene.order ?? index + 1;
+  }
+
+  protected sceneType(scene: Scene): string {
+    return scene.type ?? 'souvenir';
+  }
+
+  protected sceneStatus(scene: Scene): string {
+    const status = scene.generationStatus as SceneGenerationStatus | undefined;
+    return status && status in STATUS_LABELS ? STATUS_LABELS[status] : (scene.generationStatus ?? 'Generee');
+  }
+
+  protected sceneVoiceOver(scene: Scene): string {
+    return scene.voiceOverText ?? scene.description ?? '';
+  }
+
+  protected isScenesLoading(): boolean {
+    return false;
+  }
+
+  protected scenesErrorMessage(): string {
+    return '';
+  }
+
+  protected isAiReconstructed(scene: Scene): boolean {
+    return Boolean(scene.isAiReconstructed);
+  }
+
+  protected sceneImage(scene: Scene, episode: Episode): string | null {
+    return scene.imageUrl ?? scene.photoUrl ?? episode.videoStill ?? null;
+  }
+
+  protected sceneImageAlt(scene: Scene, index: number): string {
+    return scene.title || `Scene ${index + 1}`;
+  }
+
+  protected sceneMeta(scene: Scene, index: number): string {
+    return `#${this.sceneOrder(scene, index)} - ${scene.timecode} - ${this.sceneType(scene)}`;
+  }
+
+  protected sceneStatusClass(scene: Scene, _episode: Episode): string {
+    return `scene-status scene-status--${scene.generationStatus ?? 'completed'}`;
+  }
+
+  protected sceneStatusLabel(scene: Scene, _episode: Episode): string {
+    return this.sceneStatus(scene);
   }
 
   private loadTravel(travelId: string): void {

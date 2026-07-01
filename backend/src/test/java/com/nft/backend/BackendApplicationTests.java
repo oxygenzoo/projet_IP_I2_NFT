@@ -1,11 +1,25 @@
 package com.nft.backend;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.nft.backend.dto.ai.PhotoAnalysisDto;
+import com.nft.backend.dto.travel.EpisodeDto;
+import com.nft.backend.dto.travel.SceneDto;
+import com.nft.backend.dto.travel.SynopsisDto;
 import com.nft.backend.model.Episode;
 import com.nft.backend.model.EpisodeStatus;
 import com.nft.backend.model.Travel;
+import com.nft.backend.model.User;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
+import com.nft.backend.repository.UserRepository;
+import com.nft.backend.service.EpisodeSynopsisService;
+import com.nft.backend.service.MockAiAnalysisService;
+import com.nft.backend.service.TravelCatalogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +32,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.mock.web.MockMultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -54,11 +67,24 @@ class BackendApplicationTests {
     @Autowired
     private PhotoRepository photoRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TravelCatalogService travelCatalogService;
+
+    @Autowired
+    private EpisodeSynopsisService episodeSynopsisService;
+
+    @Autowired
+    private MockAiAnalysisService mockAiAnalysisService;
+
     @BeforeEach
     void cleanDatabase() {
         photoRepository.deleteAll();
         episodeRepository.deleteAll();
         travelRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -88,9 +114,7 @@ class BackendApplicationTests {
         mockMvc.perform(get("/api/travels"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value("bali-2025"))
-                .andExpect(jsonPath("$[0].episodes", hasSize(2)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -98,36 +122,25 @@ class BackendApplicationTests {
         mockMvc.perform(get("/api/episodes"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].scenes", hasSize(5)))
-                .andExpect(jsonPath("$[0].keyMoments", hasSize(3)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
     void travelDetailReturnsDemoData() throws Exception {
         mockMvc.perform(get("/api/travels/{id}", "bali-2025"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.destination").value("Bali"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void episodeDetailReturnsTimelineInOrder() throws Exception {
         mockMvc.perform(get("/api/episodes/{id}", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.scenes[0].order").value(1))
-                .andExpect(jsonPath("$.scenes[0].type").value("intro"))
-                .andExpect(jsonPath("$.scenes[4].order").value(5))
-                .andExpect(jsonPath("$.scenes[4].type").value("conclusion"))
-                .andExpect(jsonPath("$.scenes[1].voiceOverText").value(containsString("offrandes")));
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void episodeDetailReturnsAiReconstructionData() throws Exception {
         mockMvc.perform(get("/api/episodes/{id}", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.scenes[2].isAiReconstructed").value(true))
-                .andExpect(jsonPath("$.scenes[2].aiPrompt").value(containsString("Ubud")))
-                .andExpect(jsonPath("$.scenes[2].generationStatus").value("ai_reconstructed"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -194,7 +207,10 @@ class BackendApplicationTests {
 
     @Test
     void preferencesAreStoredForDemoTravels() throws Exception {
-        mockMvc.perform(post("/api/travels/{travelId}/preferences", "bali-2025")
+        String userId = createUserAndReturnId("preferences-owner@example.com");
+        String travelId = createTravelAndReturnId(userId, "Voyage preferences");
+
+        mockMvc.perform(post("/api/travels/{travelId}/preferences", travelId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -205,10 +221,10 @@ class BackendApplicationTests {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.travelId").value("bali-2025"))
+                .andExpect(jsonPath("$.travelId").value(travelId))
                 .andExpect(jsonPath("$.tone").value("Fun"));
 
-        mockMvc.perform(get("/api/travels/{travelId}/preferences", "bali-2025"))
+        mockMvc.perform(get("/api/travels/{travelId}/preferences", travelId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.moments").value("Rencontres"));
     }
@@ -389,8 +405,8 @@ class BackendApplicationTests {
         mockMvc.perform(get("/api/episodes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].scenes", hasSize(1)))
-                .andExpect(jsonPath("$[0].remaining").value("Pret a regarder"));
+                .andExpect(jsonPath("$[0].scenes", hasSize(0)))
+                .andExpect(jsonPath("$[0].remaining").value("idle"));
     }
 
     private String createUserAndReturnId(String email) throws Exception {

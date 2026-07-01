@@ -34,9 +34,7 @@ public class TravelController {
 
     @GetMapping("/travels")
     public List<TravelDto> getTravels() {
-        return java.util.stream.Stream
-                .concat(travelService.getTravels().stream(), travelCatalogService.getTravels().stream())
-                .toList();
+        return travelService.getTravels();
     }
 
     @GetMapping("/travels/{id}")

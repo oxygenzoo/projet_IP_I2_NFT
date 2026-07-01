@@ -17,8 +17,9 @@ export interface Scene {
   description?: string;
   voiceOverText?: string;
   type?: 'intro' | 'souvenir' | 'transition' | 'conclusion';
-  generationStatus?: string;
+  generationStatus?: SceneGenerationStatus | 'generated' | 'ai_reconstructed' | string;
   imageUrl?: string | null;
+  photoUrl?: string | null;
   isAiReconstructed?: boolean;
   aiPrompt?: string | null;
 }

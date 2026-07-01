@@ -12,6 +12,7 @@ import com.nft.backend.dto.travel.EpisodeDto;
 import com.nft.backend.dto.travel.SceneDto;
 import com.nft.backend.dto.travel.TravelDto;
 import com.nft.backend.model.Episode;
+import com.nft.backend.model.EpisodeScene;
 import com.nft.backend.model.EpisodeStatus;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.EpisodeRepository;
@@ -113,7 +114,11 @@ public class TravelCatalogService {
                 episodes.isEmpty() ? "A generer" : "Pret",
                 false,
                 List.of("IA", "Souvenirs"),
-                episodes);
+                episodes,
+                travel.getUser() == null ? null : travel.getUser().getId().toString(),
+                travel.getStartDate(),
+                travel.getEndDate(),
+                travel.getCreatedAt());
     }
 
     private EpisodeDto toEpisodeDto(Episode episode) {
@@ -133,7 +138,24 @@ public class TravelCatalogService {
                 valueOrDefault(episode.getVideoUrl(), ""),
                 episode.getStatus() == EpisodeStatus.READY ? 100 : 0,
                 valueOrDefault(episode.getExportStatus(), "idle"),
-                List.<SceneDto>of());
+                List.of(),
+                episode.getScenes().stream()
+                        .map(this::toSceneDto)
+                        .toList());
+    }
+
+    private SceneDto toSceneDto(EpisodeScene scene) {
+        return new SceneDto(
+                scene.getId().toString(),
+                scene.getOrder(),
+                "Scene " + scene.getOrder(),
+                "",
+                scene.getVoiceOverText(),
+                scene.getType(),
+                scene.getGenerationStatus(),
+                scene.getPhotoUrl(),
+                scene.isAiReconstructed(),
+                scene.getAiPrompt());
     }
 
     private Optional<UUID> parseUuid(String id) {

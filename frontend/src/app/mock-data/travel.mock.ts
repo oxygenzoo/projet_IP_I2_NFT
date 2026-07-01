@@ -73,11 +73,11 @@ export const mockEpisodes: Episode[] = [
       {
         id: 'scene-ai-001',
         title: 'Moment manquant reconstitue',
-        episodeId: '1',
         order: 3,
+        timecode: '06:40',
         imageUrl: null,
         voiceOverText: "Meme si aucune photo n'a capture ce moment, l'IA reconstitue l'ambiance du voyage.",
-        status: 'completed',
+        generationStatus: 'completed',
         isAiReconstructed: true,
         aiPrompt: 'Reconstituer un moment manquant du voyage avec une ambiance realiste, chaude et cinematographique.',
       },
