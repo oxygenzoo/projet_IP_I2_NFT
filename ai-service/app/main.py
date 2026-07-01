@@ -7,13 +7,17 @@ from pathlib import Path
 from typing import Annotated, Optional
 from uuid import uuid4
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app import narrative_generator, photo_selector, video_generator
 
 
 app = FastAPI(title="NFT AI Service", version="0.1.0")
+BASE_WORKDIR = Path(os.getenv("AI_WORKDIR", "workdir")).resolve()
+BASE_WORKDIR.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(BASE_WORKDIR)), name="media")
 
 
 class GenerationResponse(BaseModel):
@@ -52,6 +56,7 @@ def health() -> dict:
 
 @app.post("/ai/episodes", response_model=GenerationResponse)
 async def generate_episode(
+    request: Request,
     images: Annotated[list[UploadFile], File(description="Travel photos")],
     title: Annotated[str, Form()] = "Mon voyage",
     destination: Annotated[str, Form()] = "",
@@ -61,7 +66,7 @@ async def generate_episode(
         raise HTTPException(status_code=400, detail="Ajoutez au moins une photo.")
 
     job_id = str(uuid4())
-    base_dir = Path(os.getenv("AI_WORKDIR", "workdir")).resolve()
+    base_dir = BASE_WORKDIR
     job_dir = base_dir / "jobs" / job_id
     photos_dir = job_dir / "photos"
     selection_dir = job_dir / "selection"
@@ -108,13 +113,18 @@ async def generate_episode(
                 max_episodes=max_episodes,
             )
 
+        video_urls = [
+            str(request.url_for("media", path=Path(video).resolve().relative_to(base_dir).as_posix()))
+            for video in videos
+        ]
+
         return GenerationResponse(
             job_id=job_id,
             status="completed",
             message="Episode genere par le service IA.",
             selection_report=selection_report,
             script=script,
-            videos=videos,
+            videos=video_urls,
             workdir=str(job_dir),
         )
     except HTTPException:

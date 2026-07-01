@@ -33,6 +33,11 @@ public class EpisodeService {
 
     @Transactional
     public EpisodeResponse create(UUID travelId, CreateEpisodeRequest request) {
+        return create(travelId, request, null);
+    }
+
+    @Transactional
+    public EpisodeResponse create(UUID travelId, CreateEpisodeRequest request, String videoUrl) {
         Travel travel = findTravel(travelId);
         Episode episode = new Episode(
                 travel,
@@ -44,6 +49,10 @@ public class EpisodeService {
                 request.outroText(),
                 request.musicMood(),
                 request.status());
+
+        if (videoUrl != null && !videoUrl.isBlank()) {
+            episode.updateExport("ready", videoUrl);
+        }
 
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));
     }

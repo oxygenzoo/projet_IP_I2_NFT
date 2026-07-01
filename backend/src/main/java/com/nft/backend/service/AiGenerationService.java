@@ -177,7 +177,8 @@ public class AiGenerationService {
                 cleanOrDefault(response.message(), ""),
                 "Generation IA terminee.",
                 cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
-                EpisodeStatus.READY));
+                EpisodeStatus.READY),
+                firstVideoUrl(response));
     }
 
     private UUID parseTravelId(String travelId) {
@@ -219,6 +220,14 @@ public class AiGenerationService {
 
     private String stringValue(Object value) {
         return value instanceof String text ? text : "";
+    }
+
+    private String firstVideoUrl(GenerationResponse response) {
+        if (response == null || response.videos() == null || response.videos().isEmpty()) {
+            return "";
+        }
+
+        return cleanOrDefault(response.videos().getFirst(), "");
     }
 
     private int numberValue(Object value, int fallback) {
