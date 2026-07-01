@@ -12,14 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Transient;
 
 @Entity
-@Table(
-        name = "episode_scenes",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_episode_scene_order",
-                columnNames = {"episode_id", "scene_order"}))
+@Table(name = "episode_scenes")
 public class EpisodeScene {
 
     private static final Set<String> TYPES = Set.of("intro", "souvenir", "transition", "conclusion");
@@ -32,29 +28,29 @@ public class EpisodeScene {
     @JoinColumn(name = "episode_id", nullable = false)
     private Episode episode;
 
-    @Column(name = "scene_order", nullable = false)
+    @Column(name = "scene_number", nullable = false)
     private int order;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "photo_id")
     private Photo photo;
 
-    @Column(name = "photo_url")
+    @Transient
     private String photoUrl;
 
-    @Column(name = "voice_over_text", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "voiceover_text", columnDefinition = "TEXT")
     private String voiceOverText;
 
-    @Column(nullable = false, length = 32)
+    @Transient
     private String type;
 
-    @Column(name = "generation_status", nullable = false, length = 64)
+    @Transient
     private String generationStatus;
 
-    @Column(name = "is_ai_reconstructed", nullable = false)
+    @Transient
     private boolean isAiReconstructed;
 
-    @Column(name = "ai_prompt", columnDefinition = "TEXT")
+    @Transient
     private String aiPrompt;
 
     protected EpisodeScene() {
@@ -98,19 +94,23 @@ public class EpisodeScene {
     }
 
     public String getPhotoUrl() {
-        return photoUrl;
+        if (photoUrl != null && !photoUrl.isBlank()) {
+            return photoUrl;
+        }
+
+        return photo == null ? null : photo.getImageUrl();
     }
 
     public String getVoiceOverText() {
-        return voiceOverText;
+        return voiceOverText == null ? "" : voiceOverText;
     }
 
     public String getType() {
-        return type;
+        return type == null || type.isBlank() ? "souvenir" : type;
     }
 
     public String getGenerationStatus() {
-        return generationStatus;
+        return generationStatus == null || generationStatus.isBlank() ? "generated" : generationStatus;
     }
 
     public boolean isAiReconstructed() {

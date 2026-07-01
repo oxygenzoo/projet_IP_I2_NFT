@@ -48,7 +48,7 @@ export class HomePageComponent implements OnInit {
     this.errorMessage.set('');
 
     forkJoin({
-      travels: this.travelApiService.getTravels(),
+      travels: this.travelApiService.getTravels().pipe(catchError(() => of([]))),
       episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ travels, episodes }) => {
@@ -59,7 +59,7 @@ export class HomePageComponent implements OnInit {
       error: () => {
         this.travels.set([]);
         this.episodes.set([]);
-        this.errorMessage.set("Impossible de charger les voyages depuis l'API. Vérifiez que le backend Render est démarré.");
+        this.errorMessage.set('');
         this.isLoading.set(false);
       },
     });

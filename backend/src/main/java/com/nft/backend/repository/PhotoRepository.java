@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PhotoRepository extends JpaRepository<Photo, UUID> {
 
-    List<Photo> findByTravelIdOrderByUploadedAtAsc(UUID travelId);
+    List<Photo> findByTravelIdOrderByIdAsc(UUID travelId);
 }

@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "photos")
@@ -28,25 +29,25 @@ public class Photo {
     @Column(nullable = false)
     private String filename;
 
-    @Column(nullable = false)
-    private long size;
+    @Column(name = "size_mb")
+    private Double sizeMb;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "format", length = 20)
     private String type;
 
-    @Column(name = "storage_path")
+    @Column(name = "file_path")
     private String storagePath;
 
-    @Column(name = "image_url")
+    @Column(name = "storage_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "consent_rgpd")
+    @Transient
     private boolean consentRgpd;
 
-    @Column(name = "consent_date")
+    @Transient
     private Instant consentDate;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "imported_at", updatable = false)
     private Instant uploadedAt = Instant.now();
 
     protected Photo() {
@@ -63,10 +64,10 @@ public class Photo {
             Instant consentDate) {
         this.travel = travel;
         this.filename = filename;
-        this.size = size;
+        this.sizeMb = size / (1024d * 1024d);
         this.type = type;
         this.storagePath = storagePath;
-        this.imageUrl = imageUrl;
+        this.imageUrl = imageUrl == null || imageUrl.isBlank() ? storagePath : imageUrl;
         this.consentRgpd = consentRgpd;
         this.consentDate = consentDate;
     }
@@ -84,7 +85,7 @@ public class Photo {
     }
 
     public long getSize() {
-        return size;
+        return sizeMb == null ? 0 : Math.round(sizeMb * 1024d * 1024d);
     }
 
     public String getType() {

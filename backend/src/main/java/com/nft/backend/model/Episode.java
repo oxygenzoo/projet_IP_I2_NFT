@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "episodes")
@@ -52,13 +53,13 @@ public class Episode {
     @Column(name = "music_mood", length = 200)
     private String musicMood;
 
-    @Column(name = "share_token", unique = true, length = 80)
+    @Transient
     private String shareToken;
 
-    @Column(name = "export_status", length = 20)
+    @Transient
     private String exportStatus = "idle";
 
-    @Column(name = "video_url")
+    @Column(name = "video_path")
     private String videoUrl;
 
     @Convert(converter = EpisodeStatusConverter.class)

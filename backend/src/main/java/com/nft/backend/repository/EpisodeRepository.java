@@ -11,5 +11,4 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
 
     List<Episode> findByTravelIdOrderByEpisodeNumberAsc(UUID travelId);
 
-    Optional<Episode> findByShareToken(String shareToken);
 }

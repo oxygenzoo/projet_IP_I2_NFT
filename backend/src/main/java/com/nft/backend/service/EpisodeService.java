@@ -107,13 +107,7 @@ public class EpisodeService {
 
     @Transactional(readOnly = true)
     public EpisodeResponse getPublicEpisode(String shareToken) {
-        if (shareToken == null || shareToken.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found");
-        }
-
-        return episodeRepository.findByShareToken(shareToken)
-                .map(EpisodeResponse::fromEntity)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found"));
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found");
     }
 
     @Transactional

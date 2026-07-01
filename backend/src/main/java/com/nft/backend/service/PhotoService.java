@@ -117,7 +117,7 @@ public class PhotoService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found");
         }
 
-        return photoRepository.findByTravelIdOrderByUploadedAtAsc(travelId)
+        return photoRepository.findByTravelIdOrderByIdAsc(travelId)
                 .stream()
                 .map(PhotoResponse::fromEntity)
                 .toList();
