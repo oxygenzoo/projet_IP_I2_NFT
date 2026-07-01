@@ -34,10 +34,38 @@
   </header>
 
   @if (isLoading()) {
-    <section class="api-state glass-panel" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <h1>Chargement des voyages...</h1>
-      <p>Connexion au backend en cours.</p>
+    <section class="home-video-hero home-video-hero--loading" aria-live="polite">
+      <div class="video-empty-card video-empty-card--hero">
+        <span class="spinner" aria-hidden="true"></span>
+        <strong>Chargement des vidéos...</strong>
+        <p>Connexion au backend en cours.</p>
+      </div>
+    </section>
+
+    <section class="content-rail">
+      <div class="rail-heading">
+        <h2>Souvenirs recents</h2>
+        <span>Chargement</span>
+      </div>
+      <div class="card-row">
+        <article class="video-empty-card">
+          <strong>Aucune vidéo pour l'instant</strong>
+          <span>Vos épisodes apparaîtront ici dès qu'ils seront générés.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-rail content-rail--last">
+      <div class="rail-heading">
+        <h2>Mes episodes</h2>
+        <span>Chargement</span>
+      </div>
+      <div class="card-row">
+        <article class="video-empty-card">
+          <strong>Aucune vidéo pour l'instant</strong>
+          <span>La section reste prête même avant votre première vidéo.</span>
+        </article>
+      </div>
     </section>
   } @else if (errorMessage()) {
     <section class="api-state api-state--error glass-panel" role="alert">
@@ -66,18 +94,27 @@
                 Lecture
               </a>
               <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail episode</a>
+            } @else {
+              <a class="btn btn--primary" routerLink="/upload">Créer une vidéo</a>
             }
           </div>
 
-          <div class="continue-line" aria-label="Progression de lecture">
-            <div>
-              <span>Reprendre</span>
-              <strong>{{ featured.remaining }}</strong>
+          @if (featuredEpisode()) {
+            <div class="continue-line" aria-label="Progression de lecture">
+              <div>
+                <span>Reprendre</span>
+                <strong>{{ featured.remaining }}</strong>
+              </div>
+              <div class="progress-track">
+                <span [style.width.%]="featured.progress"></span>
+              </div>
             </div>
-            <div class="progress-track">
-              <span [style.width.%]="featured.progress"></span>
+          } @else {
+            <div class="video-empty-card video-empty-card--inline">
+              <strong>Aucune vidéo pour l'instant</strong>
+              <span>Ce voyage est prêt à recevoir son premier épisode.</span>
             </div>
-          </div>
+          }
         </div>
 
         <aside class="season-card glass-panel">
@@ -87,11 +124,17 @@
         </aside>
       </section>
     } @else {
-      <section class="home-empty-intro">
-        <p class="eyebrow">Votre espace voyage</p>
-        <h1>Aucun voyage pour le moment</h1>
-        <p>Vos souvenirs, episodes et favoris apparaitront dans les sections ci-dessous.</p>
-        <a class="btn btn--primary" routerLink="/upload">Creer un voyage</a>
+      <section class="home-video-hero">
+        <div class="home-video-hero__copy">
+          <p class="eyebrow">Votre espace voyage</p>
+          <h1>Aucune vidéo pour l'instant</h1>
+          <p>Vos voyages et épisodes apparaîtront ici dès que vous aurez importé vos premières photos.</p>
+          <a class="btn btn--primary" routerLink="/upload">Créer une vidéo</a>
+        </div>
+        <div class="video-empty-card video-empty-card--hero">
+          <strong>Aucune vidéo pour l'instant</strong>
+          <span>Importez vos photos pour générer un premier épisode.</span>
+        </div>
       </section>
     }
 
@@ -104,9 +147,9 @@
         @for (episode of recentEpisodes(); track episode.id) {
           <app-episode-card [episode]="episode"></app-episode-card>
         } @empty {
-          <article class="empty-rail">
-            <strong>Aucun souvenir genere</strong>
-            <span>Vos prochains episodes apparaitront ici.</span>
+          <article class="video-empty-card">
+            <strong>Aucune vidéo pour l'instant</strong>
+            <span>Vos prochains épisodes apparaîtront ici.</span>
           </article>
         }
       </div>
@@ -145,9 +188,9 @@
         @for (episode of recentEpisodes(); track episode.id) {
           <app-episode-card [episode]="episode" [compact]="true" destination="player"></app-episode-card>
         } @empty {
-          <article class="empty-rail">
-            <strong>Aucun episode</strong>
-            <span>Quand vous en aurez, ils seront listes ici.</span>
+          <article class="video-empty-card">
+            <strong>Aucune vidéo pour l'instant</strong>
+            <span>Quand vous en aurez, elles seront listées ici.</span>
           </article>
         }
       </div>

@@ -645,6 +645,41 @@ img {
   margin-top: 0.45rem;
 }
 
+.home-video-hero {
+  align-items: end;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 34rem);
+  min-height: 58dvh;
+  padding: 9rem 4.5vw 3rem;
+}
+
+.home-video-hero--loading {
+  grid-template-columns: minmax(0, 46rem);
+}
+
+.home-video-hero__copy {
+  max-width: 46rem;
+}
+
+.home-video-hero h1 {
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  line-height: 0.96;
+  margin: 0;
+}
+
+.home-video-hero p:not(.eyebrow),
+.video-empty-card span,
+.video-empty-card p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.home-video-hero .btn {
+  margin-top: 1.4rem;
+}
+
 .metadata-row {
   color: #e5e5ea;
   display: flex;
@@ -849,6 +884,81 @@ img {
 .empty-rail span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.video-empty-card {
+  align-items: center;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035)),
+    rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.8rem;
+  color: #ffffff;
+  display: grid;
+  justify-items: center;
+  min-height: 10rem;
+  overflow: hidden;
+  padding: 1rem;
+  position: relative;
+  scroll-snap-align: start;
+  text-align: center;
+}
+
+.video-empty-card::before {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  content: "";
+  height: 3.4rem;
+  position: absolute;
+  width: 3.4rem;
+}
+
+.video-empty-card::after {
+  border-bottom: 0.55rem solid transparent;
+  border-left: 0.85rem solid rgba(255, 255, 255, 0.72);
+  border-top: 0.55rem solid transparent;
+  content: "";
+  left: calc(50% - 0.25rem);
+  position: absolute;
+  top: calc(50% - 0.55rem);
+}
+
+.video-empty-card strong,
+.video-empty-card span,
+.video-empty-card p,
+.video-empty-card .spinner {
+  position: relative;
+  z-index: 1;
+}
+
+.video-empty-card strong {
+  align-self: end;
+  display: block;
+  font-size: 1rem;
+  margin-top: 4.6rem;
+}
+
+.video-empty-card--hero {
+  min-height: 19rem;
+}
+
+.video-empty-card--hero strong {
+  font-size: 1.25rem;
+}
+
+.video-empty-card--inline {
+  margin-top: 1.6rem;
+  max-width: 28rem;
+}
+
+.video-empty-card .spinner {
+  align-self: end;
+  margin-top: 4rem;
+}
+
+.video-empty-card .spinner + strong {
+  margin-top: 0;
 }
 
 .floating-create {
@@ -2222,6 +2332,11 @@ img {
     grid-template-columns: 1fr;
   }
 
+  .home-video-hero {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
   .hero-preview,
   .season-card {
     justify-self: start;
@@ -2434,6 +2549,14 @@ img {
   .landing-hero h1,
   .stream-hero h1,
   .episode-hero h1 {
+    font-size: 2.7rem;
+  }
+
+  .home-video-hero {
+    padding: 8rem 1rem 2rem;
+  }
+
+  .home-video-hero h1 {
     font-size: 2.7rem;
   }
 
