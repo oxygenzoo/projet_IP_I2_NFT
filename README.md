@@ -1,16 +1,16 @@
 # NFT - Never Forget your Trip
 
-NFT est une maquette V0 de produit SaaS inspiree des plateformes de streaming.
+NFT est une application SaaS inspiree des plateformes de streaming.
 
 Le concept : un utilisateur importe ses photos de voyage, puis une IA transforme ses souvenirs en saisons et episodes narratifs, comme une mini-serie personnelle.
 
-Cette V0 sert surtout a la demonstration visuelle du projet : le frontend Angular contient des donnees mockees et un parcours complet sans authentification ni backend obligatoire.
+Le frontend Angular consomme les APIs deployees via Vercel/Render et Supabase Auth.
 
 ## Etat actuel
 
-- Frontend Angular : maquette fonctionnelle et responsive.
-- Backend Spring Boot : base technique presente.
-- Service IA Python/FastAPI : base technique presente.
+- Frontend Angular : interface fonctionnelle et responsive.
+- Backend Spring Boot : API voyages, episodes, pricing, preferences et generation.
+- Service IA Python/FastAPI : pipeline de selection, narration et rendu optionnel.
 - CI GitHub Actions et analyse SonarQube Cloud.
 - Deploiement frontend configure pour Vercel via `vercel.json`.
 
@@ -51,7 +51,7 @@ En pratique : si quelqu'un connait deja Node/Git/Java, le README suffit. Si quel
 
 ## Prerequis rapides
 
-Pour lancer la V0 frontend :
+Pour lancer le frontend :
 
 - Node.js 22 LTS recommande ;
 - npm ;
@@ -66,7 +66,7 @@ Pour lancer tout le projet :
 
 Le guide complet pour Windows et macOS est ici : [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
-## Lancer la V0 frontend
+## Lancer le frontend
 
 Depuis la racine du repository :
 

@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { API_URL } from '../config/api.config';
-import { Episode, Scene, Travel } from '../models/travel.models';
+import { Episode, PricingPlan, Scene, Travel } from '../models/travel.models';
 
 @Injectable({
   providedIn: 'root',
@@ -32,6 +32,10 @@ export class TravelApiService {
 
   getPublicEpisode(shareToken: string): Observable<Episode> {
     return this.http.get<Episode>(`${this.apiUrl}/api/public/episodes/${shareToken}`);
+  }
+
+  getPricingPlans(): Observable<PricingPlan[]> {
+    return this.http.get<PricingPlan[]>(`${this.apiUrl}/api/pricing-plans`);
   }
 
   shareEpisode(travelId: string, episodeId: string): Observable<Episode> {

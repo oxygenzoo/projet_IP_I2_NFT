@@ -119,12 +119,15 @@ public class EpisodeService {
     @Transactional
     public EpisodeResponse export(UUID travelId, UUID episodeId, boolean fail) {
         Episode episode = findEpisodeForTravel(travelId, episodeId);
-        episode.updateExport("pending", null);
+        String videoUrl = episode.getVideoUrl();
+        episode.updateExport("pending", videoUrl);
 
         if (fail) {
             episode.updateExport("failed", null);
+        } else if (videoUrl == null || videoUrl.isBlank()) {
+            episode.updateExport("failed", null);
         } else {
-            episode.updateExport("ready", "/demo-video.mp4");
+            episode.updateExport("ready", videoUrl);
         }
 
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));

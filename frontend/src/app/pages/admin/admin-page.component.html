@@ -1,0 +1,108 @@
+<main class="admin-page">
+  <header class="stream-header stream-header--floating">
+    <app-logo [compact]="true"></app-logo>
+    <div class="stream-header__nav">
+      <a routerLink="/home">Accueil</a>
+      <a routerLink="/upload">Creer</a>
+      <a routerLink="/profile">Profil</a>
+    </div>
+  </header>
+
+  <section class="admin-shell">
+    <div class="admin-heading">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Tableau de bord</h1>
+      </div>
+      <button class="btn btn--glass" type="button" (click)="loadDashboard()">Actualiser</button>
+    </div>
+
+    @if (isLoading()) {
+      <section class="api-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Chargement admin...</h1>
+        <p>Lecture des voyages et episodes.</p>
+      </section>
+    } @else if (errorMessage()) {
+      <section class="api-state api-state--error glass-panel" role="alert">
+        <h1>Admin indisponible</h1>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn--primary" type="button" (click)="loadDashboard()">Reessayer</button>
+      </section>
+    } @else {
+      <section class="admin-stat-grid" aria-label="Statistiques admin">
+        <article>
+          <strong>{{ travels().length }}</strong>
+          <span>Voyages</span>
+        </article>
+        <article>
+          <strong>{{ episodes().length }}</strong>
+          <span>Episodes</span>
+        </article>
+        <article>
+          <strong>{{ totalPhotos() }}</strong>
+          <span>Photos</span>
+        </article>
+        <article>
+          <strong>{{ failedEpisodes() }}</strong>
+          <span>Erreurs IA</span>
+        </article>
+      </section>
+
+      <section class="admin-grid">
+        <article class="admin-panel">
+          <div class="admin-panel__heading">
+            <h2>Voyages</h2>
+            <span>{{ travels().length }} total</span>
+          </div>
+          <div class="admin-list">
+            @for (travel of travels(); track travel.id) {
+              <div class="admin-list__row">
+                <div>
+                  <strong>{{ travel.title }}</strong>
+                  <span>{{ travel.destination || travel.country || 'Destination non renseignee' }}</span>
+                </div>
+                <div>
+                  <span>{{ travel.episodeCount }} episodes</span>
+                  <span>{{ travel.photoCount }} photos</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="admin-empty">
+                <strong>Aucun voyage</strong>
+                <span>La liste reste stable meme sans donnees.</span>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel__heading">
+            <h2>Episodes</h2>
+            <span>{{ episodes().length }} total</span>
+          </div>
+          <div class="admin-list">
+            @for (episode of episodes(); track episode.id) {
+              <div class="admin-list__row">
+                <div>
+                  <strong>{{ episode.title }}</strong>
+                  <span>{{ episode.location || episode.locationName || 'Lieu non renseigne' }}</span>
+                </div>
+                <div>
+                  <span class="admin-status">{{ episodeStatus(episode) }}</span>
+                  <span>{{ photoCountFor(episode) }} photos</span>
+                  <span>{{ aiErrorLabel(episode) }}</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="admin-empty">
+                <strong>Aucun episode</strong>
+                <span>Les statuts IA apparaitront apres generation.</span>
+              </div>
+            }
+          </div>
+        </article>
+      </section>
+    }
+  </section>
+</main>

@@ -1,8 +1,15 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from './guards/admin.guard';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./pages/admin/admin-page.component').then((component) => component.AdminPageComponent),
+    title: 'Admin | NFT',
+  },
   {
     path: '',
     loadComponent: () =>

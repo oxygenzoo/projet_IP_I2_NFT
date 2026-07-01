@@ -7,35 +7,52 @@
     <p class="eyebrow">Modele economique</p>
     <h1>Un prix simple pour transformer les voyages en saisons.</h1>
     <p>
-      La V0 presente une offre lisible: commencer gratuitement, acheter un voyage complet, ou passer en
-      illimite pour archiver toute une vie de souvenirs.
+      Les offres sont chargees depuis le backend pour garder les prix alignes avec la production.
     </p>
   </section>
 
-  <section class="pricing-grid">
-    @for (plan of plans; track plan.id) {
-      <article class="pricing-card" [class.pricing-card--featured]="plan.highlighted">
-        @if (plan.highlighted) {
-          <span class="plan-badge">Favoris</span>
-        }
-        @if (plan.audience) {
-          <span class="plan-badge plan-badge--soft">{{ plan.audience }}</span>
-        }
-        <h2>{{ plan.name }}</h2>
-        <div class="price-line">
-          <strong>{{ plan.price }}</strong>
-          <span>{{ plan.cadence }}</span>
-        </div>
-        <p>{{ plan.description }}</p>
-        <ul>
-          @for (feature of plan.features; track feature) {
-            <li>{{ feature }}</li>
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Chargement des offres...</h1>
+    </section>
+  } @else if (errorMessage()) {
+    <section class="api-state api-state--error glass-panel" role="alert">
+      <h1>Offres indisponibles</h1>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn btn--primary" type="button" (click)="loadPlans()">Reessayer</button>
+    </section>
+  } @else {
+    <section class="pricing-grid">
+      @for (plan of plans(); track plan.id) {
+        <article class="pricing-card" [class.pricing-card--featured]="plan.highlighted">
+          @if (plan.highlighted) {
+            <span class="plan-badge">Favoris</span>
           }
-        </ul>
-        <a class="btn" [class.btn--primary]="plan.highlighted" [class.btn--glass]="!plan.highlighted" routerLink="/upload">
-          Upgrade
-        </a>
-      </article>
-    }
-  </section>
+          @if (plan.audience) {
+            <span class="plan-badge plan-badge--soft">{{ plan.audience }}</span>
+          }
+          <h2>{{ plan.name }}</h2>
+          <div class="price-line">
+            <strong>{{ plan.price }}</strong>
+            <span>{{ plan.cadence }}</span>
+          </div>
+          <p>{{ plan.description }}</p>
+          <ul>
+            @for (feature of plan.features; track feature) {
+              <li>{{ feature }}</li>
+            }
+          </ul>
+          <a class="btn" [class.btn--primary]="plan.highlighted" [class.btn--glass]="!plan.highlighted" routerLink="/upload">
+            Upgrade
+          </a>
+        </article>
+      } @empty {
+        <article class="empty-rail empty-rail--wide">
+          <strong>Aucune offre disponible</strong>
+          <span>Les offres apparaitront quand le backend les publiera.</span>
+        </article>
+      }
+    </section>
+  }
 </main>

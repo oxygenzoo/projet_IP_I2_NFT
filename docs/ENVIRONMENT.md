@@ -43,6 +43,7 @@ JWT_SECRET=...
 JWT_EXPIRATION_MS=86400000
 
 CORS_ALLOWED_ORIGINS=https://TON_FRONT.vercel.app,http://localhost:4200
+CORS_ALLOWED_ORIGIN_PATTERNS=https://*.vercel.app
 CORS_ALLOWED_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
 
 SMTP_HOST=smtp.sendgrid.net
@@ -81,6 +82,7 @@ Dans Render, renseigner au minimum :
 
 ```text
 CORS_ALLOWED_ORIGINS=https://TON_FRONT.vercel.app,http://localhost:4200
+CORS_ALLOWED_ORIGIN_PATTERNS=https://*.vercel.app
 JWT_SECRET=...
 AI_SERVICE_URL=https://TON_AI_SERVICE.onrender.com
 ```

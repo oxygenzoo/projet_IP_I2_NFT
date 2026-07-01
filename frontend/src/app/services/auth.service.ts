@@ -165,6 +165,16 @@ export class AuthService {
     return Boolean(await this.getSession());
   }
 
+  async isAdmin(): Promise<boolean> {
+    const user = await this.getCurrentUser();
+
+    if (!user) {
+      return false;
+    }
+
+    return this.hasAdminRole(user.app_metadata ?? {}) || this.hasAdminRole(user.user_metadata ?? {});
+  }
+
   async getAccessToken(): Promise<string | null> {
     return (await this.getSession())?.access_token ?? null;
   }
@@ -291,6 +301,17 @@ export class AuthService {
     }
 
     return '';
+  }
+
+  private hasAdminRole(metadata: Record<string, unknown>): boolean {
+    const role = this.firstText(metadata, ['role', 'user_role', 'plan']).toLowerCase();
+
+    if (role === 'admin') {
+      return true;
+    }
+
+    const roles = metadata['roles'];
+    return Array.isArray(roles) && roles.some((value) => typeof value === 'string' && value.toLowerCase() === 'admin');
   }
 
   private nameFromEmail(email: string): string {

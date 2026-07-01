@@ -1,11 +1,30 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { mockEpisodes } from '../../mock-data/travel.mock';
+import { Episode } from '../../models/travel.models';
 import { EpisodeCardComponent } from './episode-card.component';
 
 @Component({ template: '' })
 class EmptyPageComponent {}
+
+const episodeFixture: Episode = {
+  id: 'episode-1',
+  travelId: 'travel-1',
+  seasonNumber: 1,
+  episodeNumber: 1,
+  title: 'Arrivee a Lisbonne',
+  subtitle: 'Premier soir',
+  summary: 'Une arrivee au coucher du soleil.',
+  duration: '3 min',
+  location: 'Lisbonne',
+  date: '2026-06-12',
+  photoCount: 12,
+  coverImage: 'https://cdn.example.com/cover.jpg',
+  videoStill: 'https://cdn.example.com/still.jpg',
+  progress: 42,
+  remaining: '1 min',
+  scenes: [],
+};
 
 describe('EpisodeCardComponent', () => {
   let fixture: ComponentFixture<EpisodeCardComponent>;
@@ -22,7 +41,7 @@ describe('EpisodeCardComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(EpisodeCardComponent);
-    fixture.componentRef.setInput('episode', mockEpisodes[0]);
+    fixture.componentRef.setInput('episode', episodeFixture);
     fixture.detectChanges();
   });
 
@@ -34,19 +53,19 @@ describe('EpisodeCardComponent', () => {
     const element = fixture.nativeElement as HTMLElement;
     const image = element.querySelector('img') as HTMLImageElement;
 
-    expect(element.textContent).toContain(mockEpisodes[0].title);
-    expect(element.textContent).toContain(mockEpisodes[0].summary);
-    expect(element.textContent).toContain(mockEpisodes[0].location);
-    expect(element.textContent).toContain(mockEpisodes[0].duration);
+    expect(element.textContent).toContain(episodeFixture.title);
+    expect(element.textContent).toContain(episodeFixture.summary);
+    expect(element.textContent).toContain(episodeFixture.location);
+    expect(element.textContent).toContain(episodeFixture.duration);
     expect(element.textContent).toContain('S1:E1');
-    expect(image.getAttribute('src')).toBe(mockEpisodes[0].coverImage);
-    expect(image.getAttribute('alt')).toBe(mockEpisodes[0].title);
+    expect(image.getAttribute('src')).toBe(episodeFixture.coverImage);
+    expect(image.getAttribute('alt')).toBe(episodeFixture.title);
   });
 
   it('renders the reading progress when an episode has started', () => {
     const progress = fixture.nativeElement.querySelector('[aria-label="Progression de lecture"] span') as HTMLElement;
 
-    expect(progress.style.width).toBe(`${mockEpisodes[0].progress}%`);
+    expect(progress.style.width).toBe(`${episodeFixture.progress}%`);
   });
 
   it('emits the selected episode when the card is clicked', async () => {
@@ -56,7 +75,7 @@ describe('EpisodeCardComponent', () => {
     (fixture.nativeElement.querySelector('a') as HTMLAnchorElement).click();
     await fixture.whenStable();
 
-    expect(selectedSpy).toHaveBeenCalledWith(mockEpisodes[0]);
+    expect(selectedSpy).toHaveBeenCalledWith(episodeFixture);
   });
 
   it('uses the compact player variant when requested', () => {
@@ -69,9 +88,9 @@ describe('EpisodeCardComponent', () => {
     const image = element.querySelector('img') as HTMLImageElement;
 
     expect(link.classList).toContain('episode-card--compact');
-    expect(link.getAttribute('href')).toBe('/player/1');
-    expect(image.getAttribute('src')).toBe(mockEpisodes[0].videoStill);
-    expect(element.textContent).toContain(mockEpisodes[0].date);
-    expect(element.textContent).not.toContain(mockEpisodes[0].summary);
+    expect(link.getAttribute('href')).toBe('/player/episode-1');
+    expect(image.getAttribute('src')).toBe(episodeFixture.videoStill);
+    expect(element.textContent).toContain(episodeFixture.date);
+    expect(element.textContent).not.toContain(episodeFixture.summary);
   });
 });

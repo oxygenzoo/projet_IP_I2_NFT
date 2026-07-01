@@ -215,7 +215,8 @@ img {
 .player-page,
 .profile-page,
 .notifications-page,
-.pricing-page {
+.pricing-page,
+.admin-page {
   min-height: 100dvh;
 }
 
@@ -1385,7 +1386,7 @@ img {
 
 .player-topbar,
 .player-controls,
-.fake-player {
+.video-player {
   position: relative;
   z-index: 1;
 }
@@ -1407,12 +1408,39 @@ img {
   text-decoration: none;
 }
 
-.fake-player {
+.video-player {
   align-items: center;
   display: flex;
   flex: 1;
   justify-content: center;
   min-height: 52dvh;
+  padding: 2rem 4.5vw;
+}
+
+.video-player__media,
+.video-player__empty {
+  border-radius: 1.2rem;
+  max-height: 70dvh;
+  max-width: 66rem;
+  width: min(100%, 66rem);
+}
+
+.video-player__media {
+  background: #000000;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.44);
+}
+
+.video-player__empty {
+  align-items: center;
+  display: grid;
+  gap: 0.55rem;
+  min-height: 18rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.video-player__empty span {
+  color: var(--muted);
 }
 
 .player-shine {
@@ -1508,7 +1536,7 @@ img {
   background: linear-gradient(0deg, rgba(5, 5, 5, 0.94), rgba(5, 5, 5, 0.42));
   display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr auto 2fr;
+  grid-template-columns: 1fr auto;
   padding: 2rem 4.5vw;
 }
 
@@ -1545,6 +1573,13 @@ img {
   color: var(--muted);
   font-size: 0.85rem;
   font-weight: 800;
+}
+
+.player-duration {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+  justify-self: end;
 }
 
 .profile-page {
@@ -1697,7 +1732,9 @@ img {
 }
 
 .profile-stat-grid article,
-.profile-panel {
+.profile-panel,
+.admin-stat-grid article,
+.admin-panel {
   background: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
@@ -1966,6 +2003,108 @@ img {
   padding: 0.55rem 0.9rem;
 }
 
+.admin-page {
+  padding: 7rem 4.5vw 5rem;
+}
+
+.admin-shell {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.admin-heading {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.admin-heading h1 {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.admin-stat-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-stat-grid article,
+.admin-panel {
+  padding: 1.2rem;
+}
+
+.admin-stat-grid strong {
+  display: block;
+  font-size: 2rem;
+}
+
+.admin-stat-grid span,
+.admin-panel__heading span,
+.admin-list__row span,
+.admin-empty span {
+  color: var(--muted);
+}
+
+.admin-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-panel__heading {
+  align-items: baseline;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.admin-panel__heading h2 {
+  margin: 0;
+}
+
+.admin-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.admin-list__row,
+.admin-empty {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.8rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0.85rem;
+}
+
+.admin-list__row strong,
+.admin-empty strong {
+  display: block;
+}
+
+.admin-list__row > div:last-child {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.admin-status {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #ffffff;
+  font-weight: 850;
+  padding: 0.25rem 0.55rem;
+}
+
 .pricing-page {
   padding-bottom: 5rem;
 }
@@ -2112,9 +2251,14 @@ img {
   .section-grid,
   .benefit-grid,
   .episode-layout,
-  .profile-grid,
-  .pricing-grid {
+    .profile-grid,
+    .admin-grid,
+    .pricing-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .choice-grid {
@@ -2153,7 +2297,12 @@ img {
     padding-inline: 1rem;
   }
 
+  .admin-page {
+    padding-inline: 1rem;
+  }
+
   .notifications-heading,
+  .admin-heading,
   .notification-content > div:first-child {
     align-items: stretch;
     flex-direction: column;
@@ -2188,6 +2337,16 @@ img {
 
   .profile-stat-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-stat-grid,
+  .admin-list__row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-list__row > div:last-child {
+    justify-items: start;
+    text-align: left;
   }
 
   .mentor-greeting {

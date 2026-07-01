@@ -15,20 +15,15 @@
       <a class="btn btn--primary" routerLink="/home">Retour à l'accueil</a>
     </section>
   } @else if (episode(); as episode) {
-    <section class="fake-player" aria-label="Lecteur video">
-      <div class="player-shine"></div>
-      <button
-        class="player-center-button"
-        [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
-        type="button"
-        (click)="togglePlayback()"
-      >
-        @if (playing()) {
-          <span class="control-icon control-icon--pause" aria-hidden="true"></span>
-        } @else {
-          <span class="control-icon control-icon--play" aria-hidden="true"></span>
-        }
-      </button>
+    <section class="video-player" aria-label="Lecteur video">
+      @if (episode.videoUrl) {
+        <video class="video-player__media" [src]="episode.videoUrl" [poster]="episode.videoStill" controls playsinline></video>
+      } @else {
+        <div class="video-player__empty glass-panel">
+          <strong>Video non disponible</strong>
+          <span>L'episode existe, mais aucun export video n'est encore fourni par le backend.</span>
+        </div>
+      }
     </section>
 
     <footer class="player-controls">
@@ -36,27 +31,7 @@
         <span>{{ travel()?.title ?? 'Votre voyage' }}</span>
         <strong>{{ episode.title }}</strong>
       </div>
-
-      <button
-        class="round-control"
-        [attr.aria-label]="playing() ? 'Mettre en pause' : 'Lancer la lecture'"
-        type="button"
-        (click)="togglePlayback()"
-      >
-        @if (playing()) {
-          <span class="control-icon control-icon--pause" aria-hidden="true"></span>
-        } @else {
-          <span class="control-icon control-icon--play" aria-hidden="true"></span>
-        }
-      </button>
-
-      <div class="player-progress" aria-label="Barre de progression">
-        <span>{{ progress().toFixed(0) }}%</span>
-        <div class="progress-track">
-          <span [style.width.%]="progress()"></span>
-        </div>
-        <span>{{ episode.duration }}</span>
-      </div>
+      <span class="player-duration">{{ episode.duration }}</span>
     </footer>
   }
 </main>

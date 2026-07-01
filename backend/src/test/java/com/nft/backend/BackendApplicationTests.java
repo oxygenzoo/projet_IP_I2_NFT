@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.nft.backend.dto.ai.PhotoAnalysisDto;
 import com.nft.backend.dto.travel.EpisodeDto;
 import com.nft.backend.dto.travel.SceneDto;
 import com.nft.backend.dto.travel.SynopsisDto;
@@ -18,7 +17,6 @@ import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
 import com.nft.backend.repository.UserRepository;
 import com.nft.backend.service.EpisodeSynopsisService;
-import com.nft.backend.service.MockAiAnalysisService;
 import com.nft.backend.service.TravelCatalogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,9 +74,6 @@ class BackendApplicationTests {
     @Autowired
     private EpisodeSynopsisService episodeSynopsisService;
 
-    @Autowired
-    private MockAiAnalysisService mockAiAnalysisService;
-
     @BeforeEach
     void cleanDatabase() {
         photoRepository.deleteAll();
@@ -110,6 +105,18 @@ class BackendApplicationTests {
     }
 
     @Test
+    void corsAllowsVercelPreviewOrigins() throws Exception {
+        String origin = "https://projet-ip-i2-5faavc4mb-oxygenzoos-projects.vercel.app";
+
+        mockMvc.perform(options("/api/episodes")
+                        .header(HttpHeaders.ORIGIN, origin)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, containsString("GET")));
+    }
+
+    @Test
     void travelsEndpointReturnsBackendData() throws Exception {
         mockMvc.perform(get("/api/travels"))
                 .andExpect(status().isOk())
@@ -126,7 +133,7 @@ class BackendApplicationTests {
     }
 
     @Test
-    void travelDetailReturnsDemoData() throws Exception {
+    void travelDetailReturnsNotFoundForUnknownId() throws Exception {
         mockMvc.perform(get("/api/travels/{id}", "bali-2025"))
                 .andExpect(status().isNotFound());
     }
@@ -165,18 +172,6 @@ class BackendApplicationTests {
     }
 
     @Test
-    void mockAiServiceReturnsStableData() {
-        List<PhotoAnalysisDto> first = mockAiAnalysisService.analyzePhotos(List.of("photo-1", "photo-2"));
-        List<PhotoAnalysisDto> second = mockAiAnalysisService.analyzePhotos(List.of("photo-1", "photo-2"));
-
-        assertThat(first).isEqualTo(second);
-        assertThat(first).hasSize(2);
-        assertThat(first.get(0).qualityScore()).isPositive();
-        assertThat(first.get(0).tags()).contains("paysage", "groupe", "monument");
-        assertThat(mockAiAnalysisService.analyzePhotos(List.of())).isEmpty();
-    }
-
-    @Test
     void refusesQuestionnaireForUnknownTravel() throws Exception {
         mockMvc.perform(post("/api/travels/{travelId}/preferences", "unknown-travel")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -206,7 +201,7 @@ class BackendApplicationTests {
     }
 
     @Test
-    void preferencesAreStoredForDemoTravels() throws Exception {
+    void preferencesAreStoredForPersistedTravels() throws Exception {
         String userId = createUserAndReturnId("preferences-owner@example.com");
         String travelId = createTravelAndReturnId(userId, "Voyage preferences");
 
@@ -235,14 +230,14 @@ class BackendApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "email": "demo@example.com",
+                                  "email": "user@example.com",
                                   "passwordHash": "hashed-password",
                                   "consentRgpd": true
                                 }
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.email").value("demo@example.com"))
+                .andExpect(jsonPath("$.email").value("user@example.com"))
                 .andExpect(jsonPath("$.consentRgpd").value(true));
     }
 
@@ -381,7 +376,7 @@ class BackendApplicationTests {
                 "images",
                 "trip.jpg",
                 "image/jpeg",
-                "fake-image".getBytes(StandardCharsets.UTF_8));
+                "image-bytes".getBytes(StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/generation/jobs")
                         .file(image)
@@ -502,7 +497,7 @@ class BackendApplicationTests {
     @Test
     void sharesEpisodeAndRejectsInvalidToken() throws Exception {
         Episode episode = episodeRepository.save(new Episode(
-                travelRepository.save(new Travel("Bali", "Bali", "Demo")),
+                travelRepository.save(new Travel("Bali", "Bali", "Production")),
                 1,
                 "Arrivee",
                 "Ubud",
@@ -528,8 +523,8 @@ class BackendApplicationTests {
 
     @Test
     void exportsEpisodeReadyOrFailed() throws Exception {
-        Episode episode = episodeRepository.save(new Episode(
-                travelRepository.save(new Travel("Bali", "Bali", "Demo")),
+        Episode episode = new Episode(
+                travelRepository.save(new Travel("Bali", "Bali", "Production")),
                 1,
                 "Arrivee",
                 "Ubud",
@@ -537,16 +532,18 @@ class BackendApplicationTests {
                 "Resume",
                 "",
                 "Cinematographique",
-                EpisodeStatus.READY));
+                EpisodeStatus.READY);
+        episode.updateExport("idle", "https://cdn.example.com/videos/episode.mp4");
+        Episode savedEpisode = episodeRepository.save(episode);
 
         mockMvc.perform(post("/api/travels/{travelId}/episodes/{episodeId}/export",
-                        episode.getTravel().getId(), episode.getId()))
+                        savedEpisode.getTravel().getId(), savedEpisode.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exportStatus").value("ready"))
-                .andExpect(jsonPath("$.videoUrl").value("/demo-video.mp4"));
+                .andExpect(jsonPath("$.videoUrl").value("https://cdn.example.com/videos/episode.mp4"));
 
         mockMvc.perform(post("/api/travels/{travelId}/episodes/{episodeId}/export",
-                        episode.getTravel().getId(), episode.getId())
+                        savedEpisode.getTravel().getId(), savedEpisode.getId())
                         .param("fail", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exportStatus").value("failed"));
