@@ -64,7 +64,10 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
     const images = this.draft.selectedImages();
 
     if (images.length === 0) {
-      this.errorMessage.set('Aucune photo a envoyer. Retournez a l import pour ajouter vos images.');
+      this.router.navigate(['/upload'], {
+        queryParams: { reason: 'missing-photos' },
+        replaceUrl: true,
+      });
       this.percent.set(0);
       this.completed.set([]);
       this.activeIndex.set(0);

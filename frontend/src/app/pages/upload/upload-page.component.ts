@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
@@ -13,12 +14,21 @@ export class UploadPageComponent {
   static readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   private readonly draft = inject(TravelDraftService);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly selectedImages = this.draft.selectedImages;
   protected readonly consentGiven = this.draft.consentRgpd;
   protected readonly selectedCount = computed(() => this.selectedImages().length);
   protected readonly errors = signal<string[]>([]);
   protected readonly isDragging = signal(false);
+
+  constructor() {
+    if (this.route.snapshot.queryParamMap.get('reason') === 'missing-photos') {
+      this.errors.set([
+        'Les photos doivent etre selectionnees dans cette session. Reimportez vos images pour relancer la generation.',
+      ]);
+    }
+  }
 
   protected onFileSelection(event: Event): void {
     const input = event.target as HTMLInputElement;
