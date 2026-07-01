@@ -1,0 +1,34 @@
+<main class="episode-page">
+  <nav class="stream-header stream-header--floating">
+    <app-logo [compact]="true"></app-logo>
+    <div class="stream-header__nav">
+      <a routerLink="/">Accueil</a>
+      <a routerLink="/pricing">Tarifs</a>
+    </div>
+  </nav>
+
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Chargement de l'episode...</h1>
+    </section>
+  } @else if (errorMessage()) {
+    <section class="api-state api-state--error glass-panel" role="alert">
+      <h1>Episode indisponible</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn btn--primary" routerLink="/">Retour</a>
+    </section>
+  } @else if (episode(); as episode) {
+    <section class="episode-hero" [style.--cover-image]="coverImage()">
+      <div class="episode-hero__content">
+        <p class="eyebrow">Episode partage</p>
+        <h1>{{ episode.title }}</h1>
+        <p>{{ episode.summary || episode.introText }}</p>
+        <div class="metadata-row">
+          <span>{{ episode.location || episode.locationName }}</span>
+          <span>Lecture seule</span>
+        </div>
+      </div>
+    </section>
+  }
+</main>

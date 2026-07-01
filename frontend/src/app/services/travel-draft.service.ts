@@ -7,6 +7,7 @@ export class TravelDraftService {
   readonly selectedImages = signal<DraftImage[]>([]);
   readonly preferences = signal<TravelPreferences>({});
   readonly travelId = signal<string | null>(null);
+  readonly consentRgpd = signal(false);
 
   addFiles(files: File[]): void {
     const images = files.map((file) => ({
@@ -36,6 +37,10 @@ export class TravelDraftService {
     this.travelId.set(travelId);
   }
 
+  setConsentRgpd(consent: boolean): void {
+    this.consentRgpd.set(consent);
+  }
+
   clear(): void {
     for (const image of this.selectedImages()) {
       URL.revokeObjectURL(image.previewUrl);
@@ -44,5 +49,6 @@ export class TravelDraftService {
     this.selectedImages.set([]);
     this.preferences.set({});
     this.travelId.set(null);
+    this.consentRgpd.set(false);
   }
 }

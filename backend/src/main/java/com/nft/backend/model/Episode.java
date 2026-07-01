@@ -48,6 +48,15 @@ public class Episode {
     @Column(name = "music_mood", length = 200)
     private String musicMood;
 
+    @Column(name = "share_token", unique = true, length = 80)
+    private String shareToken;
+
+    @Column(name = "export_status", length = 20)
+    private String exportStatus = "idle";
+
+    @Column(name = "video_url")
+    private String videoUrl;
+
     @Convert(converter = EpisodeStatusConverter.class)
     @Column(name = "video_status", nullable = false, length = 20)
     private EpisodeStatus status = EpisodeStatus.DRAFT;
@@ -115,6 +124,18 @@ public class Episode {
         return musicMood;
     }
 
+    public String getShareToken() {
+        return shareToken;
+    }
+
+    public String getExportStatus() {
+        return exportStatus;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
     public EpisodeStatus getStatus() {
         return status;
     }
@@ -144,5 +165,14 @@ public class Episode {
 
     public void changeStatus(EpisodeStatus status) {
         this.status = status;
+    }
+
+    public void enableSharing(String shareToken) {
+        this.shareToken = shareToken;
+    }
+
+    public void updateExport(String exportStatus, String videoUrl) {
+        this.exportStatus = exportStatus;
+        this.videoUrl = videoUrl;
     }
 }

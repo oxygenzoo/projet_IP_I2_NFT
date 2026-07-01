@@ -19,9 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class AiGenerationService {
 
     private final RestClient restClient;
+    private final TravelCatalogService travelCatalogService;
 
-    public AiGenerationService(@Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl) {
+    public AiGenerationService(
+            @Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl,
+            TravelCatalogService travelCatalogService) {
         this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
+        this.travelCatalogService = travelCatalogService;
     }
 
     public GenerationResponse generateEpisode(
@@ -64,6 +68,13 @@ public class AiGenerationService {
             if (response == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Le service IA n'a pas renvoye de resultat.");
             }
+
+            travelCatalogService.registerGeneration(
+                    response,
+                    valueOrDefault(title, "Mon voyage"),
+                    valueOrDefault(destination, ""),
+                    images.size(),
+                    images.stream().map((image) -> safeFilename(image.getOriginalFilename())).toList());
 
             return response;
         } catch (RestClientException exception) {

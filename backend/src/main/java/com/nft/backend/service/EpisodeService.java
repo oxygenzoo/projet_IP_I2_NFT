@@ -1,5 +1,7 @@
 package com.nft.backend.service;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EpisodeService {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final EpisodeRepository episodeRepository;
     private final TravelRepository travelRepository;
@@ -90,6 +94,42 @@ public class EpisodeService {
         episodeRepository.delete(episode);
     }
 
+    @Transactional
+    public EpisodeResponse enableSharing(UUID travelId, UUID episodeId) {
+        Episode episode = findEpisodeForTravel(travelId, episodeId);
+
+        if (episode.getShareToken() == null || episode.getShareToken().isBlank()) {
+            episode.enableSharing(newShareToken());
+        }
+
+        return EpisodeResponse.fromEntity(episodeRepository.save(episode));
+    }
+
+    @Transactional(readOnly = true)
+    public EpisodeResponse getPublicEpisode(String shareToken) {
+        if (shareToken == null || shareToken.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found");
+        }
+
+        return episodeRepository.findByShareToken(shareToken)
+                .map(EpisodeResponse::fromEntity)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found"));
+    }
+
+    @Transactional
+    public EpisodeResponse export(UUID travelId, UUID episodeId, boolean fail) {
+        Episode episode = findEpisodeForTravel(travelId, episodeId);
+        episode.updateExport("pending", null);
+
+        if (fail) {
+            episode.updateExport("failed", null);
+        } else {
+            episode.updateExport("ready", "/demo-video.mp4");
+        }
+
+        return EpisodeResponse.fromEntity(episodeRepository.save(episode));
+    }
+
     private Travel findTravel(UUID travelId) {
         return travelRepository.findById(travelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
@@ -104,5 +144,11 @@ public class EpisodeService {
         }
 
         return episode;
+    }
+
+    private String newShareToken() {
+        byte[] bytes = new byte[32];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

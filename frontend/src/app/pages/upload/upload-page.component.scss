@@ -13,6 +13,31 @@
   background: rgba(255, 197, 51, 0.12);
 }
 
+.consent-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin: 1rem 0;
+  padding: 1rem;
+
+  input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.2rem;
+    accent-color: var(--gold);
+  }
+
+  span {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--muted);
+  }
+
+  strong {
+    color: #fff;
+  }
+}
+
 .upload-errors {
   margin-top: 1rem;
   padding: 1rem 1.1rem;
