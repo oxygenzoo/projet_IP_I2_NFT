@@ -86,10 +86,19 @@
     } @else {
       <div class="scene-timeline">
         @for (scene of sortedScenes(); track scene.id; let index = $index) {
-          <article class="scene-card">
+          <article class="scene-card" [class.scene-card--ai]="isAiReconstructed(scene)">
             <div class="scene-card__media">
               @if (sceneImage(scene, episode); as imageUrl) {
-                <img [src]="imageUrl" [alt]="scene.title || 'Photo de la scène ' + (index + 1)" loading="lazy" />
+                <img [src]="imageUrl" [alt]="sceneImageAlt(scene, index)" loading="lazy" />
+                @if (isAiReconstructed(scene)) {
+                  <span class="ai-reconstruction-badge">Reconstitu&eacute; par IA</span>
+                }
+              } @else if (isAiReconstructed(scene)) {
+                <div class="scene-card__placeholder scene-card__placeholder--ai" aria-label="Image reconstituee par IA">
+                  <span class="ai-placeholder__icon" aria-hidden="true">IA</span>
+                  <strong>Image g&eacute;n&eacute;r&eacute;e / reconstitu&eacute;e par IA</strong>
+                  <small>Pas une photo originale</small>
+                </div>
               } @else {
                 <div class="scene-card__placeholder" aria-label="Photo indisponible">
                   <span>Image indisponible</span>
@@ -99,10 +108,23 @@
             <div class="scene-card__body">
               <div class="scene-card__topline">
                 <span class="scene-card__meta">{{ sceneMeta(scene, index) }}</span>
+                @if (isAiReconstructed(scene)) {
+                  <span class="ai-reconstruction-badge">Reconstitu&eacute; par IA</span>
+                }
                 <span [class]="sceneStatusClass(scene, episode)">{{ sceneStatusLabel(scene, episode) }}</span>
               </div>
               <h3>{{ scene.title || 'Scène ' + (index + 1) }}</h3>
               <p>{{ sceneVoiceOver(scene) }}</p>
+              @if (isAiReconstructed(scene)) {
+                <p class="ai-reconstruction-notice">
+                  Cette sc&egrave;ne est une reconstitution IA, pas une photo originale.
+                </p>
+                @if (scene.aiPrompt) {
+                  <p class="ai-reconstruction-prompt">
+                    <strong>Prompt IA :</strong> {{ scene.aiPrompt }}
+                  </p>
+                }
+              }
             </div>
           </article>
         } @empty {

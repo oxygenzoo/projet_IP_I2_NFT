@@ -64,7 +64,23 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   protected sceneImage(scene: Scene, episode: Episode): string {
+    if (this.isAiReconstructed(scene) && !scene.imageUrl) {
+      return '';
+    }
+
     return scene.imageUrl || episode.coverImage || episode.videoStill || '';
+  }
+
+  protected isAiReconstructed(scene: Scene): boolean {
+    return scene.isAiReconstructed === true;
+  }
+
+  protected sceneImageAlt(scene: Scene, index: number): string {
+    if (this.isAiReconstructed(scene)) {
+      return `Image reconstituee par IA pour la scene ${index + 1}`;
+    }
+
+    return scene.title || `Photo de la scene ${index + 1}`;
   }
 
   protected sceneVoiceOver(scene: Scene): string {

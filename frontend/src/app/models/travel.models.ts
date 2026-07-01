@@ -11,10 +11,11 @@ export type SceneGenerationStatus = 'pending' | 'generating' | 'completed' | 'fa
 
 export interface Scene {
   id: string;
+  episodeId?: string;
   title?: string;
   timecode?: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   voiceOverText?: string;
   voiceoverText?: string;
   narrationText?: string;
@@ -24,6 +25,8 @@ export interface Scene {
   position?: number | string;
   duration?: number | string;
   createdAt?: string;
+  isAiReconstructed?: boolean;
+  aiPrompt?: string;
 }
 
 export interface Episode {
