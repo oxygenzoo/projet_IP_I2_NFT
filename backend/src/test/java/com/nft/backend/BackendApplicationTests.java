@@ -344,7 +344,7 @@ class BackendApplicationTests {
 
     @Test
     @DirtiesContext
-    void generationWorkflowCreatesReadyEpisodeFromTravelPhotosAndPreferences() throws Exception {
+    void generationWorkflowRejectsWhenAiServiceIsUnavailable() throws Exception {
         String userId = createUserAndReturnId("generation-owner@example.com");
         String travelId = createTravelAndReturnId(userId, "Voyage IA");
 
@@ -383,25 +383,18 @@ class BackendApplicationTests {
                         .param("travelId", travelId)
                         .param("title", "Voyage IA")
                         .param("destination", "Lisbonne")
-                        .param("preferences", """
-                                {"style":"Cinematographique","people":"Famille","moments":"Paysages","tone":"Inspirant"}
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ready"))
-                .andExpect(jsonPath("$.selection_report.photos_recues").value(1))
-                .andExpect(jsonPath("$.script.preferences", containsString("Cinematographique")));
+                .param("preferences", """
+                        {"style":"Cinematographique","people":"Famille","moments":"Paysages","tone":"Inspirant"}
+                        """))
+                .andExpect(status().isBadGateway());
 
         mockMvc.perform(get("/api/travels/{travelId}/episodes", travelId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].title").value("Episode 1 - Voyage IA"))
-                .andExpect(jsonPath("$[0].status").value("ready"));
+                .andExpect(jsonPath("$", hasSize(0)));
 
         mockMvc.perform(get("/api/episodes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].scenes", hasSize(0)))
-                .andExpect(jsonPath("$[0].remaining").value("idle"));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     private String createUserAndReturnId(String email) throws Exception {

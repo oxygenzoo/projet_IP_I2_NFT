@@ -2,11 +2,8 @@ package com.nft.backend.service;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -108,18 +105,10 @@ public class AiGenerationService {
 
             return response;
         } catch (RestClientException exception) {
-            GenerationResponse fallback = localGeneration(valueOrDefault(title, "Mon voyage"), destination, preferences, filenames);
-            if (travelId == null || travelId.isBlank()) {
-                travelCatalogService.registerGeneration(
-                        fallback,
-                        valueOrDefault(title, "Mon voyage"),
-                        valueOrDefault(destination, ""),
-                        filenames.size(),
-                        filenames);
-            } else {
-                registerTravelWorkflow(fallback, travelId, images);
-            }
-            return fallback;
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Le service IA est indisponible. Aucune generation locale n'a ete creee.",
+                    exception);
         }
     }
 
@@ -129,46 +118,6 @@ public class AiGenerationService {
             String destination,
             String preferences) {
         return generateEpisode(images, title, destination, preferences, null);
-    }
-
-    private GenerationResponse localGeneration(
-            String title,
-            String destination,
-            String preferences,
-            List<String> filenames) {
-        String jobId = UUID.randomUUID().toString();
-        String location = valueOrDefault(destination, "Votre voyage");
-        String episodeTitle = "Episode 1 - " + title;
-        List<Map<String, Object>> scenes = new ArrayList<>();
-
-        for (int index = 0; index < Math.min(filenames.size(), 6); index++) {
-            scenes.add(Map.of(
-                    "titre", "Souvenir " + (index + 1),
-                    "description", filenames.get(index),
-                    "timecode", "00:" + String.format(Locale.ROOT, "%02d", index * 12)));
-        }
-
-        Map<String, Object> script = Map.of(
-                "voyage", title,
-                "preferences", valueOrDefault(preferences, "{}"),
-                "nb_episodes", 1,
-                "episodes", List.of(Map.of(
-                        "episode_numero", 1,
-                        "episode_titre", episodeTitle,
-                        "lieu", location,
-                        "date", DateTimeFormatter.ISO_DATE.format(LocalDate.now()),
-                        "scenes", scenes)));
-
-        return new GenerationResponse(
-                jobId,
-                "ready",
-                "Episode cree en local. Le service IA externe n'est pas disponible pour le moment.",
-                Map.of(
-                        "photos_recues", filenames.size(),
-                        "mode", "local-fallback"),
-                script,
-                List.of(),
-                "");
     }
 
     private ByteArrayResource multipartResource(MultipartFile file) throws IOException {
