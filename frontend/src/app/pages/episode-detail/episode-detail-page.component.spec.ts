@@ -103,6 +103,43 @@ describe('EpisodeDetailPageComponent', () => {
     expect(element.textContent).toContain('Ancien texte narratif conserve.');
   });
 
+  it('renders AI reconstructed scenes with a badge, prompt, and dedicated placeholder', () => {
+    const episode = episodeWithScenes([
+      {
+        id: 'normal-scene',
+        title: 'Photo originale',
+        order: 1,
+        imageUrl: '/real-photo.jpg',
+        voiceOverText: 'Une vraie photo importee.',
+        status: 'completed',
+      },
+      {
+        id: 'ai-scene',
+        title: 'Moment manquant',
+        order: 2,
+        imageUrl: null,
+        voiceOverText: "Aucune photo n'a capture ce moment.",
+        status: 'completed',
+        isAiReconstructed: true,
+        aiPrompt: 'Reconstituer une scene de coucher de soleil a Rome avec ambiance cinematographique.',
+      },
+    ]);
+
+    render(episode);
+
+    const element = fixture.nativeElement as HTMLElement;
+    const aiCard = element.querySelector('.scene-card--ai') as HTMLElement;
+    const normalCard = element.querySelector('.scene-card:not(.scene-card--ai)') as HTMLElement;
+
+    expect(aiCard).toBeTruthy();
+    expect(aiCard.textContent).toContain('Reconstitu\u00e9 par IA');
+    expect(aiCard.textContent).toContain('Image g\u00e9n\u00e9r\u00e9e / reconstitu\u00e9e par IA');
+    expect(aiCard.textContent).toContain('Cette sc\u00e8ne est une reconstitution IA, pas une photo originale.');
+    expect(aiCard.textContent).toContain('Prompt IA : Reconstituer une scene de coucher de soleil a Rome');
+    expect(aiCard.querySelector('img')).toBeNull();
+    expect(normalCard.textContent).not.toContain('Reconstitu\u00e9 par IA');
+  });
+
   it('renders an empty timeline message when the episode has no scenes', () => {
     render(episodeWithScenes([]));
 

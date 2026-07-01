@@ -5,5 +5,7 @@ public record SceneDto(
         String title,
         String timecode,
         String description,
-        String imageUrl) {
+        String imageUrl,
+        Boolean isAiReconstructed,
+        String aiPrompt) {
 }
