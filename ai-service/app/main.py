@@ -49,6 +49,10 @@ def should_render_video() -> bool:
     return os.getenv("AI_RENDER_VIDEO", "false").lower() in {"1", "true", "yes", "on"}
 
 
+def max_rendered_episodes() -> int:
+    return max(1, int(os.getenv("AI_RENDER_MAX_EPISODES", "1")))
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "UP"}
@@ -110,7 +114,7 @@ async def generate_episode(
                 scripts_path=str(scripts_dir / "scripts_episodes.json"),
                 photos_dir=str(photos_dir),
                 output_dir=str(videos_dir),
-                max_episodes=max_episodes,
+                max_episodes=min(max_episodes, max_rendered_episodes()),
             )
 
         video_urls = [

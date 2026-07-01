@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -37,7 +38,13 @@ def wrap_text(text: str, max_chars: int = 70) -> list[str]:
     return lines
 
 
-def load_image(path: str, width: int = 1280, height: int = 720) -> np.ndarray:
+VIDEO_WIDTH = int(os.getenv("AI_VIDEO_WIDTH", "854"))
+VIDEO_HEIGHT = int(os.getenv("AI_VIDEO_HEIGHT", "480"))
+VIDEO_FPS = int(os.getenv("AI_VIDEO_FPS", "12"))
+VIDEO_MAX_SCENES = int(os.getenv("AI_VIDEO_MAX_SCENES", "6"))
+
+
+def load_image(path: str, width: int = VIDEO_WIDTH, height: int = VIDEO_HEIGHT) -> np.ndarray:
     image = Image.open(path).convert("RGB")
     source_w, source_h = image.size
     target_ratio = width / height
@@ -56,17 +63,17 @@ def load_image(path: str, width: int = 1280, height: int = 720) -> np.ndarray:
 
 
 def text_card(lines: list[tuple[str, tuple[int, int, int], int]],
-              width: int = 1280, height: int = 720) -> np.ndarray:
+              width: int = VIDEO_WIDTH, height: int = VIDEO_HEIGHT) -> np.ndarray:
     image = Image.new("RGB", (width, height), color=(10, 10, 15))
     draw = ImageDraw.Draw(image)
-    draw.rectangle([60, 60, width - 60, 62], fill=(80, 70, 120))
-    draw.rectangle([60, height - 62, width - 60, height - 60], fill=(80, 70, 120))
+    draw.rectangle([40, 40, width - 40, 42], fill=(80, 70, 120))
+    draw.rectangle([40, height - 42, width - 40, height - 40], fill=(80, 70, 120))
 
-    total_height = len(lines) * 70
+    total_height = len(lines) * 54
     y = (height - total_height) // 2
     for text, color, size in lines:
         draw.text((width // 2, y), text, fill=color, font=font(size), anchor="mm")
-        y += 70
+        y += 54
 
     return np.array(image)
 
@@ -77,17 +84,17 @@ def add_caption(frame: np.ndarray, voiceover: str, screen_text: str = "") -> np.
     width, height = image.size
 
     if screen_text:
-        draw.rectangle([0, 0, width, 48], fill=(0, 0, 0, 150))
-        draw.text((24, 24), screen_text, fill=(230, 225, 245, 255), font=font(25), anchor="lm")
+        draw.rectangle([0, 0, width, 42], fill=(0, 0, 0, 150))
+        draw.text((20, 21), screen_text, fill=(230, 225, 245, 255), font=font(20), anchor="lm")
 
     if voiceover:
-        lines = wrap_text(voiceover, 72)
-        band_height = 50 + len(lines) * 46
+        lines = wrap_text(voiceover, 58)
+        band_height = 34 + len(lines) * 34
         draw.rectangle([0, height - band_height, width, height], fill=(0, 0, 0, 170))
-        y = height - band_height + 28
+        y = height - band_height + 22
         for line in lines:
-            draw.text((width // 2, y), line, fill=(245, 240, 255, 255), font=font(34), anchor="mm")
-            y += 46
+            draw.text((width // 2, y), line, fill=(245, 240, 255, 255), font=font(24), anchor="mm")
+            y += 34
 
     return np.array(image.convert("RGB"))
 
@@ -111,18 +118,18 @@ def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | N
     clips = []
 
     clips.append(ImageClip(text_card([
-        (f"Episode {number}", (140, 120, 200), 30),
-        (title, (255, 255, 255), 62),
-        (place, (190, 185, 210), 34),
-        (date, (140, 135, 160), 28),
-    ]), duration=4.0))
+        (f"Episode {number}", (140, 120, 200), 24),
+        (title, (255, 255, 255), 42),
+        (place, (190, 185, 210), 26),
+        (date, (140, 135, 160), 22),
+    ]), duration=2.5))
 
     for line in wrap_text(episode.get("intro", ""), 58):
-        clips.append(ImageClip(text_card([(line, (220, 215, 240), 34)]), duration=2.5))
+        clips.append(ImageClip(text_card([(line, (220, 215, 240), 26)]), duration=1.8))
 
-    for scene in episode.get("scenes", []):
+    for scene in episode.get("scenes", [])[:VIDEO_MAX_SCENES]:
         photo_path = find_photo(scene.get("photo_fichier", ""), photos_dir)
-        duration = float(scene.get("duree_secondes", 6))
+        duration = min(float(scene.get("duree_secondes", 4)), 4.0)
         if not photo_path:
             frame = text_card([
                 ("Photo introuvable", (220, 90, 90), 40),
@@ -137,16 +144,21 @@ def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | N
         clips.append(ImageClip(frame, duration=duration))
 
     for line in wrap_text(episode.get("outro", ""), 58):
-        clips.append(ImageClip(text_card([(line, (220, 215, 240), 34)]), duration=2.5))
+        clips.append(ImageClip(text_card([(line, (220, 215, 240), 26)]), duration=1.8))
 
     if not clips:
         return None
 
     video = concatenate_videoclips(clips, method="compose")
-    safe_title = "".join(char if char.isalnum() or char in "-_" else "_" for char in title[:35])
-    output_path = str(Path(output_dir) / f"episode_{number:02d}_{safe_title}.mp4")
-    video.write_videofile(output_path, fps=24, codec="libx264", audio=False, logger=None)
-    return output_path
+    try:
+        safe_title = "".join(char if char.isalnum() or char in "-_" else "_" for char in title[:35])
+        output_path = str(Path(output_dir) / f"episode_{number:02d}_{safe_title}.mp4")
+        video.write_videofile(output_path, fps=VIDEO_FPS, codec="libx264", audio=False, logger=None)
+        return output_path
+    finally:
+        video.close()
+        for clip in clips:
+            clip.close()
 
 
 def run_pipeline(scripts_path: str, photos_dir: str, output_dir: str,
