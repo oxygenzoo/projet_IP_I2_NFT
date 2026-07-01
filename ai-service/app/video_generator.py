@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -107,25 +109,74 @@ def find_photo(filename: str, photos_dir: str) -> str | None:
     return None
 
 
-def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | None:
-    from moviepy import ImageClip, concatenate_videoclips
+def quote_concat_path(path: Path) -> str:
+    return str(path.resolve()).replace("'", "'\\''")
 
+
+def write_frame(frame: np.ndarray, frame_dir: Path, index: int) -> Path:
+    frame_path = frame_dir / f"frame_{index:03d}.jpg"
+    Image.fromarray(frame.astype(np.uint8)).save(frame_path, format="JPEG", quality=88, optimize=True)
+    return frame_path
+
+
+def render_video_from_frames(frames: list[tuple[Path, float]], output_path: str) -> None:
+    concat_path = Path(output_path).with_suffix(".concat.txt")
+    lines = []
+    for frame_path, duration in frames:
+        lines.append(f"file '{quote_concat_path(frame_path)}'")
+        lines.append(f"duration {duration:.2f}")
+    if frames:
+        lines.append(f"file '{quote_concat_path(frames[-1][0])}'")
+
+    concat_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(concat_path),
+                "-vf",
+                "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                "-r",
+                str(VIDEO_FPS),
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                output_path,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    finally:
+        concat_path.unlink(missing_ok=True)
+
+
+def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | None:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     number = episode.get("episode_numero", 1)
     title = episode.get("episode_titre", f"Episode {number}")
     place = episode.get("lieu", "")
     date = episode.get("date", "")
-    clips = []
+    frame_dir = Path(output_dir) / f"frames_episode_{number:02d}"
+    frame_dir.mkdir(parents=True, exist_ok=True)
+    frames: list[tuple[Path, float]] = []
 
-    clips.append(ImageClip(text_card([
+    frames.append((write_frame(text_card([
         (f"Episode {number}", (140, 120, 200), 24),
         (title, (255, 255, 255), 42),
         (place, (190, 185, 210), 26),
         (date, (140, 135, 160), 22),
-    ]), duration=2.5))
+    ]), frame_dir, len(frames)), 2.5))
 
     for line in wrap_text(episode.get("intro", ""), 58):
-        clips.append(ImageClip(text_card([(line, (220, 215, 240), 26)]), duration=1.8))
+        frames.append((write_frame(text_card([(line, (220, 215, 240), 26)]), frame_dir, len(frames)), 1.8))
 
     for scene in episode.get("scenes", [])[:VIDEO_MAX_SCENES]:
         photo_path = find_photo(scene.get("photo_fichier", ""), photos_dir)
@@ -141,24 +192,21 @@ def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | N
                 scene.get("voix_off", ""),
                 scene.get("texte_ecran", ""),
             )
-        clips.append(ImageClip(frame, duration=duration))
+        frames.append((write_frame(frame, frame_dir, len(frames)), duration))
 
     for line in wrap_text(episode.get("outro", ""), 58):
-        clips.append(ImageClip(text_card([(line, (220, 215, 240), 26)]), duration=1.8))
+        frames.append((write_frame(text_card([(line, (220, 215, 240), 26)]), frame_dir, len(frames)), 1.8))
 
-    if not clips:
+    if not frames:
         return None
 
-    video = concatenate_videoclips(clips, method="compose")
     try:
         safe_title = "".join(char if char.isalnum() or char in "-_" else "_" for char in title[:35])
         output_path = str(Path(output_dir) / f"episode_{number:02d}_{safe_title}.mp4")
-        video.write_videofile(output_path, fps=VIDEO_FPS, codec="libx264", audio=False, logger=None)
+        render_video_from_frames(frames, output_path)
         return output_path
     finally:
-        video.close()
-        for clip in clips:
-            clip.close()
+        shutil.rmtree(frame_dir, ignore_errors=True)
 
 
 def run_pipeline(scripts_path: str, photos_dir: str, output_dir: str,
