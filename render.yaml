@@ -31,6 +31,8 @@ services:
         value: "false"
       - key: HIBERNATE_DIALECT
         value: org.hibernate.dialect.PostgreSQLDialect
+      - key: POSTGRES_PREPARE_THRESHOLD
+        value: "0"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
