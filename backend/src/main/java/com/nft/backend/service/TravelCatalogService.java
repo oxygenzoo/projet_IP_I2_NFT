@@ -48,7 +48,7 @@ public class TravelCatalogService {
     @Transactional(readOnly = true)
     public List<EpisodeDto> getEpisodes() {
         return episodeRepository.findAll().stream()
-                .map(this::toEpisodeDto)
+                .map((episode) -> toEpisodeDto(episode, false))
                 .toList();
     }
 
@@ -88,7 +88,7 @@ public class TravelCatalogService {
     private TravelDto toTravelDto(Travel travel) {
         List<EpisodeDto> episodes = episodeRepository.findByTravelIdOrderByEpisodeNumberAsc(travel.getId())
                 .stream()
-                .map(this::toEpisodeDto)
+                .map((episode) -> toEpisodeDto(episode, false))
                 .toList();
 
         int photoCount = travel.getPhotos() == null ? 0 : travel.getPhotos().size();
@@ -122,6 +122,10 @@ public class TravelCatalogService {
     }
 
     private EpisodeDto toEpisodeDto(Episode episode) {
+        return toEpisodeDto(episode, true);
+    }
+
+    private EpisodeDto toEpisodeDto(Episode episode, boolean includeScenes) {
         return new EpisodeDto(
                 episode.getId().toString(),
                 episode.getTravel().getId().toString(),
@@ -139,9 +143,11 @@ public class TravelCatalogService {
                 episode.getStatus() == EpisodeStatus.READY ? 100 : 0,
                 valueOrDefault(episode.getExportStatus(), "idle"),
                 List.of(),
-                episode.getScenes().stream()
-                        .map(this::toSceneDto)
-                        .toList());
+                includeScenes
+                        ? episode.getScenes().stream()
+                                .map(this::toSceneDto)
+                                .toList()
+                        : List.of());
     }
 
     private SceneDto toSceneDto(EpisodeScene scene) {

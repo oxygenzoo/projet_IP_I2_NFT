@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
 import { TravelApiService } from '../../services/travel-api.service';
@@ -126,7 +126,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     this.statsSubscription?.unsubscribe();
     this.statsSubscription = forkJoin({
       travels: this.travelApiService.getTravels(),
-      episodes: this.travelApiService.getEpisodes(),
+      episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ travels, episodes }) => {
         this.travelCount.set(travels.length);

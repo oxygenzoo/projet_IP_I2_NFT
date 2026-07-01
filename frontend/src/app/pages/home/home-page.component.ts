@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
@@ -49,7 +49,7 @@ export class HomePageComponent implements OnInit {
 
     forkJoin({
       travels: this.travelApiService.getTravels(),
-      episodes: this.travelApiService.getEpisodes(),
+      episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ travels, episodes }) => {
         this.travels.set(travels);

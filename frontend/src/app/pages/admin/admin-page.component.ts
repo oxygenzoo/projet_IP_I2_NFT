@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
 import { TravelApiService } from '../../services/travel-api.service';
@@ -36,7 +36,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
     this.dashboardSubscription?.unsubscribe();
     this.dashboardSubscription = forkJoin({
       travels: this.travelApiService.getTravels(),
-      episodes: this.travelApiService.getEpisodes(),
+      episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ travels, episodes }) => {
         this.travels.set(travels);
