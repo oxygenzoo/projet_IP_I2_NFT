@@ -38,9 +38,27 @@
           <span class="play-icon"></span>
           Lecture
         </a>
-        <button class="btn btn--glass" type="button">Partager</button>
+        <button class="btn btn--glass" type="button" (click)="shareEpisode()">Partager</button>
+        <button
+          class="btn btn--glass"
+          type="button"
+          [disabled]="isExporting()"
+          [attr.aria-busy]="isExporting()"
+          (click)="exportEpisode()"
+        >
+          {{ isExporting() ? 'Export...' : 'Exporter' }}
+        </button>
         <a class="btn btn--ghost" routerLink="/home">Retour</a>
       </div>
+      @if (shareMessage()) {
+        <p class="episode-action-state">{{ shareMessage() }}</p>
+      }
+      @if (exportMessage()) {
+        <p class="episode-action-state">{{ exportMessage() }}</p>
+      }
+      @if (episode.videoUrl && episode.exportStatus === 'ready') {
+        <a class="episode-action-state" [href]="episode.videoUrl">Video accessible</a>
+      }
     </div>
   </section>
 

@@ -114,7 +114,6 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.draft.setPreferences(this.selected());
     const preferences = this.currentPreferences();
 
     if (!this.isQuestionnaireComplete(preferences)) {

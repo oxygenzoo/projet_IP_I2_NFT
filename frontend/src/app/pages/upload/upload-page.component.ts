@@ -15,6 +15,7 @@ export class UploadPageComponent {
   private readonly draft = inject(TravelDraftService);
 
   protected readonly selectedImages = this.draft.selectedImages;
+  protected readonly consentGiven = this.draft.consentRgpd;
   protected readonly selectedCount = computed(() => this.selectedImages().length);
   protected readonly errors = signal<string[]>([]);
   protected readonly isDragging = signal(false);
@@ -45,6 +46,12 @@ export class UploadPageComponent {
     this.draft.removeImage(index);
   }
 
+  protected updateConsent(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.draft.setConsentRgpd(input.checked);
+    this.errors.set([]);
+  }
+
   protected preferencesLink(): string | string[] {
     const travelId = this.draft.travelId();
 
@@ -61,6 +68,11 @@ export class UploadPageComponent {
 
   private addFiles(fileList: FileList | null): void {
     if (!fileList?.length) {
+      return;
+    }
+
+    if (!this.consentGiven()) {
+      this.errors.set(['Vous devez accepter le traitement privé de vos photos avant l’import.']);
       return;
     }
 

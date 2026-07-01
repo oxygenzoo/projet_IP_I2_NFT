@@ -33,13 +33,19 @@ export interface Episode {
   summary: string;
   duration: string;
   location: string;
+  locationName?: string;
   date: string;
+  episodeDate?: string;
+  introText?: string;
   photoCount: number;
   coverImage: string;
   videoStill: string;
   progress: number;
   remaining: string;
-  keyMoments?: string[];
+  status?: string;
+  shareToken?: string;
+  exportStatus?: 'idle' | 'pending' | 'ready' | 'failed' | string;
+  videoUrl?: string;
   scenes: Scene[];
 }
 

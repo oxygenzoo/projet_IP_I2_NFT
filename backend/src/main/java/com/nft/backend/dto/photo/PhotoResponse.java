@@ -11,6 +11,9 @@ public record PhotoResponse(
         String filename,
         long size,
         String type,
+        String imageUrl,
+        boolean consentRgpd,
+        Instant consentDate,
         Instant uploadedAt) {
 
     public static PhotoResponse fromEntity(Photo photo) {
@@ -20,6 +23,9 @@ public record PhotoResponse(
                 photo.getFilename(),
                 photo.getSize(),
                 photo.getType(),
+                photo.getImageUrl(),
+                photo.isConsentRgpd(),
+                photo.getConsentDate(),
                 photo.getUploadedAt());
     }
 }

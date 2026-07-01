@@ -22,15 +22,16 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   private readonly travelApiService = inject(TravelApiService);
   private episodeSubscription?: Subscription;
   private travelSubscription?: Subscription;
-  private sceneSubscription?: Subscription;
+  private shareSubscription?: Subscription;
+  private exportSubscription?: Subscription;
 
   protected readonly episode = signal<Episode | null>(null);
   protected readonly travel = signal<Travel | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
-  protected readonly scenes = signal<Scene[]>([]);
-  protected readonly isScenesLoading = signal(false);
-  protected readonly scenesErrorMessage = signal('');
+  protected readonly shareMessage = signal('');
+  protected readonly exportMessage = signal('');
+  protected readonly isExporting = signal(false);
   protected readonly coverImage = computed(() => `url(${this.episode()?.coverImage ?? ''})`);
   protected readonly sortedScenes = computed(() =>
     [...(this.episode()?.scenes ?? [])].sort(
@@ -64,154 +65,51 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.episodeSubscription?.unsubscribe();
     this.travelSubscription?.unsubscribe();
-    this.sceneSubscription?.unsubscribe();
+    this.shareSubscription?.unsubscribe();
+    this.exportSubscription?.unsubscribe();
   }
 
-  protected sceneImage(scene: Scene, episode: Episode): string {
-    if (this.isAiReconstructed(scene) && !scene.imageUrl) {
-      return '';
-    }
+  protected shareEpisode(): void {
+    const episode = this.episode();
 
-    return scene.imageUrl || episode.coverImage || episode.videoStill || '';
-  }
-
-  protected isAiReconstructed(scene: Scene): boolean {
-    return scene.isAiReconstructed === true;
-  }
-
-  protected sceneImageAlt(scene: Scene, index: number): string {
-    if (this.isAiReconstructed(scene)) {
-      return `Image reconstituee par IA pour la scene ${index + 1}`;
-    }
-
-    return scene.title || `Photo de la scene ${index + 1}`;
-  }
-
-  protected sceneVoiceOver(scene: Scene): string {
-    return (
-      scene.voiceOverText ||
-      scene.voiceoverText ||
-      scene.narrationText ||
-      scene.description ||
-      'Texte de voix-off indisponible pour cette scène.'
-    );
-  }
-
-  protected sceneStatus(scene: Scene, episode: Episode): SceneGenerationStatus {
-    if (scene.status) {
-      return scene.status;
-    }
-
-    if (episode.progress >= 100) {
-      return 'completed';
-    }
-
-    if (episode.progress > 0) {
-      return 'generating';
-    }
-
-    return 'pending';
-  }
-
-  protected sceneStatusLabel(scene: Scene, episode: Episode): string {
-    return STATUS_LABELS[this.sceneStatus(scene, episode)];
-  }
-
-  protected sceneStatusClass(scene: Scene, episode: Episode): string {
-    return `scene-status scene-status--${this.sceneStatus(scene, episode)}`;
-  }
-
-  protected sceneDuration(scene: Scene): string {
-    if (scene.duration === undefined || scene.duration === null || scene.duration === '') {
-      return '';
-    }
-
-    return typeof scene.duration === 'number' ? `${scene.duration} s` : scene.duration;
-  }
-
-  protected sceneMeta(scene: Scene, index: number): string {
-    const parts = [`Scene ${index + 1}`];
-
-    if (scene.timecode) {
-      parts.push(scene.timecode);
-    }
-
-    const duration = this.sceneDuration(scene);
-    if (duration) {
-      parts.push(duration);
-    }
-
-    return parts.join(' - ');
-  }
-
-  private loadScenes(episode: Episode): void {
-    this.sceneSubscription?.unsubscribe();
-    this.isScenesLoading.set(true);
-    this.scenesErrorMessage.set('');
-
-    if (Array.isArray(episode.scenes)) {
-      this.scenes.set(episode.scenes);
-      this.isScenesLoading.set(false);
+    if (!episode) {
       return;
     }
 
-    this.sceneSubscription = this.travelApiService.getEpisodeScenes(episode.id).subscribe({
-      next: (scenes) => {
-        this.scenes.set(scenes);
-        this.isScenesLoading.set(false);
+    this.shareMessage.set('');
+    this.shareSubscription?.unsubscribe();
+    this.shareSubscription = this.travelApiService.shareEpisode(episode.travelId, episode.id).subscribe({
+      next: (sharedEpisode) => {
+        this.episode.set({ ...episode, ...sharedEpisode });
+        this.copyShareLink(sharedEpisode.shareToken);
       },
-      error: () => {
-        this.scenes.set([]);
-        this.scenesErrorMessage.set("Impossible de charger la timeline de l'épisode.");
-        this.isScenesLoading.set(false);
-      },
+      error: () => this.shareMessage.set('Partage impossible pour le moment.'),
     });
   }
 
-  private sortScenes(scenes: Scene[]): Scene[] {
-    return scenes
-      .map((scene, index) => ({ scene, index }))
-      .sort((left, right) => {
-        const leftOrder = this.sceneOrder(left.scene);
-        const rightOrder = this.sceneOrder(right.scene);
+  protected exportEpisode(): void {
+    const episode = this.episode();
 
-        if (leftOrder !== null && rightOrder !== null && leftOrder !== rightOrder) {
-          return leftOrder - rightOrder;
-        }
-
-        if (leftOrder !== null && rightOrder === null) {
-          return -1;
-        }
-
-        if (leftOrder === null && rightOrder !== null) {
-          return 1;
-        }
-
-        const leftDate = this.createdAtTime(left.scene);
-        const rightDate = this.createdAtTime(right.scene);
-
-        if (leftDate !== null && rightDate !== null && leftDate !== rightDate) {
-          return leftDate - rightDate;
-        }
-
-        return left.index - right.index;
-      })
-      .map(({ scene }) => scene);
-  }
-
-  private sceneOrder(scene: Scene): number | null {
-    const order = scene.order ?? scene.sceneOrder ?? scene.position;
-    const numericOrder = typeof order === 'string' ? Number(order) : order;
-    return typeof numericOrder === 'number' && Number.isFinite(numericOrder) ? numericOrder : null;
-  }
-
-  private createdAtTime(scene: Scene): number | null {
-    if (!scene.createdAt) {
-      return null;
+    if (!episode || this.isExporting()) {
+      return;
     }
 
-    const timestamp = Date.parse(scene.createdAt);
-    return Number.isNaN(timestamp) ? null : timestamp;
+    this.isExporting.set(true);
+    this.exportMessage.set('Export en cours...');
+    this.exportSubscription?.unsubscribe();
+    this.exportSubscription = this.travelApiService.exportEpisode(episode.travelId, episode.id).subscribe({
+      next: (exportedEpisode) => {
+        this.episode.set({ ...episode, ...exportedEpisode });
+        this.isExporting.set(false);
+        this.exportMessage.set(
+          exportedEpisode.exportStatus === 'ready' ? 'Export prêt.' : 'L’export a échoué.',
+        );
+      },
+      error: () => {
+        this.isExporting.set(false);
+        this.exportMessage.set('L’export a échoué.');
+      },
+    });
   }
 
   private loadTravel(travelId: string): void {
@@ -222,23 +120,15 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected sceneOrder(scene: Scene, index: number): number {
-    return scene.order ?? index + 1;
-  }
-
-  protected sceneVoiceOver(scene: Scene): string {
-    return scene.voiceOverText ?? scene.description ?? '';
-  }
-
-  protected sceneType(scene: Scene): string {
-    return scene.type ?? 'souvenir';
-  }
-
-  protected sceneStatus(scene: Scene): string {
-    if (scene.isAiReconstructed) {
-      return 'IA reconstruite';
+  private copyShareLink(shareToken: string | undefined): void {
+    if (!shareToken || typeof window === 'undefined') {
+      this.shareMessage.set('Lien généré.');
+      return;
     }
 
-    return scene.generationStatus === 'generated' || !scene.generationStatus ? 'Generee' : scene.generationStatus;
+    const link = `${window.location.origin}/shared/episode/${shareToken}`;
+    navigator.clipboard?.writeText(link)
+      .then(() => this.shareMessage.set('Lien copié.'))
+      .catch(() => this.shareMessage.set(link));
   }
 }

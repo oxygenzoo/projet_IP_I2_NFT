@@ -30,18 +30,12 @@ public class AiGenerationService {
 
     private final RestClient restClient;
     private final TravelCatalogService travelCatalogService;
-    private final PhotoService photoService;
-    private final EpisodeService episodeService;
 
     public AiGenerationService(
             @Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl,
-            TravelCatalogService travelCatalogService,
-            PhotoService photoService,
-            EpisodeService episodeService) {
+            TravelCatalogService travelCatalogService) {
         this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
         this.travelCatalogService = travelCatalogService;
-        this.photoService = photoService;
-        this.episodeService = episodeService;
     }
 
     public GenerationResponse generateEpisode(
@@ -99,9 +93,9 @@ public class AiGenerationService {
                     response,
                     valueOrDefault(title, "Mon voyage"),
                     valueOrDefault(destination, ""),
-                    filenames.size(),
-                    filenames);
-            registerTravelWorkflow(response, travelId, images);
+                    images.size(),
+                    images.stream().map((image) -> safeFilename(image.getOriginalFilename())).toList());
+
             return response;
         } catch (RestClientException exception) {
             GenerationResponse fallback = localGeneration(valueOrDefault(title, "Mon voyage"), destination, preferences, filenames);

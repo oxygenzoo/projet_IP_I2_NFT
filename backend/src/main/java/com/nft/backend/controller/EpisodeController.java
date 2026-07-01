@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,5 +72,18 @@ public class EpisodeController {
     public ResponseEntity<Void> deleteEpisode(@PathVariable UUID travelId, @PathVariable UUID episodeId) {
         episodeService.delete(travelId, episodeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{episodeId}/share")
+    public EpisodeResponse shareEpisode(@PathVariable UUID travelId, @PathVariable UUID episodeId) {
+        return episodeService.enableSharing(travelId, episodeId);
+    }
+
+    @PostMapping("/{episodeId}/export")
+    public EpisodeResponse exportEpisode(
+            @PathVariable UUID travelId,
+            @PathVariable UUID episodeId,
+            @RequestParam(defaultValue = "false") boolean fail) {
+        return episodeService.export(travelId, episodeId, fail);
     }
 }

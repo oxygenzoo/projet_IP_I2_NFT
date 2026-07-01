@@ -79,10 +79,24 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'shared/episode/:token',
+    loadComponent: () =>
+      import('./pages/public-episode/public-episode-page.component').then(
+        (component) => component.PublicEpisodePageComponent,
+      ),
+    title: 'Episode partagé | NFT',
+  },
+  {
     path: 'pricing',
     loadComponent: () =>
       import('./pages/pricing/pricing-page.component').then((component) => component.PricingPageComponent),
     title: 'NFT',
+  },
+  {
+    path: 'organisations',
+    loadComponent: () =>
+      import('./pages/organization/organization-page.component').then((component) => component.OrganizationPageComponent),
+    title: 'Organisations | NFT',
   },
   {
     path: '**',

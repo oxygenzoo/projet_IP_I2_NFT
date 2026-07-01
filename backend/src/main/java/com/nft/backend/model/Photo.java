@@ -34,17 +34,41 @@ public class Photo {
     @Column(nullable = false, length = 100)
     private String type;
 
+    @Column(name = "storage_path")
+    private String storagePath;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "consent_rgpd")
+    private boolean consentRgpd;
+
+    @Column(name = "consent_date")
+    private Instant consentDate;
+
     @Column(nullable = false, updatable = false)
     private Instant uploadedAt = Instant.now();
 
     protected Photo() {
     }
 
-    public Photo(Travel travel, String filename, long size, String type) {
+    public Photo(
+            Travel travel,
+            String filename,
+            long size,
+            String type,
+            String storagePath,
+            String imageUrl,
+            boolean consentRgpd,
+            Instant consentDate) {
         this.travel = travel;
         this.filename = filename;
         this.size = size;
         this.type = type;
+        this.storagePath = storagePath;
+        this.imageUrl = imageUrl;
+        this.consentRgpd = consentRgpd;
+        this.consentDate = consentDate;
     }
 
     public UUID getId() {
@@ -67,7 +91,27 @@ public class Photo {
         return type;
     }
 
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public boolean isConsentRgpd() {
+        return consentRgpd;
+    }
+
+    public Instant getConsentDate() {
+        return consentDate;
+    }
+
     public Instant getUploadedAt() {
         return uploadedAt;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

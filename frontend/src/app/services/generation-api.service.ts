@@ -56,9 +56,9 @@ export class GenerationApiService {
     }
 
     if (error.status === 0) {
-      return 'API indisponible. Vérifiez que le backend et le service IA sont démarrés.';
+      return 'IA indisponible : génération suspendue. Vos épisodes déjà prêts restent lisibles.';
     }
 
-    return 'La génération IA a échoué. Réessayez dans un instant.';
+    return 'La génération IA a échoué. Vos épisodes déjà prêts restent lisibles.';
   }
 }
