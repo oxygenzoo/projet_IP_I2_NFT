@@ -25,6 +25,10 @@ public class Photo {
     @JoinColumn(name = "travel_id", nullable = false)
     private Travel travel;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private Profile profile;
+
     @Column(nullable = false)
     private String filename;
 
@@ -53,6 +57,10 @@ public class Photo {
 
     public Travel getTravel() {
         return travel;
+    }
+
+    public Profile getProfile() {
+        return profile;
     }
 
     public String getFilename() {
