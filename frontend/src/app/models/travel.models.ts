@@ -9,10 +9,16 @@ export interface User {
 
 export interface Scene {
   id: string;
+  order?: number;
   title: string;
   timecode: string;
-  description: string;
-  imageUrl: string;
+  description?: string;
+  voiceOverText?: string;
+  type?: 'intro' | 'souvenir' | 'transition' | 'conclusion';
+  generationStatus?: string;
+  imageUrl?: string | null;
+  isAiReconstructed?: boolean;
+  aiPrompt?: string | null;
 }
 
 export interface Episode {
@@ -31,6 +37,7 @@ export interface Episode {
   videoStill: string;
   progress: number;
   remaining: string;
+  keyMoments?: string[];
   scenes: Scene[];
 }
 

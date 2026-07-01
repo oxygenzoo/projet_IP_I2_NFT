@@ -102,15 +102,6 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
         this.clearTimers();
       },
     });
-        this.redirectId = setTimeout(() => {
-          this.router.navigate(['/home']);
-        }, 700);
-      }
-    }, 520);
-  }
-
-  ngOnDestroy(): void {
-    this.clearTimers();
   }
 
   private clearTimers(): void {

@@ -2,8 +2,11 @@ package com.nft.backend.model;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -13,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -54,6 +58,9 @@ public class Episode {
 
     @Column(name = "generated_at", nullable = false, updatable = false)
     private Instant generatedAt = Instant.now();
+
+    @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EpisodeScene> scenes = new ArrayList<>();
 
     protected Episode() {
     }
@@ -121,6 +128,10 @@ public class Episode {
 
     public Instant getGeneratedAt() {
         return generatedAt;
+    }
+
+    public List<EpisodeScene> getScenes() {
+        return scenes;
     }
 
     public void update(
