@@ -1,6 +1,7 @@
 package com.nft.backend.model;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,10 +36,16 @@ public class Travel {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private Profile profile;
+    @JoinColumn(name = "user_id")
+    private Profile user;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     @OneToMany(mappedBy = "travel", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -51,9 +58,22 @@ public class Travel {
     }
 
     public Travel(String title, String destination, String description) {
+        this(null, title, destination, description, null, null);
+    }
+
+    public Travel(
+            Profile user,
+            String title,
+            String destination,
+            String description,
+            LocalDate startDate,
+            LocalDate endDate) {
+        this.user = user;
         this.title = title;
         this.destination = destination;
         this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public UUID getId() {
@@ -72,8 +92,20 @@ public class Travel {
         return description;
     }
 
+    public Profile getUser() {
+        return user;
+    }
+
     public Profile getProfile() {
-        return profile;
+        return user;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     public Instant getCreatedAt() {
@@ -88,4 +120,20 @@ public class Travel {
         return photos;
     }
 
+    public void setUser(Profile user) {
+        this.user = user;
+    }
+
+    public void update(
+            String title,
+            String destination,
+            String description,
+            LocalDate startDate,
+            LocalDate endDate) {
+        this.title = title;
+        this.destination = destination;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }
