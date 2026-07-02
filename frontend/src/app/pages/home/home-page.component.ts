@@ -6,7 +6,7 @@ import { Episode, Travel } from '../../models/travel.models';
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
 import { CreationStateService } from '../../services/creation-state.service';
 import { I18nService } from '../../services/i18n.service';
-import { TravelApiService } from '../../services/travel-api.service';
+import { ContributionLink, TravelApiService } from '../../services/travel-api.service';
 import { UserProfileApiService } from '../../services/user-profile-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
@@ -48,7 +48,7 @@ export class HomePageComponent implements OnInit {
   protected readonly profile = signal<ConnectedProfile | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
-  protected readonly creationNotice = signal('');
+  protected readonly notificationCount = signal(0);
   protected readonly renderServices = signal<RenderServiceStatus[]>(RENDER_SERVICES);
   protected readonly travels = signal<Travel[]>([]);
   protected readonly episodes = signal<Episode[]>([]);
@@ -95,10 +95,12 @@ export class HomePageComponent implements OnInit {
     forkJoin({
       travels: this.travelApiService.getTravels().pipe(catchError(() => of([]))),
       episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
+      contributionLinks: this.travelApiService.getContributionLinks().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ travels, episodes }) => {
+      next: ({ travels, episodes, contributionLinks }) => {
         this.travels.set(travels);
         this.episodes.set(episodes);
+        this.notificationCount.set(this.countNotifications(episodes, contributionLinks));
         this.handleFinishedCreation();
         this.isLoading.set(false);
       },
@@ -149,9 +151,31 @@ export class HomePageComponent implements OnInit {
       return;
     }
 
-    this.creationNotice.set('Votre souvenir est prêt et a été ajouté à votre espace.');
+    this.notificationCount.update((count) => Math.max(count, 1));
     this.creationState.acknowledgeFinished();
-    this.loadDashboard();
+  }
+
+  private countNotifications(episodes: Episode[], contributionLinks: ContributionLink[]): number {
+    const readIds = this.readNotificationIds();
+    const ids = [
+      ...episodes
+        .filter((episode) => episode.videoUrl || ['completed', 'ready'].includes((episode.status ?? '').toLowerCase()))
+        .map((episode) => `episode-ready-${episode.id}`),
+      ...contributionLinks.flatMap((link) => [
+        link.openedAt ? `contribution-opened-${link.id}-${link.openedAt}` : '',
+        (link.uploadCount ?? 0) > 0 ? `contribution-uploaded-${link.id}-${link.uploadCount}` : '',
+      ]),
+    ].filter(Boolean);
+
+    return ids.filter((id) => !readIds.includes(id)).length;
+  }
+
+  private readNotificationIds(): string[] {
+    try {
+      return JSON.parse(localStorage.getItem('nft.readNotifications') ?? '[]');
+    } catch {
+      return [];
+    }
   }
 
   private async wakeRenderServices(): Promise<void> {

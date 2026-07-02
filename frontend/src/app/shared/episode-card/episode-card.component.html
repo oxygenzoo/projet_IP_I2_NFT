@@ -4,28 +4,31 @@
   [routerLink]="link"
   (click)="selectEpisode()"
 >
-  @if (episode().videoStill || episode().coverImage) {
-    <img
-      [src]="compact() ? (episode().videoStill || episode().coverImage) : (episode().coverImage || episode().videoStill)"
-      [alt]="episode().title"
-      loading="lazy"
-    />
-    @if (episode().videoUrl) {
+  <div class="episode-card__visual">
+    @if (episode().videoStill || episode().coverImage) {
+      <img
+        [src]="compact() ? (episode().videoStill || episode().coverImage) : (episode().coverImage || episode().videoStill)"
+        [alt]="episode().title"
+        loading="lazy"
+      />
+      @if (episode().videoUrl) {
+        <span class="episode-card__play" aria-hidden="true">▶</span>
+      }
+    } @else if (episode().videoUrl) {
+      <video
+        class="episode-card__media"
+        [src]="episode().videoUrl"
+        muted
+        playsinline
+        preload="metadata"
+      ></video>
       <span class="episode-card__play" aria-hidden="true">▶</span>
+    } @else {
+      <div class="episode-card__placeholder">
+        <span>Aucun souvenir pour l'instant</span>
+      </div>
     }
-  } @else if (episode().videoUrl) {
-    <video
-      class="episode-card__media"
-      [src]="episode().videoUrl"
-      muted
-      playsinline
-      preload="metadata"
-    ></video>
-  } @else {
-    <div class="episode-card__placeholder">
-      <span>Aucun souvenir pour l'instant</span>
-    </div>
-  }
+  </div>
   <div class="episode-card__body">
     <span>
       @if (compact()) {

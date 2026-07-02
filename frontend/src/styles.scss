@@ -561,6 +561,45 @@ img {
   margin: 1rem 0 0.45rem;
 }
 
+.landing-footer {
+  background:
+    linear-gradient(135deg, rgba(74, 93, 255, 0.1), rgba(255, 79, 139, 0.08)),
+    rgba(255, 255, 255, 0.045);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 2rem 4.5vw;
+}
+
+.landing-footer strong {
+  color: #ffffff;
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.landing-footer p,
+.landing-footer small {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 72rem;
+}
+
+.landing-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+}
+
+.landing-footer nav span {
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  opacity: 0.82;
+}
+
 .final-cta {
   align-items: center;
   background:
@@ -659,6 +698,28 @@ img {
   height: 2.7rem;
   justify-content: center;
   width: 2.7rem;
+}
+
+.icon-button--badge {
+  position: relative;
+}
+
+.notification-badge {
+  align-items: center;
+  background: #ff4f8b;
+  border: 2px solid #050505;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 950;
+  height: 1.25rem;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.25rem;
+  position: absolute;
+  right: -0.18rem;
+  top: -0.18rem;
 }
 
 .icon-button svg,
@@ -1107,6 +1168,19 @@ img {
   width: 100%;
 }
 
+.episode-card__visual {
+  aspect-ratio: 16 / 9;
+  background: rgba(255, 255, 255, 0.055);
+  overflow: hidden;
+  position: relative;
+}
+
+.episode-card__visual img,
+.episode-card__visual video,
+.episode-card__visual .episode-card__placeholder {
+  height: 100%;
+}
+
 .episode-card__media {
   background: #000000;
   display: block;
@@ -1126,6 +1200,7 @@ img {
   padding-left: 0.12rem;
   position: absolute;
   width: 3rem;
+  z-index: 1;
 }
 
 .episode-card__placeholder {
@@ -1148,6 +1223,10 @@ img {
 }
 
 .episode-card--compact img {
+  aspect-ratio: 21 / 10;
+}
+
+.episode-card--compact .episode-card__visual {
   aspect-ratio: 21 / 10;
 }
 
@@ -2505,6 +2584,7 @@ img {
   grid-template-columns: 1fr;
   justify-items: stretch;
   max-width: none;
+  min-width: min(18rem, 100%);
 }
 
 .profile-hero-actions .btn {
@@ -2516,6 +2596,12 @@ img {
   align-self: start;
   margin: 0;
   min-height: 1.25rem;
+  text-align: center;
+}
+
+.profile-hero-message span {
+  display: block;
+  margin: 0;
 }
 
 .profile-stat-grid {

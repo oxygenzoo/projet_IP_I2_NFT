@@ -50,11 +50,14 @@ export class CreationStateService {
         return;
       }
       this.creation.set({
+        ...this.creation(),
         id: session.id,
         ownerId: session.ownerId,
         travelId: session.travelId ?? null,
         episodeId: session.episodeId ?? null,
         status: session.status,
+        progressPercent: session.status === 'done' ? 100 : this.creation()?.progressPercent,
+        progressStartedAt: this.creation()?.progressStartedAt ?? (session.status === 'generating' ? new Date().toISOString() : null),
         resultVideoUrl: session.resultVideoUrl ?? null,
         errorMessage: session.errorMessage ?? null,
         updatedAt: session.updatedAt,

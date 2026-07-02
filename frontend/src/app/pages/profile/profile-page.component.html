@@ -57,14 +57,16 @@
             {{ isSaving() ? i18n.t('saving') : i18n.t('save') }}
           </button>
           <button class="btn btn--ghost" type="button" (click)="logout()">Déconnexion</button>
-        </div>
 
-        @if (feedbackMessage()) {
-          <p class="form-success profile-hero-message">{{ feedbackMessage() }}</p>
-        }
-        @if (errorMessage()) {
-          <p class="form-error profile-hero-message">{{ errorMessage() }}</p>
-        }
+          <p class="profile-hero-message" aria-live="polite">
+            @if (feedbackMessage()) {
+              <span class="form-success">{{ feedbackMessage() }}</span>
+            }
+            @if (errorMessage()) {
+              <span class="form-error">{{ errorMessage() }}</span>
+            }
+          </p>
+        </div>
       </form>
 
       <section class="profile-stat-grid" aria-label="Statistiques du profil">
