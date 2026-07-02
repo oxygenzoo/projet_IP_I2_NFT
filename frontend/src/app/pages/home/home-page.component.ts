@@ -151,23 +151,42 @@ export class HomePageComponent implements OnInit {
       return;
     }
 
-    this.notificationCount.update((count) => Math.max(count, 1));
     this.creationState.acknowledgeFinished();
   }
 
   private countNotifications(episodes: Episode[], contributionLinks: ContributionLink[]): number {
     const readIds = this.readNotificationIds();
+    const travelIdsWithPendingPhotos = new Set(
+      this.travels()
+        .filter((travel) => travel.photoCount > 0 && travel.episodeCount === 0)
+        .map((travel) => `travel-photos-${travel.id}`),
+    );
     const ids = [
-      ...episodes
-        .filter((episode) => episode.videoUrl || ['completed', 'ready'].includes((episode.status ?? '').toLowerCase()))
-        .map((episode) => `episode-ready-${episode.id}`),
-      ...contributionLinks.flatMap((link) => [
-        link.openedAt ? `contribution-opened-${link.id}` : '',
-        (link.uploadCount ?? 0) > 0 ? `contribution-uploaded-${link.id}-${link.uploadCount}` : '',
-      ]),
-    ].filter(Boolean);
+      ...episodes.flatMap((episode) => this.notificationIdsForEpisode(episode)),
+      ...contributionLinks.flatMap((link) => this.notificationIdsForContribution(link)),
+      ...Array.from(travelIdsWithPendingPhotos),
+    ];
 
     return ids.filter((id) => !readIds.includes(id)).length;
+  }
+
+  private notificationIdsForEpisode(episode: Episode): string[] {
+    const status = (episode.status ?? '').toLowerCase();
+    const exportStatus = (episode.exportStatus ?? '').toLowerCase();
+    return [
+      episode.videoUrl || status === 'completed' || status === 'ready' ? `episode-ready-${episode.id}` : '',
+      status === 'generating' || status === 'pending' ? `episode-generating-${episode.id}` : '',
+      status === 'failed' ? `episode-failed-${episode.id}` : '',
+      episode.shareToken ? `episode-shared-${episode.id}` : '',
+      exportStatus === 'ready' ? `episode-export-ready-${episode.id}` : '',
+    ].filter(Boolean);
+  }
+
+  private notificationIdsForContribution(link: ContributionLink): string[] {
+    return [
+      link.openedAt ? `contribution-opened-${link.id}` : '',
+      (link.uploadCount ?? 0) > 0 ? `contribution-uploaded-${link.id}-${link.uploadCount}` : '',
+    ].filter(Boolean);
   }
 
   private readNotificationIds(): string[] {
