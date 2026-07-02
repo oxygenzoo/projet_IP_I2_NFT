@@ -1026,6 +1026,22 @@ img {
   display: block;
 }
 
+.episode-card__play {
+  align-items: center;
+  aspect-ratio: 1;
+  background: rgba(0, 0, 0, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  color: #ffffff;
+  display: grid;
+  font-size: 0.95rem;
+  inset: 0;
+  margin: auto;
+  padding-left: 0.12rem;
+  position: absolute;
+  width: 3rem;
+}
+
 .episode-card__placeholder {
   align-items: center;
   background: rgba(255, 255, 255, 0.07);
