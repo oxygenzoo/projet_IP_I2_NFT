@@ -7,7 +7,6 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="#050505"/>
-  <path d="M14 47V17h7l15 18V17h8v30h-7L22 29v18h-8Z" fill="url(#nftGradient)"/>
-  <path d="M48 18h8v7h-8v-7Zm0 11h8v18h-8V29Z" fill="#ffb13b"/>
-  <path d="M9 53h46" stroke="url(#nftGradient)" stroke-width="4" stroke-linecap="round"/>
+  <text x="32" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="900" letter-spacing="-1" fill="url(#nftGradient)">NFT</text>
+  <path d="M13 47h38" stroke="url(#nftGradient)" stroke-width="4" stroke-linecap="round"/>
 </svg>

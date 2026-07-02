@@ -1186,23 +1186,6 @@ img {
   display: block;
 }
 
-.episode-card__play {
-  align-items: center;
-  aspect-ratio: 1;
-  background: rgba(5, 5, 5, 0.68);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  color: #ffffff;
-  display: grid;
-  font-size: 0.68rem;
-  left: 0.75rem;
-  padding-left: 0.08rem;
-  position: absolute;
-  top: 0.75rem;
-  width: 1.75rem;
-  z-index: 1;
-}
-
 .episode-card__placeholder {
   align-items: center;
   background: rgba(255, 255, 255, 0.07);

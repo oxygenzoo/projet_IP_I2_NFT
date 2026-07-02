@@ -11,9 +11,6 @@
         [alt]="episode().title"
         loading="lazy"
       />
-      @if (episode().videoUrl) {
-        <span class="episode-card__play" aria-hidden="true">▶</span>
-      }
     } @else if (episode().videoUrl) {
       <video
         class="episode-card__media"
@@ -22,7 +19,6 @@
         playsinline
         preload="metadata"
       ></video>
-      <span class="episode-card__play" aria-hidden="true">▶</span>
     } @else {
       <div class="episode-card__placeholder">
         <span>Aucun souvenir pour l'instant</span>
