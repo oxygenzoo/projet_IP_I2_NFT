@@ -20,10 +20,9 @@
       <p>{{ episode.summary }}</p>
 
       <div class="metadata-row">
-        <span>{{ episode.duration }}</span>
-        <span>{{ episode.location }}</span>
-        <span>{{ episode.date }}</span>
-        <span>{{ episode.photoCount }} photos</span>
+        @for (item of metadataItems(episode); track item) {
+          <span>{{ item }}</span>
+        }
       </div>
 
       <div class="hero-actions">
@@ -48,9 +47,6 @@
       }
       @if (exportMessage()) {
         <p class="episode-action-state">{{ exportMessage() }}</p>
-      }
-      @if (episode.videoUrl && episode.exportStatus === 'ready') {
-        <a class="episode-action-state" [href]="episode.videoUrl">Souvenir accessible</a>
       }
     </div>
   </section>
@@ -112,7 +108,7 @@
                 </div>
               } @else {
                 <div class="scene-card__placeholder" aria-label="Photo indisponible">
-                  <span>Image indisponible</span>
+                  <span>Visuel en préparation</span>
                 </div>
               }
             </div>

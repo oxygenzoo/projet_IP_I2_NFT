@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { API_URL } from '../../config/api.config';
 import { Episode, Scene, SceneGenerationStatus, Travel } from '../../models/travel.models';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
@@ -20,6 +21,7 @@ const STATUS_LABELS: Record<SceneGenerationStatus, string> = {
 export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly travelApiService = inject(TravelApiService);
+  private readonly apiUrl = inject(API_URL);
   private episodeSubscription?: Subscription;
   private travelSubscription?: Subscription;
   private shareSubscription?: Subscription;
@@ -128,6 +130,15 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     return scene.voiceOverText ?? scene.description ?? '';
   }
 
+  protected metadataItems(episode: Episode): string[] {
+    return [
+      episode.duration,
+      episode.location,
+      episode.date,
+      episode.photoCount > 0 ? `${episode.photoCount} photos` : '',
+    ].filter((item): item is string => Boolean(item?.trim()));
+  }
+
   protected isScenesLoading(): boolean {
     return false;
   }
@@ -141,7 +152,13 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   protected sceneImage(scene: Scene, episode: Episode): string | null {
-    return scene.imageUrl ?? scene.photoUrl ?? episode.videoStill ?? null;
+    return this.assetUrl(scene.imageUrl)
+      ?? this.assetUrl(scene.photoUrl)
+      ?? this.assetUrl(episode.videoStill)
+      ?? this.assetUrl(episode.coverImage)
+      ?? this.assetUrl(this.travel()?.posterImage)
+      ?? this.assetUrl(this.travel()?.coverImage)
+      ?? null;
   }
 
   protected sceneImageAlt(scene: Scene, index: number): string {
@@ -149,7 +166,9 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   protected sceneMeta(scene: Scene, index: number): string {
-    return `#${this.sceneOrder(scene, index)} - ${scene.timecode} - ${this.sceneType(scene)}`;
+    return [`#${this.sceneOrder(scene, index)}`, scene.timecode, this.sceneType(scene)]
+      .filter((item) => Boolean(item?.trim()))
+      .join(' - ');
   }
 
   protected sceneStatusClass(scene: Scene, _episode: Episode): string {
@@ -178,5 +197,15 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     navigator.clipboard?.writeText(link)
       .then(() => this.shareMessage.set('Lien copié.'))
       .catch(() => this.shareMessage.set(link));
+  }
+
+  private assetUrl(value: string | null | undefined): string | null {
+    const trimmed = value?.trim();
+
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed.startsWith('/') ? `${this.apiUrl}${trimmed}` : trimmed;
   }
 }

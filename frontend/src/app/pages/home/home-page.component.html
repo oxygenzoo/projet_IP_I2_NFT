@@ -47,7 +47,7 @@
 
     <section class="content-rail">
       <div class="rail-heading">
-        <h2>Souvenirs recents</h2>
+        <h2>Souvenirs récents</h2>
         <span>Chargement</span>
       </div>
       <div class="card-row">
@@ -77,82 +77,23 @@
       <button class="btn btn--primary" type="button" (click)="loadDashboard()">Réessayer</button>
     </section>
   } @else {
-    @if (featured(); as featured) {
-      <section class="stream-hero" [style.--hero-image]="heroImage()">
-        <div class="stream-hero__content">
-          <p class="eyebrow">Souvenir en reprise</p>
-          <h1>{{ featured.title }}</h1>
-          <p>{{ featured.tagline }}</p>
-
-          <div class="metadata-row">
-            <span>{{ featured.episodeCount }} souvenirs</span>
-            <span>{{ featured.photoCount }} photos</span>
-            <span>{{ featured.duration }}</span>
-          </div>
-
+    <section class="home-video-hero">
+      <div class="home-video-hero__copy">
+        <p class="eyebrow">Votre espace voyage</p>
+        @if (totalEpisodes() > 0) {
+          <h1>Vos souvenirs sont prêts.</h1>
+          <p>Retrouvez vos voyages, vos souvenirs générés et vos photos dans votre bibliothèque.</p>
           <div class="hero-actions">
-            @if (featuredEpisode(); as featuredEpisode) {
-              <a class="btn btn--primary" [routerLink]="['/player', featuredEpisode.id]">
-                <span class="play-icon"></span>
-                Lecture
-              </a>
-              <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail souvenir</a>
-            } @else {
-              <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
-            }
+            <a class="btn btn--primary" routerLink="/library">Voir mes souvenirs</a>
+            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
           </div>
-
-          @if (featuredEpisode()) {
-            <div class="continue-line" aria-label="Progression de lecture">
-              <div>
-                <span>Reprendre</span>
-                <strong>{{ featured.remaining }}</strong>
-              </div>
-              <div class="progress-track">
-                <span [style.width.%]="featured.progress"></span>
-              </div>
-            </div>
-          } @else {
-            <div class="video-empty-card video-empty-card--inline">
-              <strong>Aucun souvenir pour l'instant</strong>
-              <span>Ce voyage est prêt à recevoir son premier souvenir.</span>
-            </div>
-          }
-        </div>
-
-        <aside class="home-preview-card glass-panel">
-          @if (featuredEpisode(); as previewEpisode) {
-            @if (previewEpisode.videoUrl) {
-              <video [src]="previewEpisode.videoUrl" [poster]="previewEpisode.videoStill || previewEpisode.coverImage" muted playsinline preload="metadata"></video>
-            } @else {
-              <div class="video-empty-card">
-                <strong>Aucun souvenir pour l'instant</strong>
-                <span>La preview apparaîtra après génération.</span>
-              </div>
-            }
-            <div class="home-preview-card__body">
-              <p>Dernier souvenir</p>
-              <strong>{{ previewEpisode.title }}</strong>
-              <span>{{ previewEpisode.photoCount }} photos · {{ previewEpisode.duration }} · {{ previewEpisode.scenes.length }} scenes</span>
-            </div>
-          } @else {
-            <div class="video-empty-card">
-              <strong>Aucun souvenir pour l'instant</strong>
-              <span>Importez vos photos pour créer un premier souvenir.</span>
-            </div>
-          }
-        </aside>
-      </section>
-    } @else {
-      <section class="home-video-hero">
-        <div class="home-video-hero__copy">
-          <p class="eyebrow">Votre espace voyage</p>
+        } @else {
           <h1>Aucun souvenir pour l'instant</h1>
-          <p>Vos voyages et souvenirs apparaîtront ici dès que vous aurez importé vos premières photos.</p>
+          <p>Importez vos photos pour créer votre premier souvenir de voyage.</p>
           <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
-        </div>
-      </section>
-    }
+        }
+      </div>
+    </section>
 
     <section class="content-rail">
       <div class="rail-heading">
@@ -194,7 +135,7 @@
         } @empty {
           <article class="empty-rail empty-rail--wide">
             <strong>Aucun favori pour le moment</strong>
-            <span>Ils seront calcules depuis vos voyages.</span>
+            <span>Ils seront calculés depuis vos voyages.</span>
           </article>
         }
       </div>
@@ -216,7 +157,7 @@
               loading="lazy"
             />
             <strong>Aucun souvenir pour l'instant</strong>
-            <span>Quand vous en aurez, elles seront listées ici.</span>
+            <span>Quand vous en aurez, ils seront listés ici.</span>
             <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
           </article>
         }

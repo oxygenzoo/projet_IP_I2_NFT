@@ -1,70 +1,82 @@
 <main class="generation-page">
   <app-logo class="page-logo" [compact]="true"></app-logo>
 
-  <section class="generation-shell">
-    <div class="ai-core" aria-hidden="true"></div>
-    <p class="eyebrow">Génération IA</p>
-    <h1>Votre voyage devient un souvenir.</h1>
-    <p class="generation-copy">
-      Never Forget Your Trip analyse les images, choisit les moments forts et assemble un souvenir prêt à regarder.
-    </p>
-
-    @if (errorMessage()) {
-      <div class="generation-alert generation-alert--error" role="alert">
-        <strong>Génération impossible</strong>
-        <p>{{ errorMessage() }}</p>
-      </div>
-      <div class="generation-actions">
-        <button class="btn btn--primary" type="button" (click)="retry()">Réessayer</button>
-        <a class="btn btn--glass" routerLink="/upload">Revenir à l'import</a>
-      </div>
-    } @else {
-      <div class="generation-meter" aria-label="Progression de génération">
-        <strong>{{ percent() }}%</strong>
-        <div class="progress-track">
-          <span [style.width.%]="percent()"></span>
-        </div>
+  @if (result()) {
+    <section class="generation-complete" aria-live="polite">
+      <div class="confetti" aria-hidden="true">
+        @for (piece of confettiPieces; track piece) {
+          <span [style.--i]="piece"></span>
+        }
       </div>
 
-      <div class="generation-steps">
-        @for (step of steps; track step; let index = $index) {
-          <div
-            class="generation-step"
-            [class.generation-step--done]="completed().includes(step)"
-            [class.generation-step--active]="activeIndex() === index"
-          >
-            <span></span>
-            <p>{{ step }}</p>
+      <p class="eyebrow">Souvenir terminé</p>
+      <h1>{{ firstEpisodeTitle() }}</h1>
+      <p>Votre souvenir est prêt. Vous pouvez le regarder, le partager ou le retrouver dans votre espace voyage.</p>
+
+      <div class="generation-complete__preview glass-panel">
+        @if (videoUrl()) {
+          <video class="generation-preview" [src]="videoUrl()" controls playsinline preload="metadata"></video>
+        } @else {
+          <div class="video-empty-card">
+            <strong>Souvenir non disponible</strong>
+            <span>Le script est prêt, mais aucun fichier n'a été renvoyé.</span>
           </div>
         }
       </div>
 
-      @if (result()) {
-        <div class="generation-result generation-result--complete glass-panel">
-          <p>Souvenir terminé</p>
-          <strong>{{ firstEpisodeTitle() }}</strong>
-          @if (videoUrl()) {
-            <video class="generation-preview" [src]="videoUrl()" controls playsinline preload="metadata"></video>
-          } @else {
-            <div class="video-empty-card">
-              <strong>Souvenir non disponible</strong>
-              <span>Le script est prêt, mais aucun fichier n'a été renvoyé.</span>
-            </div>
-          }
-          <div class="generation-result__meta">
-            <span>{{ photoCount() }} photos</span>
-            <span>{{ sceneCount() }} scènes</span>
-            <span>{{ estimatedDuration() }}</span>
-            <span>{{ episodeCount() }} souvenir</span>
-          </div>
-          <div class="generation-actions">
-            <a class="btn btn--primary" routerLink="/home">Voir sur l'accueil</a>
-            @if (videoUrl()) {
-              <a class="btn btn--glass" [href]="videoUrl()" target="_blank" rel="noreferrer">Ouvrir le souvenir</a>
-            }
+      <div class="generation-result__meta" aria-label="Détails du souvenir généré">
+        <span>{{ photoCount() }} photos</span>
+        <span>{{ sceneCount() }} scènes</span>
+        <span>{{ estimatedDuration() }}</span>
+        <span>{{ episodeCount() }} souvenir</span>
+      </div>
+
+      <div class="generation-actions">
+        <a class="btn btn--primary" routerLink="/home">Voir sur l'accueil</a>
+        @if (videoUrl()) {
+          <a class="btn btn--glass" [href]="videoUrl()" target="_blank" rel="noreferrer">Ouvrir le souvenir</a>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="generation-shell">
+      <div class="ai-core" aria-hidden="true"></div>
+      <p class="eyebrow">Génération IA</p>
+      <h1>Votre voyage devient un souvenir.</h1>
+      <p class="generation-copy">
+        Never Forget Your Trip analyse les images, choisit les moments forts et assemble un souvenir prêt à regarder.
+      </p>
+
+      @if (errorMessage()) {
+        <div class="generation-alert generation-alert--error" role="alert">
+          <strong>Génération impossible</strong>
+          <p>{{ errorMessage() }}</p>
+        </div>
+        <div class="generation-actions">
+          <button class="btn btn--primary" type="button" (click)="retry()">Réessayer</button>
+          <a class="btn btn--glass" routerLink="/upload">Revenir à l'import</a>
+        </div>
+      } @else {
+        <div class="generation-meter" aria-label="Progression de génération">
+          <strong>{{ percent() }}%</strong>
+          <div class="progress-track">
+            <span [style.width.%]="percent()"></span>
           </div>
         </div>
+
+        <div class="generation-steps">
+          @for (step of steps; track step; let index = $index) {
+            <div
+              class="generation-step"
+              [class.generation-step--done]="completed().includes(step)"
+              [class.generation-step--active]="activeIndex() === index"
+            >
+              <span></span>
+              <p>{{ step }}</p>
+            </div>
+          }
+        </div>
       }
-    }
-  </section>
+    </section>
+  }
 </main>

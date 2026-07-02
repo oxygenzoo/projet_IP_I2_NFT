@@ -23,11 +23,12 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
 
   protected readonly steps = [
     'Analyse des photos',
-    'Selection des meilleurs souvenirs',
-    'Creation du recit',
+    'Sélection des meilleurs souvenirs',
+    'Création du récit',
     'Assemblage du souvenir',
     'Finalisation',
   ];
+  protected readonly confettiPieces = Array.from({ length: 30 }, (_, index) => index + 1);
 
   protected readonly percent = signal(7);
   protected readonly activeIndex = signal(0);
@@ -57,7 +58,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   }
 
   protected firstEpisodeTitle(): string {
-    return this.result()?.script?.episodes?.[0]?.episode_titre ?? 'Souvenir genere';
+    return this.result()?.script?.episodes?.[0]?.episode_titre ?? 'Souvenir généré';
   }
 
   protected videoUrl(): string {
