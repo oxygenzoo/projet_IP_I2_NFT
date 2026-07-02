@@ -4,21 +4,15 @@
   [routerLink]="link"
   (click)="selectEpisode()"
 >
-  @if (episode().videoUrl) {
-    <video
-      class="episode-card__media"
-      [src]="episode().videoUrl"
-      [poster]="episode().videoStill || episode().coverImage"
-      muted
-      playsinline
-      preload="metadata"
-    ></video>
-  } @else if (episode().videoStill || episode().coverImage) {
+  @if (episode().videoStill || episode().coverImage) {
     <img
-      [src]="compact() ? episode().videoStill : episode().coverImage"
+      [src]="compact() ? (episode().videoStill || episode().coverImage) : (episode().coverImage || episode().videoStill)"
       [alt]="episode().title"
       loading="lazy"
     />
+    @if (episode().videoUrl) {
+      <span class="episode-card__play" aria-hidden="true">▶</span>
+    }
   } @else {
     <div class="episode-card__placeholder">
       <span>Aucun souvenir pour l'instant</span>
