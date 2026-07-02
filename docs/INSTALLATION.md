@@ -1,4 +1,4 @@
-# Installation du projet NFT - Never Forget Your Trip
+# Installation du projet NFT - Never Forget Your Travel
 
 Guide V4 pour installer, lancer, tester et presenter le projet.
 

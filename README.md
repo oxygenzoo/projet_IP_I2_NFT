@@ -1,4 +1,4 @@
-# NFT - Never Forget your Trip
+# NFT - Never Forget your Travel
 
 NFT est une application SaaS inspiree des plateformes de streaming.
 
