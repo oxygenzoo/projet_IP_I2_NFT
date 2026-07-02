@@ -36,7 +36,7 @@ export class NotificationsPageComponent implements OnInit {
   }
 
   protected markAllAsRead(): void {
-    const readIds = this.notifications().map((notification) => notification.id);
+    const readIds = [...this.readIds(), ...this.notifications().map((notification) => notification.id)];
     this.persistReadIds(readIds);
     this.notifications.set([]);
   }
@@ -148,7 +148,7 @@ export class NotificationsPageComponent implements OnInit {
       const travelLabel = travel?.title ?? 'votre souvenir';
       if (link.openedAt) {
         notifications.push({
-          id: `contribution-opened-${link.id}-${link.openedAt}`,
+          id: `contribution-opened-${link.id}`,
           title: 'Lien de contribution ouvert',
           description: `Quelqu'un a ouvert le lien pour ${travelLabel}.`,
           timeLabel: this.formatDate(link.openedAt),

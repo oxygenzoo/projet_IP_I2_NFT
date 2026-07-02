@@ -63,7 +63,7 @@ export class HomePageComponent implements OnInit {
   protected readonly totalPhotos = computed(() => this.travels().reduce((total, travel) => total + travel.photoCount, 0));
   protected readonly totalEpisodes = computed(() => this.episodes().length);
   protected readonly createButtonLabel = computed(() =>
-    this.creationState.isActive() ? this.i18n.t('creationInProgress') : `+ ${this.i18n.t('createMemory')}`,
+    this.creationState.isActive() ? this.i18n.t('creationInProgress') : this.i18n.t('createMemory'),
   );
   protected readonly createButtonLink = computed(() => this.creationState.routeForCurrent());
 
@@ -162,7 +162,7 @@ export class HomePageComponent implements OnInit {
         .filter((episode) => episode.videoUrl || ['completed', 'ready'].includes((episode.status ?? '').toLowerCase()))
         .map((episode) => `episode-ready-${episode.id}`),
       ...contributionLinks.flatMap((link) => [
-        link.openedAt ? `contribution-opened-${link.id}-${link.openedAt}` : '',
+        link.openedAt ? `contribution-opened-${link.id}` : '',
         (link.uploadCount ?? 0) > 0 ? `contribution-uploaded-${link.id}-${link.uploadCount}` : '',
       ]),
     ].filter(Boolean);

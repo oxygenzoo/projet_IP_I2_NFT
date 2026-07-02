@@ -14,7 +14,8 @@ export class EpisodeCardComponent {
   readonly selected = output<Episode>();
 
   protected get link(): string[] {
-    return [this.destination() === 'player' ? '/player' : '/episode', this.episode().id];
+    const target = this.destination() === 'player' || Boolean(this.episode().videoUrl) ? '/player' : '/episode';
+    return [target, this.episode().id];
   }
 
   protected selectEpisode(): void {
