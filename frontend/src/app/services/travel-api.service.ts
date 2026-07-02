@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -32,16 +32,16 @@ export class TravelApiService {
     @Inject(API_URL) private readonly apiUrl: string,
   ) {}
 
-  getTravels(): Observable<Travel[]> {
-    return this.http.get<Travel[]>(`${this.apiUrl}/api/travels`);
+  getTravels(accessToken?: string): Observable<Travel[]> {
+    return this.http.get<Travel[]>(`${this.apiUrl}/api/travels`, this.authOptions(accessToken));
   }
 
   getTravel(id: string): Observable<Travel> {
     return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`);
   }
 
-  createTravel(payload: SaveTravelPayload): Observable<Travel> {
-    return this.http.post<Travel>(`${this.apiUrl}/api/travels`, payload);
+  createTravel(payload: SaveTravelPayload, accessToken?: string): Observable<Travel> {
+    return this.http.post<Travel>(`${this.apiUrl}/api/travels`, payload, this.authOptions(accessToken));
   }
 
   getEpisodes(): Observable<Episode[]> {
@@ -112,5 +112,12 @@ export class TravelApiService {
 
   deleteEpisode(travelId: string, episodeId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/api/travels/${travelId}/episodes/${episodeId}`);
+  }
+
+  private authOptions(accessToken?: string): { headers?: HttpHeaders } {
+    const token = accessToken?.trim();
+    return token
+      ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
+      : {};
   }
 }

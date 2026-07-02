@@ -47,8 +47,7 @@ export class UploadPageComponent {
         'Les photos doivent être sélectionnées dans cette session. Réimportez vos images pour relancer la génération.',
       ]);
     }
-    this.creationState.startUpload(this.draft.travelId());
-    this.loadPersistedPhotos();
+    void this.initializeAuthenticatedFlow();
   }
 
   protected onFileSelection(event: Event): void {
@@ -225,10 +224,7 @@ export class UploadPageComponent {
       return existingTravelId;
     }
 
-    const session = await this.auth.getSession();
-    if (!session?.access_token) {
-      throw new Error('Votre session a expirÃ©. Reconnectez-vous pour continuer.');
-    }
+    const accessToken = await this.requireAccessToken();
 
     const activeTravelId = this.creationState.creation()?.travelId ?? null;
     if (activeTravelId) {
@@ -236,7 +232,7 @@ export class UploadPageComponent {
       return activeTravelId;
     }
 
-    const existingDraft = await this.findExistingDraftTravel();
+    const existingDraft = await this.findExistingDraftTravel(accessToken);
     if (existingDraft) {
       this.draft.setTravelId(existingDraft.id);
       this.creationState.startUpload(existingDraft.id);
@@ -247,15 +243,15 @@ export class UploadPageComponent {
       title: 'Nouveau souvenir',
       destination: '',
       description: 'Création en cours',
-    }));
+    }, accessToken));
     this.draft.setTravelId(travel.id);
     this.creationState.startUpload(travel.id);
     return travel.id;
   }
 
-  private async findExistingDraftTravel(): Promise<{ id: string } | null> {
+  private async findExistingDraftTravel(accessToken: string): Promise<{ id: string } | null> {
     try {
-      const travels = await firstValueFrom(this.travelApi.getTravels());
+      const travels = await firstValueFrom(this.travelApi.getTravels(accessToken));
       return travels.find((travel) =>
         travel.title === 'Nouveau souvenir'
         && travel.description === 'CrÃ©ation en cours'
@@ -277,6 +273,33 @@ export class UploadPageComponent {
       next: (photos) => this.uploadedPhotos.set(photos),
       error: () => this.uploadedPhotos.set([]),
     });
+  }
+
+  private async initializeAuthenticatedFlow(): Promise<void> {
+    const accessToken = await this.currentAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
+    this.creationState.startUpload(this.draft.travelId());
+    this.loadPersistedPhotos();
+  }
+
+  private async requireAccessToken(): Promise<string> {
+    const accessToken = await this.currentAccessToken();
+    if (accessToken) {
+      return accessToken;
+    }
+
+    await this.router.navigate(['/login'], {
+      queryParams: { redirect: this.router.url },
+    });
+    throw new Error('Votre session a expire. Reconnectez-vous pour continuer.');
+  }
+
+  private async currentAccessToken(): Promise<string | null> {
+    const session = await this.auth.getSession();
+    return session?.access_token?.trim() || null;
   }
 
   private filesToFileList(files: File[]): FileList {
@@ -312,3 +335,4 @@ export class UploadPageComponent {
 function selectedGuard(selectedCount: number, consentGiven: boolean): boolean {
   return selectedCount === 0 || !consentGiven;
 }
+
