@@ -218,10 +218,11 @@ def fallback_episode(day: str, day_data: dict, travel_name: str, episode_number:
 
     for index, photo in enumerate(day_data.get("photos", [])[:12], start=1):
         scene = photo.get("scene", "souvenir")
+        scene_label = human_scene_label(scene)
         scenes.append({
             "scene_numero": index,
             "photo_fichier": photo.get("nom", photo.get("filename", "")),
-            "voix_off": f"Ce plan garde la trace d'un moment {scene}, raconte avec un ton {style.lower()}.",
+            "voix_off": fallback_voice_over(scene_label, place, index),
             "texte_ecran": f"{place} · {day}",
             "duree_secondes": 6,
             "effet": ["ken_burns_zoom_in", "ken_burns_zoom_out", "pan_right", "static"][index % 4],
@@ -238,6 +239,30 @@ def fallback_episode(day: str, day_data: dict, travel_name: str, episode_number:
         "musique_ambiance": "ambient cinematographique doux",
         "nb_photos_source": day_data.get("photo_count", len(scenes)),
     }
+
+
+def human_scene_label(scene: str) -> str:
+    labels = {
+        "scene_mixte": "souvenir spontané",
+        "souvenir": "souvenir",
+        "paysage": "paysage",
+        "portrait": "portrait",
+        "groupe": "moment partagé",
+        "repas": "pause gourmande",
+        "monument": "découverte",
+    }
+    normalized = str(scene or "souvenir").strip().lower()
+    return labels.get(normalized, normalized.replace("_", " "))
+
+
+def fallback_voice_over(scene_label: str, place: str, index: int) -> str:
+    templates = [
+        "On garde ce moment comme une petite capsule de voyage, simple et lumineuse.",
+        f"A {place}, ce {scene_label} raconte une partie de l'ambiance que les photos ne veulent pas laisser filer.",
+        "La journée continue avec ces détails qui deviennent, sans prévenir, les vrais souvenirs.",
+        f"Ce passage remet {place} au centre du récit, entre mouvement, regards et petits instants retrouvés.",
+    ]
+    return templates[(index - 1) % len(templates)]
 
 
 def generate_episode(prompt: str, api_key: str | None) -> dict | None:

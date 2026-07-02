@@ -16,7 +16,7 @@ public class PricingPlanService {
                         "0 EUR",
                         "pour commencer",
                         "Premier souvenir pour découvrir la génération de souvenirs.",
-                        List.of("1 voyage", "1 souvenir", "Export standard"),
+                        List.of("1 voyage", "2 souvenirs", "Export standard"),
                         false,
                         "Decouverte"),
                 new PricingPlanDto(

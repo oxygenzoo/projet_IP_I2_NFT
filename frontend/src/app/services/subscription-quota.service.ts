@@ -30,7 +30,7 @@ export class SubscriptionQuotaService {
       price: '0 EUR',
       cadence: 'pour commencer',
       description: 'Premier souvenir pour découvrir la génération de souvenirs.',
-      features: ['1 voyage', '2 générations vidéo', 'Export standard'],
+      features: ['1 voyage', '2 souvenirs', 'Export standard'],
       highlighted: false,
       audience: 'Découverte',
     },

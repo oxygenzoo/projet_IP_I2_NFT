@@ -103,16 +103,25 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (episode.videoUrl) {
+      void this.downloadEpisodeVideo(episode);
+      return;
+    }
+
     this.isExporting.set(true);
     this.exportMessage.set('Export en cours...');
     this.exportSubscription?.unsubscribe();
     this.exportSubscription = this.travelApiService.exportEpisode(episode.travelId, episode.id).subscribe({
       next: (exportedEpisode) => {
-        this.episode.set({ ...episode, ...exportedEpisode });
+        const updatedEpisode = { ...episode, ...exportedEpisode };
+        this.episode.set(updatedEpisode);
+        if (updatedEpisode.videoUrl) {
+          void this.downloadEpisodeVideo(updatedEpisode);
+          return;
+        }
+
         this.isExporting.set(false);
-        this.exportMessage.set(
-          exportedEpisode.exportStatus === 'ready' ? 'Export prêt.' : 'L’export a échoué.',
-        );
+        this.exportMessage.set(exportedEpisode.exportStatus === 'ready' ? 'Vidéo indisponible.' : 'L’export a échoué.');
       },
       error: () => {
         this.isExporting.set(false);
@@ -186,7 +195,13 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   }
 
   protected sceneVoiceOver(scene: Scene): string {
-    return scene.voiceOverText ?? scene.description ?? '';
+    const voiceOver = scene.voiceOverText ?? scene.description ?? '';
+
+    if (this.looksLikePromptFallback(voiceOver)) {
+      return 'Un instant choisi pour résumer l’ambiance du voyage et garder ce souvenir vivant.';
+    }
+
+    return voiceOver;
   }
 
   protected metadataItems(episode: Episode): string[] {
@@ -196,6 +211,13 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
       episode.date,
       episode.photoCount > 0 ? `${episode.photoCount} photos` : '',
     ].filter((item): item is string => Boolean(item?.trim()));
+  }
+
+  private looksLikePromptFallback(text: string): boolean {
+    const normalized = text.toLowerCase();
+    return normalized.includes('scene_mixte')
+      || normalized.includes('raconte avec un ton')
+      || normalized.includes("ce plan garde la trace d'un moment");
   }
 
   protected isScenesLoading(): boolean {
@@ -266,5 +288,49 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     }
 
     return trimmed.startsWith('/') ? `${this.apiUrl}${trimmed}` : trimmed;
+  }
+
+  private async downloadEpisodeVideo(episode: Episode): Promise<void> {
+    const videoUrl = this.assetUrl(episode.videoUrl);
+
+    if (!videoUrl || typeof document === 'undefined') {
+      this.exportMessage.set('Vidéo indisponible.');
+      return;
+    }
+
+    this.isExporting.set(true);
+    this.exportMessage.set('Téléchargement en cours...');
+
+    try {
+      const response = await fetch(videoUrl);
+
+      if (!response.ok) {
+        throw new Error('Video download failed');
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = `${this.slugify(episode.title || 'souvenir')}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+      this.exportMessage.set('Téléchargement lancé.');
+    } catch {
+      this.exportMessage.set('Téléchargement impossible.');
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
+  private slugify(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'souvenir';
   }
 }

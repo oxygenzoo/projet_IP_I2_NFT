@@ -8,6 +8,27 @@ import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
 
+type RenderServiceState = 'pending' | 'ready' | 'contacted' | 'error';
+
+type RenderServiceStatus = {
+  name: string;
+  url: string;
+  state: RenderServiceState;
+};
+
+const RENDER_SERVICES: RenderServiceStatus[] = [
+  {
+    name: 'Service IA',
+    url: 'https://projet-ip-i2-nft-1.onrender.com/health',
+    state: 'pending',
+  },
+  {
+    name: 'Backend',
+    url: 'https://projet-ip-i2-nft.onrender.com/health',
+    state: 'pending',
+  },
+];
+
 @Component({
   selector: 'app-home-page',
   imports: [RouterLink, AppLogoComponent, EpisodeCardComponent],
@@ -21,6 +42,7 @@ export class HomePageComponent implements OnInit {
   protected readonly profile = signal<ConnectedProfile | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
+  protected readonly renderServices = signal<RenderServiceStatus[]>(RENDER_SERVICES);
   protected readonly travels = signal<Travel[]>([]);
   protected readonly episodes = signal<Episode[]>([]);
   protected readonly featured = computed(() => this.travels().find((travel) => travel.featured) ?? this.travels()[0] ?? null);
@@ -46,6 +68,7 @@ export class HomePageComponent implements OnInit {
   protected loadDashboard(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
+    void this.wakeRenderServices();
 
     forkJoin({
       travels: this.travelApiService.getTravels().pipe(catchError(() => of([]))),
@@ -70,8 +93,51 @@ export class HomePageComponent implements OnInit {
     return firstEpisode ? ['/episode', firstEpisode.id] : ['/home'];
   }
 
+  protected renderStatusLabel(state: RenderServiceState): string {
+    if (state === 'ready') {
+      return 'Connecté';
+    }
+
+    if (state === 'contacted') {
+      return 'Réveil envoyé';
+    }
+
+    if (state === 'error') {
+      return 'À relancer';
+    }
+
+    return 'Réveil en cours';
+  }
+
   protected async logout(): Promise<void> {
     await this.authService.logout();
     await this.router.navigate(['/login']);
+  }
+
+  private async wakeRenderServices(): Promise<void> {
+    this.renderServices.set(RENDER_SERVICES.map((service) => ({ ...service, state: 'pending' })));
+
+    await Promise.all(
+      RENDER_SERVICES.map(async (service) => {
+        const state = await this.pingRenderService(service.url);
+        this.renderServices.update((services) =>
+          services.map((current) => (current.url === service.url ? { ...current, state } : current)),
+        );
+      }),
+    );
+  }
+
+  private async pingRenderService(url: string): Promise<RenderServiceState> {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      return response.ok ? 'ready' : 'contacted';
+    } catch {
+      try {
+        await fetch(url, { cache: 'no-store', mode: 'no-cors' });
+        return 'contacted';
+      } catch {
+        return 'error';
+      }
+    }
   }
 }

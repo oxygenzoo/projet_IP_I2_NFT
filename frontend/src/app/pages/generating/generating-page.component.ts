@@ -80,8 +80,31 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   }
 
   protected estimatedDuration(): string {
-    const seconds = Math.max(20, 10 + this.sceneCount() * 4);
-    return seconds < 60 ? `${seconds} s` : `${Math.max(1, Math.round(seconds / 60))} min`;
+    const episode = this.result()?.script?.episodes?.[0];
+    const sceneSeconds = (episode?.scenes ?? [])
+      .slice(0, 6)
+      .reduce((total, scene) => total + Math.min(Number(scene.duree_secondes ?? 4), 4), 0);
+    const seconds = Math.round(2.5 + this.textCardSeconds(episode?.intro) + sceneSeconds + this.textCardSeconds(episode?.outro));
+
+    return this.formatDuration(seconds);
+  }
+
+  private textCardSeconds(text: string | undefined): number {
+    if (!text?.trim()) {
+      return 0;
+    }
+
+    return Math.max(1, Math.ceil(text.trim().length / 58)) * 1.8;
+  }
+
+  private formatDuration(seconds: number): string {
+    if (seconds < 60) {
+      return `${seconds} s`;
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return remainingSeconds ? `${minutes} min ${remainingSeconds} s` : `${minutes} min`;
   }
 
   private startGeneration(): void {

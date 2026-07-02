@@ -16,9 +16,13 @@ export interface GenerationResponse {
     episodes?: Array<{
       episode_numero?: number;
       episode_titre?: string;
+      intro?: string;
+      outro?: string;
       lieu?: string;
       date?: string;
-      scenes?: unknown[];
+      scenes?: Array<{
+        duree_secondes?: number;
+      }>;
     }>;
   };
   videos: string[];

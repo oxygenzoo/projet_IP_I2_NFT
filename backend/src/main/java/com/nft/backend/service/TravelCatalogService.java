@@ -148,7 +148,7 @@ public class TravelCatalogService {
                 episode.getTitle(),
                 valueOrDefault(episode.getMusicMood(), ""),
                 valueOrDefault(episode.getIntroText(), ""),
-                durationFor(sceneCount),
+                durationFor(episode),
                 valueOrDefault(episode.getLocationName(), ""),
                 formatDate(episode.getEpisodeDate()),
                 photoCount,
@@ -307,13 +307,24 @@ public class TravelCatalogService {
         return valueOrDefault(episode.getExportStatus(), "idle");
     }
 
-    private String durationFor(int sceneCount) {
-        int seconds = Math.max(20, 10 + sceneCount * 4);
+    private String durationFor(Episode episode) {
+        int sceneCount = episode.getScenes() == null ? 0 : Math.min(episode.getScenes().size(), 6);
+        int seconds = Math.round(2.5f + textCardSeconds(episode.getIntroText()) + sceneCount * 4f + textCardSeconds(episode.getOutroText()));
         if (seconds < 60) {
             return seconds + " s";
         }
 
-        return Math.max(1, Math.round(seconds / 60f)) + " min";
+        int minutes = seconds / 60;
+        int remainingSeconds = seconds % 60;
+        return remainingSeconds == 0 ? minutes + " min" : minutes + " min " + remainingSeconds + " s";
+    }
+
+    private float textCardSeconds(String text) {
+        if (text == null || text.isBlank()) {
+            return 0;
+        }
+
+        return Math.max(1, (int) Math.ceil(text.trim().length() / 58.0)) * 1.8f;
     }
 
     private String valueOrDefault(String value, String fallback) {

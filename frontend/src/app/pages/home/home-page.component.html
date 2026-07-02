@@ -38,10 +38,32 @@
 
   @if (isLoading()) {
     <section class="home-video-hero home-video-hero--loading" aria-live="polite">
-      <div class="video-empty-card video-empty-card--hero">
+      <div class="render-wake-card">
         <span class="spinner" aria-hidden="true"></span>
-        <strong>Chargement des souvenirs...</strong>
-        <p>Connexion au backend en cours.</p>
+        <p class="eyebrow">Connexion aux services</p>
+        <h1>Réveil de l'application...</h1>
+        <p>
+          Render peut prendre quelques secondes à redémarrer. On prépare le backend et le service IA avant
+          d'afficher vos souvenirs.
+        </p>
+
+        <div class="render-wake-list">
+          @for (service of renderServices(); track service.url) {
+            <div
+              class="render-wake-item"
+              [class.render-wake-item--pending]="service.state === 'pending'"
+              [class.render-wake-item--ready]="service.state === 'ready'"
+              [class.render-wake-item--contacted]="service.state === 'contacted'"
+              [class.render-wake-item--error]="service.state === 'error'"
+            >
+              <span class="render-wake-dot" aria-hidden="true"></span>
+              <div>
+                <strong>{{ service.name }}</strong>
+                <small>{{ renderStatusLabel(service.state) }}</small>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     </section>
 
