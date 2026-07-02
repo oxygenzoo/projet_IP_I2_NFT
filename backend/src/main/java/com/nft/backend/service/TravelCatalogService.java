@@ -16,8 +16,10 @@ import com.nft.backend.model.EpisodeScene;
 import com.nft.backend.model.EpisodeStatus;
 import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
+import com.nft.backend.model.User;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.TravelRepository;
+import com.nft.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +31,17 @@ public class TravelCatalogService {
     private final TravelRepository travelRepository;
     private final EpisodeRepository episodeRepository;
     private final AuthenticatedUserService authenticatedUserService;
+    private final UserRepository userRepository;
 
     public TravelCatalogService(
             TravelRepository travelRepository,
             EpisodeRepository episodeRepository,
-            AuthenticatedUserService authenticatedUserService) {
+            AuthenticatedUserService authenticatedUserService,
+            UserRepository userRepository) {
         this.travelRepository = travelRepository;
         this.episodeRepository = episodeRepository;
         this.authenticatedUserService = authenticatedUserService;
+        this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -87,9 +92,13 @@ public class TravelCatalogService {
             String destination,
             int photoCount,
             List<String> imageUrls) {
+        User owner = currentOwner();
         Travel travel = travelRepository.save(new Travel(
+                owner,
                 valueOrDefault(title, "Mon voyage"),
                 valueOrDefault(destination, ""),
+                null,
+                null,
                 response == null ? "" : valueOrDefault(response.message(), "Souvenir généré par IA.")));
 
         Episode episode = episodeRepository.save(new Episode(
@@ -349,5 +358,16 @@ public class TravelCatalogService {
 
     private String valueOrDefault(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private User currentOwner() {
+        AuthenticatedUserService.AuthenticatedUser current = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+        return userRepository.findById(current.id())
+                .orElseGet(() -> userRepository.save(new User(
+                        current.id(),
+                        current.email().isBlank() ? current.id() + "@external.local" : current.email(),
+                        "external",
+                        true)));
     }
 }

@@ -8,6 +8,12 @@ import { SubscriptionQuotaService } from '../../services/subscription-quota.serv
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
+type CompletedCreation = {
+  id?: string;
+  result?: GenerationResponse | null;
+  resultVideoUrl?: string | null;
+};
+
 @Component({
   selector: 'app-generating-page',
   imports: [AppLogoComponent, RouterLink],
@@ -110,24 +116,23 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   private startGeneration(): void {
     const existingCreation = this.creationState.creation();
     if (existingCreation?.status === 'done') {
-      this.result.set(existingCreation.result ?? {
-        job_id: existingCreation.id ?? 'creation',
-        status: 'done',
-        message: 'Souvenir termine.',
-        selection_report: {},
-        script: { nb_episodes: 1, episodes: [{ episode_titre: 'Souvenir termine', scenes: [] }] },
-        videos: existingCreation.resultVideoUrl ? [existingCreation.resultVideoUrl] : [],
-        workdir: '',
-      });
+      this.result.set(this.resultFromCreation(existingCreation));
       this.percent.set(100);
       this.completed.set(this.steps);
       this.activeIndex.set(this.steps.length - 1);
       return;
     }
 
-    const images = this.draft.selectedImages();
+    if (existingCreation?.status === 'generating') {
+      this.beginProgressAnimation();
+      this.observeCreation();
+      return;
+    }
 
-    if (images.length === 0) {
+    const images = this.draft.selectedImages();
+    const travelId = this.draft.travelId() ?? existingCreation?.travelId ?? null;
+
+    if (!travelId) {
       this.router.navigate(['/upload'], {
         queryParams: { reason: 'missing-photos' },
         replaceUrl: true,
@@ -149,9 +154,15 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.beginProgressAnimation();
+    this.creationState.beginGeneration(images, this.draft.preferences(), travelId);
+    this.observeCreation();
+  }
+
+  private beginProgressAnimation(): void {
     this.errorMessage.set('');
     this.isGenerating.set(true);
-    this.percent.set(7);
+    this.percent.set(Math.max(this.percent(), 7));
     this.activeIndex.set(0);
     this.completed.set([]);
     this.clearTimers();
@@ -164,8 +175,9 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       this.activeIndex.set(nextStepIndex);
       this.completed.set(this.steps.slice(0, nextStepIndex));
     }, 700);
+  }
 
-    this.creationState.beginGeneration(images, this.draft.preferences(), this.draft.travelId());
+  private observeCreation(): void {
     this.generationSubscription?.unsubscribe();
     this.generationSubscription = new Subscription();
 
@@ -173,7 +185,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       const creation = this.creationState.creation();
       if (creation?.status === 'done') {
         this.quota.consumeVideoToken();
-        this.result.set(creation.result ?? null);
+        this.result.set(this.resultFromCreation(creation));
         this.percent.set(100);
         this.activeIndex.set(this.steps.length - 1);
         this.completed.set(this.steps);
@@ -189,6 +201,18 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       }
     }, 500);
     this.generationSubscription.add(() => clearInterval(watchId));
+  }
+
+  private resultFromCreation(creation: CompletedCreation): GenerationResponse {
+    return creation.result ?? {
+      job_id: creation.id ?? 'creation',
+      status: 'done',
+      message: 'Souvenir terminé.',
+      selection_report: {},
+      script: { nb_episodes: 1, episodes: [{ episode_titre: 'Souvenir terminé', scenes: [] }] },
+      videos: creation.resultVideoUrl ? [creation.resultVideoUrl] : [],
+      workdir: '',
+    };
   }
 
   private clearTimers(): void {

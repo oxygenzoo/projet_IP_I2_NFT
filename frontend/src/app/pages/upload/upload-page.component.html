@@ -7,7 +7,7 @@
     <div class="flow-heading">
       <p class="eyebrow">Import de voyage</p>
       <h1>Ajoutez les photos qui deviendront votre prochain souvenir.</h1>
-      <p>Sélectionnez de vraies images depuis votre appareil. Elles restent locales tant que vous ne continuez pas.</p>
+      <p>Sélectionnez de vraies images depuis votre appareil ou vos services cloud. Elles sont préparées dans votre espace privé.</p>
     </div>
 
     <label class="consent-card glass-panel">
@@ -73,7 +73,10 @@
       </div>
 
       <div class="upload-counter" aria-live="polite">
-        @if (selectedCount() > 0) {
+        @if (isUploading()) {
+          <strong><span class="spinner" aria-hidden="true"></span> Envoi des photos...</strong>
+          <span>Vous pouvez rester sur cette page pendant la préparation.</span>
+        } @else if (selectedCount() > 0) {
           <strong>
             {{ selectedCount() }}
             {{ selectedCount() === 1 ? 'photo sélectionnée' : 'photos sélectionnées' }}
@@ -148,11 +151,12 @@
     <button
       type="button"
       class="btn btn--primary btn--wide"
-      [class.btn--disabled]="selectedCount() === 0 || !consentGiven()"
-      [attr.aria-disabled]="selectedCount() === 0 || !consentGiven()"
+      [class.btn--disabled]="selectedCount() === 0 || !consentGiven() || isUploading()"
+      [attr.aria-disabled]="selectedCount() === 0 || !consentGiven() || isUploading()"
+      [disabled]="isUploading()"
       (click)="continueToPreferences()"
     >
-      Continuer
+      {{ isUploading() ? 'Préparation...' : 'Continuer' }}
     </button>
   </section>
 </main>

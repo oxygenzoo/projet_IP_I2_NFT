@@ -147,12 +147,15 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.profile.set(profile);
+    const backendProfile = await firstValueFrom(this.userProfileApi.getMe()).catch(() => null);
+    const language = backendProfile?.language ?? profile.language;
+
+    this.profile.set({ ...profile, language });
     this.profileForm.patchValue({
       fullName: profile.name,
       email: profile.email,
       avatarUrl: profile.avatarUrl ?? '',
-      language: this.i18n.setLanguage(profile.language),
+      language: this.i18n.setLanguage(language),
     });
     this.isLoading.set(false);
   }

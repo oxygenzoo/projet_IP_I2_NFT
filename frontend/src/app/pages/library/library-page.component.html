@@ -42,7 +42,12 @@
       <section class="library-empty glass-panel">
         <strong>Aucun souvenir pour l'instant</strong>
         <span>Importez vos photos pour construire votre première bibliothèque de voyage.</span>
-        <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
+        <a class="btn btn--primary" [routerLink]="creationState.routeForCurrent()">
+          @if (creationState.isActive()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          {{ createButtonLabel() }}
+        </a>
       </section>
     }
   </section>

@@ -64,6 +64,30 @@ public class EpisodeService {
             List<Photo> photos) {
         Travel travel = findTravel(travelId);
         assertOwner(travel);
+        return createForTravel(travel, request, videoUrl, scenes, photos);
+    }
+
+    @Transactional
+    public EpisodeResponse createForOwner(
+            UUID ownerId,
+            UUID travelId,
+            CreateEpisodeRequest request,
+            String videoUrl,
+            List<GeneratedSceneRequest> scenes,
+            List<Photo> photos) {
+        Travel travel = findTravel(travelId);
+        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
+        return createForTravel(travel, request, videoUrl, scenes, photos);
+    }
+
+    private EpisodeResponse createForTravel(
+            Travel travel,
+            CreateEpisodeRequest request,
+            String videoUrl,
+            List<GeneratedSceneRequest> scenes,
+            List<Photo> photos) {
         Episode episode = new Episode(
                 travel,
                 request.episodeNumber(),

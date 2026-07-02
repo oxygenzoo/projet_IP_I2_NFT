@@ -1283,12 +1283,15 @@ img {
 }
 
 .floating-create {
+  align-items: center;
   background: linear-gradient(135deg, var(--blue), var(--pink), var(--gold));
   border-radius: 999px;
   bottom: 1.2rem;
   box-shadow: 0 18px 42px rgba(255, 104, 70, 0.34);
   color: #ffffff;
+  display: inline-flex;
   font-weight: 850;
+  gap: 0.55rem;
   padding: 0.9rem 1.2rem;
   position: fixed;
   right: 1.2rem;
@@ -1303,6 +1306,27 @@ img {
 .floating-create--loading .spinner {
   height: 0.9rem;
   width: 0.9rem;
+}
+
+.home-notice {
+  align-items: center;
+  display: grid;
+  gap: 0.35rem 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin: 1rem auto 0;
+  max-width: 1180px;
+  padding: 0.95rem 4.5vw;
+  position: relative;
+  z-index: 2;
+}
+
+.home-notice strong,
+.home-notice p {
+  margin: 0;
+}
+
+.home-notice p {
+  color: var(--muted);
 }
 
 .library-page {
@@ -1474,6 +1498,17 @@ img {
   justify-content: center;
   margin-top: 1.2rem;
   padding: 0.75rem 1rem;
+}
+
+.upload-counter strong {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.upload-counter .spinner {
+  height: 0.9rem;
+  width: 0.9rem;
 }
 
 .upload-counter span {
@@ -3279,6 +3314,10 @@ img {
 
   .home-video-hero {
     align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .home-notice {
     grid-template-columns: 1fr;
   }
 

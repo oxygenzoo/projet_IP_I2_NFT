@@ -30,3 +30,7 @@
 
 - Verifier build front et compilation backend quand l'environnement local le permet.
 - Verifier responsive mobile, loading/error/success states, orthographe visible et coherence UI avant presentation.
+- Verifier qu'aucun bouton visible n'est decoratif : chaque action doit fonctionner ou afficher une erreur de configuration claire.
+- Valider en priorite mobile first : tailles de police, espacements, alignements, cards, boutons et micro-interactions sobres.
+- Francais par defaut pour l'interface multilingue, avec libelles visibles accentues et formulations naturelles.
+- Ne jamais modifier la base de donnees a la main : toute evolution passe par un fichier de migration.

@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { TravelPreferences } from '../../models/generation.models';
 import { CreationStateService } from '../../services/creation-state.service';
 import { PreferenceApiService } from '../../services/preference-api.service';
+import { TravelApiService } from '../../services/travel-api.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -23,6 +24,7 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
   private readonly draft = inject(TravelDraftService);
   private readonly creationState = inject(CreationStateService);
   private readonly preferenceApi = inject(PreferenceApiService);
+  private readonly travelApi = inject(TravelApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private loadSubscription?: Subscription;
@@ -32,7 +34,7 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
     {
       id: 'style',
       title: 'Quel style souhaitez-vous ?',
-      options: ['Documentaire', 'Emotionnel', 'Cinematographique', 'Drole'],
+      options: ['Documentaire', 'Émotionnel', 'Cinématographique', 'Drôle'],
     },
     {
       id: 'people',
@@ -42,22 +44,23 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
     {
       id: 'moments',
       title: 'Quels moments sont les plus importants ?',
-      options: ['Paysages', 'Rencontres', 'Activites', 'Culture'],
+      options: ['Paysages', 'Rencontres', 'Activités', 'Culture'],
     },
     {
       id: 'tone',
-      title: 'Ton general',
+      title: 'Ton général',
       options: ['Nostalgique', 'Inspirant', 'Fun', 'Aventure'],
     },
   ];
 
   protected readonly selected = signal<TravelPreferences>({
-    style: 'Cinematographique',
+    style: 'Cinématographique',
     people: 'Tout le monde',
     moments: 'Paysages',
     tone: 'Inspirant',
   });
   protected readonly selectedCount = computed(() => this.draft.selectedImages().length);
+  protected readonly persistedPhotoCount = signal(0);
   protected readonly errorMessage = signal('');
   protected readonly isSaving = signal(false);
 
@@ -74,6 +77,10 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
     }
 
     this.draft.setTravelId(travelId);
+    this.travelApi.getPhotos(travelId).subscribe({
+      next: (photos) => this.persistedPhotoCount.set(photos.length),
+      error: () => this.persistedPhotoCount.set(0),
+    });
     this.loadSubscription = this.preferenceApi.getPreferences(travelId).subscribe({
       next: (preferences) => {
         const savedPreferences = this.questionPreferencesFrom(preferences);
@@ -111,7 +118,7 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
   }
 
   protected startGeneration(): void {
-    if (this.selectedCount() === 0) {
+    if (this.selectedCount() === 0 && this.persistedPhotoCount() === 0) {
       this.errorMessage.set('Ajoutez au moins une photo avant de lancer la génération.');
       return;
     }

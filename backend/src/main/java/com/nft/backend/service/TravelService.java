@@ -157,7 +157,7 @@ public class TravelService {
                 travel.getEpisodes().size(),
                 travel.getPhotos().size(),
                 0,
-                "A generer",
+                "À générer",
                 false,
                 List.of("Voyage"),
                 List.of(),

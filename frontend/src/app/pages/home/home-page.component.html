@@ -74,6 +74,14 @@
       <button class="btn btn--primary" type="button" (click)="loadDashboard()">Réessayer</button>
     </section>
   } @else {
+    @if (creationNotice()) {
+      <section class="home-notice glass-panel" aria-live="polite">
+        <strong>Souvenir prêt</strong>
+        <p>{{ creationNotice() }}</p>
+        <a class="btn btn--glass" routerLink="/notifications">Voir les notifications</a>
+      </section>
+    }
+
     <section class="home-video-hero">
       <div class="home-video-hero__copy">
         <p class="eyebrow">Votre espace voyage</p>
@@ -82,12 +90,22 @@
           <p>Retrouvez vos voyages, vos souvenirs générés et vos photos dans votre bibliothèque.</p>
           <div class="hero-actions">
             <a class="btn btn--primary" routerLink="/library">Voir mes souvenirs</a>
-            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
+            <a class="btn btn--glass" [routerLink]="createButtonLink()">
+              @if (creationState.isActive()) {
+                <span class="spinner" aria-hidden="true"></span>
+              }
+              {{ createButtonLabel() }}
+            </a>
           </div>
         } @else {
           <h1>Aucun souvenir pour l'instant</h1>
           <p>Importez vos photos pour créer votre premier souvenir de voyage.</p>
-          <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
+          <a class="btn btn--primary" [routerLink]="createButtonLink()">
+            @if (creationState.isActive()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+            {{ createButtonLabel() }}
+          </a>
         }
       </div>
     </section>

@@ -7,6 +7,7 @@ import { CreationStateService } from '../../services/creation-state.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { Photo } from '../../models/travel.models';
 
 @Component({
   selector: 'app-upload-page',
@@ -26,10 +27,12 @@ export class UploadPageComponent {
 
   protected readonly selectedImages = this.draft.selectedImages;
   protected readonly consentGiven = this.draft.consentRgpd;
-  protected readonly selectedCount = computed(() => this.selectedImages().length);
+  protected readonly uploadedPhotos = signal<Photo[]>([]);
+  protected readonly selectedCount = computed(() => Math.max(this.selectedImages().length, this.uploadedPhotos().length));
   protected readonly errors = signal<string[]>([]);
   protected readonly isDragging = signal(false);
   protected readonly isCloudImporting = signal(false);
+  protected readonly isUploading = signal(false);
   protected readonly isCreatingLink = signal(false);
   protected readonly contributionLink = signal('');
 
@@ -40,11 +43,12 @@ export class UploadPageComponent {
       ]);
     }
     this.creationState.startUpload(this.draft.travelId());
+    this.loadPersistedPhotos();
   }
 
   protected onFileSelection(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.addFiles(input.files);
+    void this.addFiles(input.files);
     input.value = '';
   }
 
@@ -65,7 +69,7 @@ export class UploadPageComponent {
   protected onDrop(event: DragEvent): void {
     event.preventDefault();
     this.isDragging.set(false);
-    this.addFiles(event.dataTransfer?.files ?? null);
+    void this.addFiles(event.dataTransfer?.files ?? null);
   }
 
   protected removeImage(index: number): void {
@@ -132,7 +136,7 @@ export class UploadPageComponent {
     return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
   }
 
-  private addFiles(fileList: FileList | null): void {
+  private async addFiles(fileList: FileList | null): Promise<void> {
     if (!fileList?.length) {
       return;
     }
@@ -162,8 +166,21 @@ export class UploadPageComponent {
     this.errors.set(validationErrors);
     this.draft.addFiles(validFiles);
     if (validFiles.length) {
-      this.creationState.startUpload(this.draft.travelId());
-      void this.ensureDraftTravel();
+      this.isUploading.set(true);
+      try {
+        const travelId = await this.ensureDraftTravel();
+        const uploaded = await Promise.all(
+          validFiles.map((file) => firstValueFrom(this.travelApi.uploadPhoto(travelId, file, this.consentGiven()))),
+        );
+        this.uploadedPhotos.update((current) => [...current, ...uploaded]);
+      } catch (error) {
+        this.errors.update((current) => [
+          ...current,
+          this.errorText(error, "Certaines photos n'ont pas pu être envoyées au backend."),
+        ]);
+      } finally {
+        this.isUploading.set(false);
+      }
     }
   }
 
@@ -177,7 +194,7 @@ export class UploadPageComponent {
     this.errors.set([]);
     try {
       const files = await loader();
-      this.addFiles(this.filesToFileList(files));
+      await this.addFiles(this.filesToFileList(files));
     } catch (error) {
       this.errors.set([this.errorText(error, 'Import impossible pour le moment.')]);
     } finally {
@@ -194,11 +211,24 @@ export class UploadPageComponent {
     const travel = await firstValueFrom(this.travelApi.createTravel({
       title: 'Nouveau souvenir',
       destination: '',
-      description: 'Creation en cours',
+      description: 'Création en cours',
     }));
     this.draft.setTravelId(travel.id);
     this.creationState.startUpload(travel.id);
     return travel.id;
+  }
+
+  private loadPersistedPhotos(): void {
+    const travelId = this.draft.travelId() ?? this.creationState.creation()?.travelId ?? null;
+    if (!travelId) {
+      return;
+    }
+
+    this.draft.setTravelId(travelId);
+    this.travelApi.getPhotos(travelId).subscribe({
+      next: (photos) => this.uploadedPhotos.set(photos),
+      error: () => this.uploadedPhotos.set([]),
+    });
   }
 
   private filesToFileList(files: File[]): FileList {

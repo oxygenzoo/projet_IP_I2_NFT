@@ -3,6 +3,7 @@ package com.nft.backend.controller;
 import java.net.URI;
 import java.util.UUID;
 
+import com.nft.backend.dto.creation.CreationGenerationRequest;
 import com.nft.backend.dto.creation.CreationSessionRequest;
 import com.nft.backend.dto.creation.CreationSessionResponse;
 import com.nft.backend.service.CreationSessionService;
@@ -39,5 +40,10 @@ public class CreationSessionController {
     @PatchMapping("/{id}")
     public CreationSessionResponse update(@PathVariable UUID id, @RequestBody CreationSessionRequest request) {
         return creationSessionService.update(id, request);
+    }
+
+    @PostMapping("/{id}/generate")
+    public CreationSessionResponse generate(@PathVariable UUID id, @RequestBody CreationGenerationRequest request) {
+        return creationSessionService.launchGeneration(id, request.travelId(), request.preferences());
     }
 }

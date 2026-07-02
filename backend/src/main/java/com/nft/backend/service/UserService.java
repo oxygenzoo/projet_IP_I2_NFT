@@ -43,12 +43,17 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UserDto me() {
-        UUID id = authenticatedUserService.requireCurrentUserId();
-        return userRepository.findById(id)
+        AuthenticatedUserService.AuthenticatedUser current = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+        return userRepository.findById(current.id())
                 .map(UserDto::fromEntity)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseGet(() -> UserDto.fromEntity(userRepository.save(new User(
+                        current.id(),
+                        current.email().isBlank() ? current.id() + "@external.local" : current.email(),
+                        "external",
+                        true))));
     }
 
     @Transactional

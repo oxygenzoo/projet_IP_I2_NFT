@@ -7,6 +7,7 @@ import { AuthService, ConnectedProfile } from '../../services/auth.service';
 import { CreationStateService } from '../../services/creation-state.service';
 import { I18nService } from '../../services/i18n.service';
 import { TravelApiService } from '../../services/travel-api.service';
+import { UserProfileApiService } from '../../services/user-profile-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
 
@@ -42,10 +43,12 @@ export class HomePageComponent implements OnInit {
   private readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private readonly travelApiService = inject(TravelApiService);
+  private readonly userProfileApi = inject(UserProfileApiService);
 
   protected readonly profile = signal<ConnectedProfile | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
+  protected readonly creationNotice = signal('');
   protected readonly renderServices = signal<RenderServiceStatus[]>(RENDER_SERVICES);
   protected readonly travels = signal<Travel[]>([]);
   protected readonly episodes = signal<Episode[]>([]);
@@ -66,16 +69,22 @@ export class HomePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.creationState.refreshFromBackend();
+    setTimeout(() => this.handleFinishedCreation(), 1600);
     void this.loadProfile();
     this.loadDashboard();
   }
 
   private async loadProfile(): Promise<void> {
     const profile = await this.authService.getCurrentProfile();
-    if (profile) {
-      this.i18n.setLanguage(profile.language);
+    if (!profile) {
+      return;
     }
-    this.profile.set(profile);
+
+    this.userProfileApi.getMe().pipe(catchError(() => of(null))).subscribe((backendProfile) => {
+      const language = backendProfile?.language ?? profile.language;
+      this.i18n.setLanguage(language);
+      this.profile.set({ ...profile, language });
+    });
   }
 
   protected loadDashboard(): void {
@@ -90,6 +99,7 @@ export class HomePageComponent implements OnInit {
       next: ({ travels, episodes }) => {
         this.travels.set(travels);
         this.episodes.set(episodes);
+        this.handleFinishedCreation();
         this.isLoading.set(false);
       },
       error: () => {
@@ -125,6 +135,23 @@ export class HomePageComponent implements OnInit {
   protected async logout(): Promise<void> {
     await this.authService.logout();
     await this.router.navigate(['/login']);
+  }
+
+  protected createButtonClasses(): Record<string, boolean> {
+    return {
+      'floating-create--loading': this.creationState.isActive(),
+    };
+  }
+
+  private handleFinishedCreation(): void {
+    const creation = this.creationState.creation();
+    if (creation?.status !== 'done') {
+      return;
+    }
+
+    this.creationNotice.set('Votre souvenir est prêt et a été ajouté à votre espace.');
+    this.creationState.acknowledgeFinished();
+    this.loadDashboard();
   }
 
   private async wakeRenderServices(): Promise<void> {

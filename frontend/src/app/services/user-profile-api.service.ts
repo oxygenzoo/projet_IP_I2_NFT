@@ -21,4 +21,8 @@ export class UserProfileApiService {
   updateLanguage(language: AppLanguage): Observable<BackendUserProfile> {
     return this.http.patch<BackendUserProfile>(`${this.apiUrl}/api/users/me/language`, { language });
   }
+
+  getMe(): Observable<BackendUserProfile> {
+    return this.http.get<BackendUserProfile>(`${this.apiUrl}/api/users/me`);
+  }
 }

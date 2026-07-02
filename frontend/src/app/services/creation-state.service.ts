@@ -24,6 +24,7 @@ export class CreationStateService {
   private readonly generationApi = inject(GenerationApiService);
   private readonly storageKey = 'nft.activeCreation';
   private generationSubscription?: Subscription;
+  private pollingSubscription?: Subscription;
 
   readonly creation = signal<StoredCreation | null>(this.readStoredCreation());
   readonly isActive = computed(() => {
@@ -40,6 +41,7 @@ export class CreationStateService {
       catchError(() => of(null)),
     ).subscribe((session) => {
       if (!session) {
+        this.creation.set(null);
         return;
       }
       this.creation.set({
@@ -53,10 +55,17 @@ export class CreationStateService {
         updatedAt: session.updatedAt,
         result: this.creation()?.result ?? null,
       });
+      if (session.status === 'generating') {
+        this.startPolling();
+      }
     });
   }
 
   startUpload(travelId?: string | null): void {
+    const current = this.creation();
+    if (current?.status === 'uploading' && current.travelId === travelId && current.id) {
+      return;
+    }
     this.setLocal('uploading', { travelId });
     this.http.post<CreationSession>(`${this.apiUrl}/api/creations`, { status: 'uploading', travelId }).pipe(
       catchError(() => of(null)),
@@ -76,12 +85,18 @@ export class CreationStateService {
       return;
     }
 
+    const creation = this.creation();
+    if (!creation?.id || !travelId) {
+      this.update('error', { errorMessage: 'La session de création est introuvable. Revenez à l’import.' });
+      return;
+    }
+
     this.update('generating', { travelId });
     this.generationSubscription?.unsubscribe();
-    this.generationSubscription = this.generationApi.createEpisode(images, preferences, travelId).subscribe({
-      next: (result) => {
-        const firstVideo = result.videos?.[0] ?? null;
-        this.update('done', { resultVideoUrl: firstVideo, result });
+    this.generationSubscription = this.generationApi.startPersistentGeneration(creation.id, travelId, preferences).subscribe({
+      next: (session) => {
+        this.mergeBackendSession(session);
+        this.startPolling();
       },
       error: (error: Error) => {
         this.update('error', { errorMessage: error.message });
@@ -91,15 +106,24 @@ export class CreationStateService {
 
   routeForCurrent(): string[] {
     const status = this.creation()?.status;
-    if (status === 'generating' || status === 'done' || status === 'error') {
+    if (status === 'generating' || status === 'error') {
       return ['/generating'];
     }
     return ['/upload'];
   }
 
+  acknowledgeFinished(): void {
+    const creation = this.creation();
+    if (creation?.status === 'done') {
+      this.clear();
+    }
+  }
+
   clear(): void {
     this.generationSubscription?.unsubscribe();
     this.generationSubscription = undefined;
+    this.pollingSubscription?.unsubscribe();
+    this.pollingSubscription = undefined;
     this.creation.set(null);
   }
 
@@ -146,6 +170,26 @@ export class CreationStateService {
       errorMessage: session.errorMessage ?? null,
       updatedAt: session.updatedAt,
     });
+  }
+
+  private startPolling(): void {
+    this.pollingSubscription?.unsubscribe();
+    this.pollingSubscription = new Subscription();
+    const intervalId = setInterval(() => {
+      this.http.get<CreationSession>(`${this.apiUrl}/api/creations/current`).pipe(
+        catchError(() => of(null)),
+      ).subscribe((session) => {
+        if (!session) {
+          return;
+        }
+        this.mergeBackendSession(session);
+        if (session.status === 'done' || session.status === 'error') {
+          this.pollingSubscription?.unsubscribe();
+          this.pollingSubscription = undefined;
+        }
+      });
+    }, 1500);
+    this.pollingSubscription.add(() => clearInterval(intervalId));
   }
 
   private readStoredCreation(): StoredCreation | null {

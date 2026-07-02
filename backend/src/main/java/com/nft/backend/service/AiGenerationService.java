@@ -1,6 +1,8 @@
 package com.nft.backend.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -12,7 +14,9 @@ import com.nft.backend.dto.generation.GenerationResponse;
 import com.nft.backend.dto.photo.PhotoMetadataRequest;
 import com.nft.backend.model.EpisodeStatus;
 import com.nft.backend.model.Photo;
+import com.nft.backend.model.Travel;
 import com.nft.backend.repository.PhotoRepository;
+import com.nft.backend.repository.TravelRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -33,18 +37,24 @@ public class AiGenerationService {
     private final PhotoService photoService;
     private final EpisodeService episodeService;
     private final PhotoRepository photoRepository;
+    private final TravelRepository travelRepository;
+
+    private record GenerationImage(String filename, String contentType, byte[] bytes, long size) {
+    }
 
     public AiGenerationService(
             @Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl,
             TravelCatalogService travelCatalogService,
             PhotoService photoService,
             EpisodeService episodeService,
-            PhotoRepository photoRepository) {
+            PhotoRepository photoRepository,
+            TravelRepository travelRepository) {
         this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
         this.travelCatalogService = travelCatalogService;
         this.photoService = photoService;
         this.episodeService = episodeService;
         this.photoRepository = photoRepository;
+        this.travelRepository = travelRepository;
     }
 
     public GenerationResponse generateEpisode(
@@ -58,28 +68,61 @@ public class AiGenerationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajoutez au moins une photo.");
         }
 
+        List<GenerationImage> generationImages = images.stream()
+                .filter((image) -> !image.isEmpty())
+                .map(this::toGenerationImage)
+                .toList();
+        return generateEpisodeImages(generationImages, title, destination, preferences, travelId, true, null);
+    }
+
+    public GenerationResponse generateEpisodeFromTravel(UUID ownerId, UUID travelId, String preferences) {
+        Travel travel = travelRepository.findById(travelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
+
+        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
+
+        List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelId);
+        List<GenerationImage> images = photos.stream()
+                .map(this::toGenerationImage)
+                .toList();
+
+        return generateEpisodeImages(
+                images,
+                valueOrDefault(travel.getTitle(), "Mon voyage"),
+                valueOrDefault(travel.getDestination(), ""),
+                preferences,
+                travelId.toString(),
+                false,
+                ownerId);
+    }
+
+    private GenerationResponse generateEpisodeImages(
+            List<GenerationImage> images,
+            String title,
+            String destination,
+            String preferences,
+            String travelId,
+            boolean persistPhotoMetadata,
+            UUID ownerId) {
+        if (images == null || images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajoutez au moins une photo.");
+        }
+
         MultipartBodyBuilder body = new MultipartBodyBuilder();
         body.part("title", valueOrDefault(title, "Mon voyage"));
         body.part("destination", valueOrDefault(destination, ""));
         body.part("preferences", valueOrDefault(preferences, "{}"));
 
-        for (MultipartFile image : images) {
-            if (image.isEmpty()) {
-                continue;
-            }
-
-            try {
-                body.part("images", multipartResource(image))
-                        .filename(safeFilename(image.getOriginalFilename()))
-                        .contentType(resolveContentType(image));
-            } catch (IOException exception) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Impossible de lire une photo envoyee.", exception);
-            }
+        for (GenerationImage image : images) {
+            body.part("images", multipartResource(image))
+                    .filename(image.filename())
+                    .contentType(resolveContentType(image.contentType()));
         }
 
         List<String> filenames = images.stream()
-                .filter((image) -> !image.isEmpty())
-                .map((image) -> safeFilename(image.getOriginalFilename()))
+                .map(GenerationImage::filename)
                 .toList();
 
         if (filenames.isEmpty()) {
@@ -104,9 +147,9 @@ public class AiGenerationService {
                         valueOrDefault(title, "Mon voyage"),
                         valueOrDefault(destination, ""),
                         images.size(),
-                        images.stream().map((image) -> safeFilename(image.getOriginalFilename())).toList());
+                        filenames);
             } else {
-                registerTravelWorkflow(response, travelId, images);
+                registerTravelWorkflow(response, travelId, images, persistPhotoMetadata, ownerId);
             }
 
             return response;
@@ -131,19 +174,16 @@ public class AiGenerationService {
         return generateEpisode(images, title, destination, preferences, null);
     }
 
-    private ByteArrayResource multipartResource(MultipartFile file) throws IOException {
-        byte[] bytes = file.getBytes();
-        String filename = safeFilename(file.getOriginalFilename());
-        return new ByteArrayResource(bytes) {
+    private ByteArrayResource multipartResource(GenerationImage image) {
+        return new ByteArrayResource(image.bytes()) {
             @Override
             public String getFilename() {
-                return filename;
+                return image.filename();
             }
         };
     }
 
-    private MediaType resolveContentType(MultipartFile file) {
-        String contentType = file.getContentType();
+    private MediaType resolveContentType(String contentType) {
         if (contentType == null || contentType.isBlank()) {
             return MediaType.APPLICATION_OCTET_STREAM;
         }
@@ -161,27 +201,59 @@ public class AiGenerationService {
         return value == null || value.isBlank() ? fallback : value;
     }
 
-    private void registerTravelWorkflow(GenerationResponse response, String travelId, List<MultipartFile> images) {
+    private GenerationImage toGenerationImage(MultipartFile image) {
+        try {
+            return new GenerationImage(
+                    safeFilename(image.getOriginalFilename()),
+                    resolveImageType(image.getContentType()),
+                    image.getBytes(),
+                    image.getSize());
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Impossible de lire une photo envoyée.", exception);
+        }
+    }
+
+    private GenerationImage toGenerationImage(Photo photo) {
+        if (photo == null || photo.getStoragePath() == null || photo.getStoragePath().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Une photo importée n'a pas de fichier exploitable.");
+        }
+
+        try {
+            Path path = Path.of(photo.getStoragePath()).toAbsolutePath().normalize();
+            if (!Files.exists(path)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Une photo importée est introuvable.");
+            }
+            return new GenerationImage(
+                    safeFilename(photo.getFilename()),
+                    resolveImageType(photo.getType()),
+                    Files.readAllBytes(path),
+                    photo.getSize());
+        } catch (IOException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Impossible de lire une photo importée.", exception);
+        }
+    }
+
+    private void registerTravelWorkflow(
+            GenerationResponse response,
+            String travelId,
+            List<GenerationImage> images,
+            boolean persistPhotoMetadata,
+            UUID ownerId) {
         if (travelId == null || travelId.isBlank()) {
             return;
         }
 
         UUID travelUuid = parseTravelId(travelId);
-        List<PhotoMetadataRequest> metadata = images.stream()
-                .filter((image) -> !image.isEmpty())
-                .map((image) -> new PhotoMetadataRequest(
-                        safeFilename(image.getOriginalFilename()),
-                        image.getSize(),
-                        resolveImageType(image)))
-                .toList();
-
-        if (!metadata.isEmpty()) {
+        if (persistPhotoMetadata) {
+            List<PhotoMetadataRequest> metadata = images.stream()
+                    .map((image) -> new PhotoMetadataRequest(image.filename(), image.size(), resolveImageType(image.contentType())))
+                    .toList();
             photoService.createAll(travelUuid, metadata);
         }
 
         Map<String, Object> episode = firstEpisode(response.script());
         List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
-        episodeService.create(travelUuid, new CreateEpisodeRequest(
+        CreateEpisodeRequest request = new CreateEpisodeRequest(
                 numberValue(episode.get("episode_numero"), 1),
                 cleanOrDefault(stringValue(episode.get("episode_titre")), "Souvenir généré"),
                 cleanOrDefault(stringValue(episode.get("lieu")), ""),
@@ -189,10 +261,13 @@ public class AiGenerationService {
                 cleanOrDefault(response.message(), ""),
                 "Génération IA terminée.",
                 cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
-                EpisodeStatus.READY),
-                firstVideoUrl(response),
-                generatedScenes(episode),
-                photos);
+                EpisodeStatus.READY);
+
+        if (ownerId == null) {
+            episodeService.create(travelUuid, request, firstVideoUrl(response), generatedScenes(episode), photos);
+        } else {
+            episodeService.createForOwner(ownerId, travelUuid, request, firstVideoUrl(response), generatedScenes(episode), photos);
+        }
     }
 
     private UUID parseTravelId(String travelId) {
@@ -203,8 +278,7 @@ public class AiGenerationService {
         }
     }
 
-    private String resolveImageType(MultipartFile image) {
-        String type = image.getContentType();
+    private String resolveImageType(String type) {
         return type == null || type.isBlank() ? "image/jpeg" : type;
     }
 

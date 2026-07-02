@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 
 import { API_URL } from '../config/api.config';
-import { DraftImage, GenerationResponse, TravelPreferences } from '../models/generation.models';
+import { CreationSession, DraftImage, GenerationResponse, TravelPreferences } from '../models/generation.models';
 
 @Injectable({ providedIn: 'root' })
 export class GenerationApiService {
@@ -28,6 +28,22 @@ export class GenerationApiService {
 
     return this.http.post<GenerationResponse>(`${this.apiUrl}/api/generation/jobs`, formData).pipe(
       tap((result) => this.lastResult.set(result)),
+      catchError((error: HttpErrorResponse) => {
+        const message = this.extractErrorMessage(error);
+        return throwError(() => new Error(message));
+      }),
+    );
+  }
+
+  startPersistentGeneration(
+    creationId: string,
+    travelId: string,
+    preferences: TravelPreferences,
+  ): Observable<CreationSession> {
+    return this.http.post<CreationSession>(`${this.apiUrl}/api/creations/${creationId}/generate`, {
+      travelId,
+      preferences: JSON.stringify(preferences),
+    }).pipe(
       catchError((error: HttpErrorResponse) => {
         const message = this.extractErrorMessage(error);
         return throwError(() => new Error(message));
