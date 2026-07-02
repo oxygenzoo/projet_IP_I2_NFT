@@ -23,6 +23,49 @@ export class SubscriptionQuotaService {
   readonly currentPlan = computed(() => this.plans[this.currentPlanId()] ?? this.plans['starter']);
   readonly remainingVideoTokens = computed(() => Math.max(0, this.currentPlan().videoTokens - this.usedVideoTokens()));
 
+  readonly demoPricingPlans = [
+    {
+      id: 'starter',
+      name: 'Starter',
+      price: '0 EUR',
+      cadence: 'pour commencer',
+      description: 'Premier souvenir pour découvrir la génération de souvenirs.',
+      features: ['1 voyage', '2 générations vidéo', 'Export standard'],
+      highlighted: false,
+      audience: 'Découverte',
+    },
+    {
+      id: 'travel',
+      name: 'Voyage complet',
+      price: '9 EUR',
+      cadence: 'par voyage',
+      description: 'Un voyage transformé en souvenir partageable.',
+      features: ["Jusqu'à 6 souvenirs", 'Sélection IA', 'Lien de partage', 'Export souvenir si disponible'],
+      highlighted: true,
+      audience: 'Le plus choisi',
+    },
+    {
+      id: 'archive',
+      name: 'Archive',
+      price: '19 EUR',
+      cadence: 'par mois',
+      description: 'Pour conserver plusieurs voyages et exports dans le temps.',
+      features: ['Voyages multiples', 'Historique complet', 'Exports prioritaires', 'Support groupe'],
+      highlighted: false,
+      audience: 'Régulier',
+    },
+    {
+      id: 'organization',
+      name: 'Organisation',
+      price: 'Sur devis',
+      cadence: 'équipes',
+      description: 'Offre adaptée aux groupes, associations et séjours organisés.',
+      features: ['Espace administrateur', 'Gestion multi-voyages', 'Accompagnement', 'Facturation dédiée'],
+      highlighted: false,
+      audience: 'Groupes',
+    },
+  ];
+
   getPlanName(planId: string): string {
     return this.plans[planId]?.name ?? planId;
   }

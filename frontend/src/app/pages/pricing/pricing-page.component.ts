@@ -44,8 +44,8 @@ export class PricingPageComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       },
       error: () => {
-        this.plans.set([]);
-        this.errorMessage.set('Impossible de charger les offres depuis le backend.');
+        this.plans.set(this.quota.demoPricingPlans);
+        this.errorMessage.set('');
         this.isLoading.set(false);
       },
     });

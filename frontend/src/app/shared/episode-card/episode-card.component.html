@@ -13,6 +13,14 @@
     @if (episode().videoUrl) {
       <span class="episode-card__play" aria-hidden="true">▶</span>
     }
+  } @else if (episode().videoUrl) {
+    <video
+      class="episode-card__media"
+      [src]="episode().videoUrl"
+      muted
+      playsinline
+      preload="metadata"
+    ></video>
   } @else {
     <div class="episode-card__placeholder">
       <span>Aucun souvenir pour l'instant</span>

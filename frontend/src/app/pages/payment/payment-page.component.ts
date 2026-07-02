@@ -1,9 +1,10 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import { PricingPlan } from '../../models/travel.models';
+import { AuthService } from '../../services/auth.service';
 import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
@@ -14,6 +15,7 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
   templateUrl: './payment-page.component.html',
 })
 export class PaymentPageComponent implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly quota = inject(SubscriptionQuotaService);
   private readonly route = inject(ActivatedRoute);
@@ -27,7 +29,6 @@ export class PaymentPageComponent implements OnInit, OnDestroy {
   protected readonly isProcessing = signal(false);
   protected readonly isPaid = signal(false);
   protected readonly errorMessage = signal('');
-  protected readonly tokenCount = computed(() => (this.plan() ? this.quota.currentPlan().videoTokens : 0));
 
   protected readonly paymentForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -39,6 +40,7 @@ export class PaymentPageComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    void this.prefillFromProfile();
     const planId = this.route.snapshot.paramMap.get('planId') ?? '';
 
     if (!planId || this.quota.isCurrentPlan(planId)) {
@@ -58,7 +60,13 @@ export class PaymentPageComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Impossible de charger le récapitulatif de paiement.');
+        const selectedPlan = this.quota.demoPricingPlans.find((plan) => plan.id === planId) ?? null;
+
+        if (!selectedPlan) {
+          this.errorMessage.set('Cette offre est introuvable.');
+        }
+
+        this.plan.set(selectedPlan);
         this.isLoading.set(false);
       },
     });
@@ -88,5 +96,18 @@ export class PaymentPageComponent implements OnInit, OnDestroy {
       this.isProcessing.set(false);
       this.isPaid.set(true);
     }, 900);
+  }
+
+  private async prefillFromProfile(): Promise<void> {
+    const profile = await this.authService.getCurrentProfile();
+
+    if (!profile) {
+      return;
+    }
+
+    this.paymentForm.patchValue({
+      email: profile.email,
+      cardName: profile.name,
+    });
   }
 }

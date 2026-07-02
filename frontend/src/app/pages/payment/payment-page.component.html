@@ -25,66 +25,77 @@
       </section>
     } @else {
       <section class="payment-shell">
-        <div class="payment-copy">
+        <header class="payment-copy">
           <p class="eyebrow">Paiement sécurisé</p>
-          <h1>Finaliser l'upgrade {{ plan.name }}</h1>
-          <p>Cette page est factice pour la démonstration, mais reprend le comportement d'un paiement réel.</p>
-        </div>
+          <h1>Finaliser l'upgrade</h1>
+          <p>Le paiement est simulé pour la démo: la carte est déjà prête, aucun débit n'est effectué.</p>
+        </header>
 
-        <form class="payment-form glass-panel" [formGroup]="paymentForm" (ngSubmit)="pay()" novalidate>
-          <div class="payment-card-preview">
-            <span>NFT Premium</span>
-            <strong>4242 4242 4242 4242</strong>
-            <small>{{ paymentForm.controls.cardName.value || 'Nom sur la carte' }}</small>
+        <section class="payment-checkout glass-panel">
+          <div class="payment-selected-plan">
+            <div>
+              <span class="plan-badge">{{ plan.audience || 'Upgrade' }}</span>
+              <h2>{{ plan.name }}</h2>
+              <p>{{ plan.description }}</p>
+            </div>
+            <div class="payment-selected-plan__price">
+              <strong>{{ plan.price }}</strong>
+              <span>{{ plan.cadence }}</span>
+            </div>
           </div>
 
-          <label>
-            Email de facturation
-            <input type="email" formControlName="email" autocomplete="email" placeholder="vous@email.com" />
-          </label>
+          <form class="payment-form" [formGroup]="paymentForm" (ngSubmit)="pay()" novalidate>
+            <div class="payment-card-preview" aria-label="Carte de test préremplie">
+              <span>NFT Premium</span>
+              <strong>{{ paymentForm.controls.cardNumber.value }}</strong>
+              <small>{{ paymentForm.controls.cardName.value || 'Nom sur la carte' }}</small>
+            </div>
 
-          <label>
-            Nom sur la carte
-            <input type="text" formControlName="cardName" autocomplete="cc-name" placeholder="Enzo Guignabert" />
-          </label>
+            <div class="payment-form-grid">
+              <label>
+                Email de facturation
+                <input type="email" formControlName="email" autocomplete="email" placeholder="vous@email.com" />
+              </label>
 
-          <label>
-            Numéro de carte
-            <input type="text" formControlName="cardNumber" inputmode="numeric" autocomplete="cc-number" />
-          </label>
+              <label>
+                Nom sur la carte
+                <input type="text" formControlName="cardName" autocomplete="cc-name" placeholder="Alexandre Roubaix" />
+              </label>
+            </div>
 
-          <div class="payment-row">
             <label>
-              Expiration
-              <input type="text" formControlName="expiry" inputmode="numeric" autocomplete="cc-exp" />
+              Numéro de carte
+              <input type="text" formControlName="cardNumber" inputmode="numeric" autocomplete="cc-number" />
             </label>
-            <label>
-              CVC
-              <input type="text" formControlName="cvc" inputmode="numeric" autocomplete="cc-csc" />
-            </label>
-            <label>
-              Code postal
-              <input type="text" formControlName="zipCode" autocomplete="postal-code" />
-            </label>
-          </div>
 
-          @if (paymentForm.touched && paymentForm.invalid) {
-            <p class="form-error">Complétez les informations de paiement pour continuer.</p>
-          }
+            <div class="payment-row">
+              <label>
+                Expiration
+                <input type="text" formControlName="expiry" inputmode="numeric" autocomplete="cc-exp" />
+              </label>
+              <label>
+                CVC
+                <input type="text" formControlName="cvc" inputmode="numeric" autocomplete="cc-csc" />
+              </label>
+              <label>
+                Code postal
+                <input type="text" formControlName="zipCode" autocomplete="postal-code" />
+              </label>
+            </div>
 
-          <button class="btn btn--primary btn--wide" type="submit" [disabled]="isProcessing()">
-            {{ isProcessing() ? 'Validation...' : 'Payer ' + plan.price }}
-          </button>
-          <p class="payment-disclaimer">Aucune carte n'est débitée. Le paiement active uniquement le mode démo local.</p>
-        </form>
+            @if (paymentForm.touched && paymentForm.invalid) {
+              <p class="form-error">Complétez les informations de paiement pour continuer.</p>
+            }
+
+            <button class="btn btn--primary btn--wide" type="submit" [disabled]="isProcessing()">
+              {{ isProcessing() ? 'Validation...' : 'Payer ' + plan.price }}
+            </button>
+            <p class="payment-disclaimer">Carte test valable avec tous les comptes de démo, dont Alexandre Roubaix et Lucie Lune.</p>
+          </form>
+        </section>
 
         <aside class="payment-summary glass-panel" aria-label="Récapitulatif">
-          <span class="plan-badge">{{ plan.audience || 'Upgrade' }}</span>
-          <h2>{{ plan.name }}</h2>
-          <div class="price-line">
-            <strong>{{ plan.price }}</strong>
-            <span>{{ plan.cadence }}</span>
-          </div>
+          <p class="eyebrow">Inclus</p>
           <p>{{ plan.description }}</p>
           <ul>
             @for (feature of plan.features; track feature) {

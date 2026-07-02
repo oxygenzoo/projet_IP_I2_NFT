@@ -138,9 +138,7 @@ public class TravelCatalogService {
         int sceneCount = episode.getScenes() == null ? 0 : episode.getScenes().size();
         List<Photo> photos = episode.getTravel().getPhotos() == null ? List.of() : episode.getTravel().getPhotos();
         int photoCount = photos.isEmpty() ? sceneCount : photos.size();
-        String cover = photos.isEmpty()
-                ? ""
-                : photos.getFirst().getImageUrl();
+        String cover = firstDisplayablePhotoUrl(photos);
 
         return new EpisodeDto(
                 episode.getId().toString(),
@@ -189,7 +187,27 @@ public class TravelCatalogService {
         }
 
         int index = Math.max(0, sceneOrder - 1) % photos.size();
-        return photos.get(index).getImageUrl();
+        return displayablePhotoUrl(photos.get(index));
+    }
+
+    private String firstDisplayablePhotoUrl(List<Photo> photos) {
+        if (photos == null || photos.isEmpty()) {
+            return "";
+        }
+
+        return photos.stream()
+                .map(this::displayablePhotoUrl)
+                .filter((url) -> !url.isBlank())
+                .findFirst()
+                .orElse("");
+    }
+
+    private String displayablePhotoUrl(Photo photo) {
+        String imageUrl = photo == null ? "" : valueOrDefault(photo.getImageUrl(), "");
+        if (imageUrl.isBlank() || imageUrl.startsWith("metadata-only/")) {
+            return "";
+        }
+        return imageUrl;
     }
 
     private Optional<UUID> parseUuid(String id) {
