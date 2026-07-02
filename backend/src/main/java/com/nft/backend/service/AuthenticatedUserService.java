@@ -12,6 +12,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,16 +24,22 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AuthenticatedUserService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticatedUserService.class);
+    private static final String AUTHENTICATED_USER_ATTRIBUTE = AuthenticatedUserService.class.getName() + ".user";
     private static final Pattern STRING_CLAIM = Pattern.compile("\"%s\"\\s*:\\s*\"([^\"]*)\"");
     private static final Pattern NUMBER_CLAIM = Pattern.compile("\"%s\"\\s*:\\s*(\\d+)");
 
     private final String jwtSecret;
+    private final String supabaseUrl;
 
     public record AuthenticatedUser(UUID id, String email) {
     }
 
-    public AuthenticatedUserService(@Value("${supabase.jwt-secret:${app.jwt.secret:}}") String jwtSecret) {
+    public AuthenticatedUserService(
+            @Value("${supabase.jwt-secret:${app.jwt.secret:}}") String jwtSecret,
+            @Value("${supabase.url:}") String supabaseUrl) {
         this.jwtSecret = jwtSecret == null ? "" : jwtSecret.trim();
+        this.supabaseUrl = supabaseUrl == null ? "" : supabaseUrl.trim().replaceAll("/+$", "");
     }
 
     public Optional<AuthenticatedUser> currentUser() {
@@ -40,12 +48,20 @@ public class AuthenticatedUserService {
             return Optional.empty();
         }
 
+        Object cachedUser = request.getAttribute(AUTHENTICATED_USER_ATTRIBUTE);
+        if (cachedUser instanceof AuthenticatedUser user) {
+            return Optional.of(user);
+        }
+
         String authorization = request.getHeader("Authorization");
         if (authorization == null || !authorization.startsWith("Bearer ")) {
+            LOGGER.warn("Authentication failed: missing Authorization bearer header for {}", request.getRequestURI());
             return Optional.empty();
         }
 
-        return Optional.of(parseBearerToken(authorization.substring("Bearer ".length()).trim()));
+        AuthenticatedUser user = parseBearerToken(authorization.substring("Bearer ".length()).trim(), request.getRequestURI());
+        request.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, user);
+        return Optional.of(user);
     }
 
     public Optional<UUID> currentUserId() {
@@ -53,17 +69,33 @@ public class AuthenticatedUserService {
     }
 
     public UUID requireCurrentUserId() {
-        return currentUserId()
+        return requireCurrentUser().id();
+    }
+
+    public AuthenticatedUser requireCurrentUser() {
+        return currentUser()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
     }
 
-    private AuthenticatedUser parseBearerToken(String token) {
+    private AuthenticatedUser parseBearerToken(String token, String requestUri) {
+        if (token.isBlank()) {
+            LOGGER.warn("Authentication failed: empty bearer token for {}", requestUri);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+
+        if (jwtSecret.isBlank()) {
+            LOGGER.error("Authentication failed: Supabase JWT secret is not configured");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT validation is not configured");
+        }
+
         String[] parts = token.split("\\.");
         if (parts.length != 3) {
+            LOGGER.warn("Authentication failed: malformed bearer token for {}", requestUri);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid bearer token");
         }
 
-        if (!jwtSecret.isBlank() && !isValidSignature(parts[0] + "." + parts[1], parts[2])) {
+        if (!isValidSignature(parts[0] + "." + parts[1], parts[2])) {
+            LOGGER.warn("Authentication failed: invalid bearer token signature for {}", requestUri);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid bearer token signature");
         }
 
@@ -71,22 +103,40 @@ public class AuthenticatedUserService {
             String json = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
             Long exp = numberClaim(json, "exp");
             if (exp != null && Instant.ofEpochSecond(exp).isBefore(Instant.now())) {
+                LOGGER.warn("Authentication failed: expired bearer token for {}", requestUri);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bearer token expired");
             }
 
             String sub = stringClaim(json, "sub");
             if (sub.isBlank()) {
+                LOGGER.warn("Authentication failed: bearer token missing subject for {}", requestUri);
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bearer token is missing subject");
             }
 
-            return new AuthenticatedUser(UUID.fromString(sub), stringClaim(json, "email"));
+            String issuer = stringClaim(json, "iss");
+            if (!isExpectedIssuer(issuer)) {
+                LOGGER.warn("Authentication failed: unexpected token issuer '{}' for {}", issuer, requestUri);
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid bearer token issuer");
+            }
+
+            AuthenticatedUser user = new AuthenticatedUser(UUID.fromString(sub), stringClaim(json, "email"));
+            LOGGER.debug("Authenticated Supabase user id={} emailPresent={} for {}", user.id(), !user.email().isBlank(), requestUri);
+            return user;
         } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Authentication failed: invalid bearer token subject for {}", requestUri);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid bearer token subject", exception);
         } catch (ResponseStatusException exception) {
             throw exception;
         } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid bearer token", exception);
         }
+    }
+
+    private boolean isExpectedIssuer(String issuer) {
+        if (supabaseUrl.isBlank()) {
+            return true;
+        }
+        return (supabaseUrl + "/auth/v1").equals(issuer);
     }
 
     private boolean isValidSignature(String signedContent, String signature) {

@@ -5,12 +5,16 @@ import java.util.UUID;
 import com.nft.backend.dto.generation.GenerationResponse;
 import com.nft.backend.model.CreationSession;
 import com.nft.backend.repository.CreationSessionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CreationGenerationWorker {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreationGenerationWorker.class);
 
     private final CreationSessionRepository creationSessionRepository;
     private final AiGenerationService aiGenerationService;
@@ -26,9 +30,12 @@ public class CreationGenerationWorker {
     @Transactional
     public void generate(UUID sessionId, UUID ownerId, UUID travelId, String preferences) {
         try {
+            LOGGER.info("Generation worker started sessionId={} userId={} travelId={}", sessionId, ownerId, travelId);
             GenerationResponse response = aiGenerationService.generateEpisodeFromTravel(ownerId, travelId, preferences);
             updateSession(sessionId, "done", travelId, firstVideoUrl(response), null);
+            LOGGER.info("Generation worker completed sessionId={} userId={} travelId={}", sessionId, ownerId, travelId);
         } catch (Exception exception) {
+            LOGGER.warn("Generation worker failed sessionId={} userId={} travelId={}: {}", sessionId, ownerId, travelId, exception.getMessage());
             updateSession(sessionId, "error", travelId, null, cleanMessage(exception));
         }
     }

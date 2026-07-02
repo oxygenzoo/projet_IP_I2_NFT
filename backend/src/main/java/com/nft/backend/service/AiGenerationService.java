@@ -20,6 +20,7 @@ import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
+import com.nft.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,8 @@ public class AiGenerationService {
     private final EpisodeService episodeService;
     private final PhotoRepository photoRepository;
     private final TravelRepository travelRepository;
+    private final UserRepository userRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
     private record GenerationImage(String filename, String contentType, byte[] bytes, long size) {
     }
@@ -58,7 +61,9 @@ public class AiGenerationService {
             PhotoService photoService,
             EpisodeService episodeService,
             PhotoRepository photoRepository,
-            TravelRepository travelRepository) {
+            TravelRepository travelRepository,
+            UserRepository userRepository,
+            AuthenticatedUserService authenticatedUserService) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofMillis(aiConnectTimeoutMs));
         requestFactory.setReadTimeout(Duration.ofMillis(aiReadTimeoutMs));
@@ -71,6 +76,8 @@ public class AiGenerationService {
         this.episodeService = episodeService;
         this.photoRepository = photoRepository;
         this.travelRepository = travelRepository;
+        this.userRepository = userRepository;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     public GenerationResponse generateEpisode(
@@ -88,7 +95,8 @@ public class AiGenerationService {
                 .filter((image) -> !image.isEmpty())
                 .map(this::toGenerationImage)
                 .toList();
-        return generateEpisodeImages(generationImages, title, destination, preferences, travelId, true, null);
+        UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        return generateEpisodeImages(generationImages, title, destination, preferences, travelId, true, ownerId);
     }
 
     public GenerationResponse generateEpisodeFromTravel(UUID ownerId, UUID travelId, String preferences) {
@@ -130,6 +138,18 @@ public class AiGenerationService {
         body.part("title", valueOrDefault(title, "Mon voyage"));
         body.part("destination", valueOrDefault(destination, ""));
         body.part("preferences", valueOrDefault(preferences, "{}"));
+        if (ownerId != null) {
+            body.part("userId", ownerId.toString());
+            body.part("language", languageFor(ownerId));
+        }
+        if (travelId != null && !travelId.isBlank()) {
+            UUID travelUuid = parseTravelId(travelId);
+            if (ownerId != null) {
+                assertTravelOwner(travelUuid, ownerId);
+            }
+            body.part("travelId", travelUuid.toString());
+        }
+        body.part("style", extractPreferenceValue(preferences, "style"));
 
         for (GenerationImage image : images) {
             body.part("images", multipartResource(image))
@@ -146,6 +166,7 @@ public class AiGenerationService {
         }
 
         try {
+            LOGGER.info("Launching AI generation for userId={} travelId={} photoCount={}", ownerId, travelId, filenames.size());
             GenerationResponse response = restClient.post()
                     .uri("/ai/episodes")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -272,15 +293,16 @@ public class AiGenerationService {
         }
 
         UUID travelUuid = parseTravelId(travelId);
-        if (persistPhotoMetadata) {
+        List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
+        if (persistPhotoMetadata && photos.isEmpty()) {
             List<PhotoMetadataRequest> metadata = images.stream()
                     .map((image) -> new PhotoMetadataRequest(image.filename(), image.size(), resolveImageType(image.contentType())))
                     .toList();
             photoService.createAll(travelUuid, metadata);
+            photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
         }
 
         Map<String, Object> episode = firstEpisode(response.script());
-        List<Photo> photos = photoRepository.findByTravelIdOrderByIdAsc(travelUuid);
         CreateEpisodeRequest request = new CreateEpisodeRequest(
                 numberValue(episode.get("episode_numero"), 1),
                 cleanOrDefault(stringValue(episode.get("episode_titre")), "Souvenir généré"),
@@ -289,13 +311,14 @@ public class AiGenerationService {
                 cleanOrDefault(response.message(), ""),
                 "Génération IA terminée.",
                 cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
-                EpisodeStatus.READY);
+                EpisodeStatus.DONE);
 
         if (ownerId == null) {
             episodeService.create(travelUuid, request, firstVideoUrl(response), generatedScenes(episode), photos);
         } else {
             episodeService.createForOwner(ownerId, travelUuid, request, firstVideoUrl(response), generatedScenes(episode), photos);
         }
+        LOGGER.info("AI generation episode saved for userId={} travelId={}", ownerId, travelUuid);
     }
 
     private GenerationResponse fallbackGeneration(
@@ -375,7 +398,7 @@ public class AiGenerationService {
 
         return new GenerationResponse(
                 UUID.randomUUID().toString(),
-                "completed",
+                "done",
                 message,
                 selectionReport,
                 script,
@@ -464,5 +487,28 @@ public class AiGenerationService {
 
     private String cleanOrDefault(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private void assertTravelOwner(UUID travelId, UUID ownerId) {
+        Travel travel = travelRepository.findById(travelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
+        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
+    }
+
+    private String languageFor(UUID ownerId) {
+        return userRepository.findById(ownerId)
+                .map((user) -> valueOrDefault(user.getLanguage(), "fr"))
+                .orElse("fr");
+    }
+
+    private String extractPreferenceValue(String preferences, String key) {
+        if (preferences == null || preferences.isBlank() || key == null || key.isBlank()) {
+            return "";
+        }
+        String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(pattern).matcher(preferences);
+        return matcher.find() ? matcher.group(1).trim() : "";
     }
 }

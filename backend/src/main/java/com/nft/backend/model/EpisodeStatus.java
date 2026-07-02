@@ -6,8 +6,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EpisodeStatus {
+    PENDING("pending"),
     DRAFT("draft"),
     GENERATING("generating"),
+    DONE("done"),
+    ERROR("error"),
     READY("ready"),
     FAILED("failed");
 

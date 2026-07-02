@@ -5,9 +5,9 @@ import { DraftImage, TravelPreferences } from '../models/generation.models';
 @Injectable({ providedIn: 'root' })
 export class TravelDraftService {
   readonly selectedImages = signal<DraftImage[]>([]);
-  readonly preferences = signal<TravelPreferences>({});
-  readonly travelId = signal<string | null>(null);
-  readonly consentRgpd = signal(false);
+  readonly preferences = signal<TravelPreferences>(this.readJson<TravelPreferences>('nft.draft.preferences', {}));
+  readonly travelId = signal<string | null>(this.readText('nft.draft.travelId'));
+  readonly consentRgpd = signal(this.readText('nft.draft.consentRgpd') === 'true');
 
   addFiles(files: File[]): void {
     const images = files.map((file) => ({
@@ -31,14 +31,17 @@ export class TravelDraftService {
 
   setPreferences(preferences: TravelPreferences): void {
     this.preferences.set({ ...preferences });
+    this.writeJson('nft.draft.preferences', preferences);
   }
 
   setTravelId(travelId: string | null): void {
     this.travelId.set(travelId);
+    this.writeText('nft.draft.travelId', travelId);
   }
 
   setConsentRgpd(consent: boolean): void {
     this.consentRgpd.set(consent);
+    this.writeText('nft.draft.consentRgpd', String(consent));
   }
 
   clear(): void {
@@ -50,5 +53,52 @@ export class TravelDraftService {
     this.preferences.set({});
     this.travelId.set(null);
     this.consentRgpd.set(false);
+    this.remove('nft.draft.preferences');
+    this.remove('nft.draft.travelId');
+    this.remove('nft.draft.consentRgpd');
+  }
+
+  private readText(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  private readJson<T>(key: string, fallback: T): T {
+    try {
+      return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  private writeText(key: string, value: string | null): void {
+    try {
+      if (value === null) {
+        localStorage.removeItem(key);
+        return;
+      }
+      localStorage.setItem(key, value);
+    } catch {
+      // Local storage can be unavailable during SSR or private browsing.
+    }
+  }
+
+  private writeJson(key: string, value: unknown): void {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Local storage can be unavailable during SSR or private browsing.
+    }
+  }
+
+  private remove(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Local storage can be unavailable during SSR or private browsing.
+    }
   }
 }

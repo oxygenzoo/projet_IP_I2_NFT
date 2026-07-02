@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 import { CloudImportService } from '../../services/cloud-import.service';
 import { CreationStateService } from '../../services/creation-state.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
@@ -25,6 +26,7 @@ export class UploadPageComponent {
   private readonly cloudImport = inject(CloudImportService);
   private readonly creationState = inject(CreationStateService);
   private readonly travelApi = inject(TravelApiService);
+  private readonly auth = inject(AuthService);
 
   protected readonly selectedImages = this.draft.selectedImages;
   protected readonly consentGiven = this.draft.consentRgpd;
@@ -35,6 +37,7 @@ export class UploadPageComponent {
   protected readonly isCloudImporting = signal(false);
   protected readonly isUploading = signal(false);
   protected readonly isCreatingLink = signal(false);
+  protected readonly isContinuing = signal(false);
   protected readonly contributionLink = signal('');
   protected readonly contributionFeedback = signal('');
 
@@ -132,10 +135,12 @@ export class UploadPageComponent {
     }
 
     try {
+      this.isContinuing.set(true);
       const travelId = await this.ensureDraftTravel();
       this.creationState.markPreferences(travelId);
       await this.router.navigate(['/preferences', travelId]);
     } catch (error) {
+      this.isContinuing.set(false);
       this.errors.set([this.errorText(error, 'Impossible de préparer votre souvenir.')]);
     }
   }
@@ -220,6 +225,24 @@ export class UploadPageComponent {
       return existingTravelId;
     }
 
+    const session = await this.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Votre session a expirÃ©. Reconnectez-vous pour continuer.');
+    }
+
+    const activeTravelId = this.creationState.creation()?.travelId ?? null;
+    if (activeTravelId) {
+      this.draft.setTravelId(activeTravelId);
+      return activeTravelId;
+    }
+
+    const existingDraft = await this.findExistingDraftTravel();
+    if (existingDraft) {
+      this.draft.setTravelId(existingDraft.id);
+      this.creationState.startUpload(existingDraft.id);
+      return existingDraft.id;
+    }
+
     const travel = await firstValueFrom(this.travelApi.createTravel({
       title: 'Nouveau souvenir',
       destination: '',
@@ -228,6 +251,19 @@ export class UploadPageComponent {
     this.draft.setTravelId(travel.id);
     this.creationState.startUpload(travel.id);
     return travel.id;
+  }
+
+  private async findExistingDraftTravel(): Promise<{ id: string } | null> {
+    try {
+      const travels = await firstValueFrom(this.travelApi.getTravels());
+      return travels.find((travel) =>
+        travel.title === 'Nouveau souvenir'
+        && travel.description === 'CrÃ©ation en cours'
+        && travel.episodeCount === 0
+      ) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private loadPersistedPhotos(): void {

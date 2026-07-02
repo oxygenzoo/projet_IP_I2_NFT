@@ -10,6 +10,8 @@ import com.nft.backend.model.Travel;
 import com.nft.backend.repository.CreationSessionRepository;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class CreationSessionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreationSessionService.class);
     private static final List<String> ACTIVE_STATUSES = List.of("uploading", "preferences", "generating", "done", "error");
 
     private final CreationSessionRepository creationSessionRepository;
@@ -91,6 +94,7 @@ public class CreationSessionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ajoutez au moins une photo avant la génération.");
         }
 
+        LOGGER.info("Launching generation session id={} userId={} travelId={}", id, ownerId, resolvedTravelId);
         session.update("generating", resolvedTravelId, null, null, null);
         CreationSession saved = creationSessionRepository.save(session);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
