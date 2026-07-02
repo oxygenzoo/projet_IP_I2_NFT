@@ -11,7 +11,10 @@ public record ContributionLinkResponse(
         String token,
         String url,
         Instant expiresAt,
-        Instant createdAt) {
+        Instant createdAt,
+        Instant openedAt,
+        Integer uploadCount,
+        Instant lastUploadAt) {
 
     public static ContributionLinkResponse fromEntity(ContributionLink link, String publicBaseUrl) {
         String baseUrl = publicBaseUrl == null ? "" : publicBaseUrl.replaceAll("/+$", "");
@@ -21,6 +24,9 @@ public record ContributionLinkResponse(
                 link.getToken(),
                 baseUrl + "/contribute/" + link.getToken(),
                 link.getExpiresAt(),
-                link.getCreatedAt());
+                link.getCreatedAt(),
+                link.getOpenedAt(),
+                link.getUploadCount(),
+                link.getLastUploadAt());
     }
 }

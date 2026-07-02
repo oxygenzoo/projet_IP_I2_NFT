@@ -1,9 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
-import { TravelApiService } from '../../services/travel-api.service';
+import { ContributionLink, TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 interface AppNotification {
@@ -51,13 +51,14 @@ export class NotificationsPageComponent implements OnInit {
     this.errorMessage.set('');
 
     forkJoin({
-      travels: this.travelApiService.getTravels(),
-      episodes: this.travelApiService.getEpisodes(),
+      travels: this.travelApiService.getTravels().pipe(catchError(() => of([]))),
+      episodes: this.travelApiService.getEpisodes().pipe(catchError(() => of([]))),
+      contributionLinks: this.travelApiService.getContributionLinks().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ travels, episodes }) => {
+      next: ({ travels, episodes, contributionLinks }) => {
         const readIds = this.readIds();
         this.notifications.set(
-          this.buildNotifications(travels, episodes)
+          this.buildNotifications(travels, episodes, contributionLinks)
             .filter((notification) => !readIds.includes(notification.id))
             .slice(0, 12),
         );
@@ -71,7 +72,7 @@ export class NotificationsPageComponent implements OnInit {
     });
   }
 
-  private buildNotifications(travels: Travel[], episodes: Episode[]): AppNotification[] {
+  private buildNotifications(travels: Travel[], episodes: Episode[], contributionLinks: ContributionLink[]): AppNotification[] {
     const travelById = new Map(travels.map((travel) => [travel.id, travel]));
     const notifications: AppNotification[] = [];
 
@@ -138,6 +139,34 @@ export class NotificationsPageComponent implements OnInit {
           kind: 'video',
           read: false,
           link: ['/episode', episode.id],
+        });
+      }
+    }
+
+    for (const link of contributionLinks) {
+      const travel = travelById.get(link.travelId);
+      const travelLabel = travel?.title ?? 'votre souvenir';
+      if (link.openedAt) {
+        notifications.push({
+          id: `contribution-opened-${link.id}-${link.openedAt}`,
+          title: 'Lien de contribution ouvert',
+          description: `Quelqu'un a ouvert le lien pour ${travelLabel}.`,
+          timeLabel: this.formatDate(link.openedAt),
+          kind: 'share',
+          read: false,
+          link: ['/upload'],
+        });
+      }
+
+      if ((link.uploadCount ?? 0) > 0) {
+        notifications.push({
+          id: `contribution-uploaded-${link.id}-${link.uploadCount}`,
+          title: 'Photos reçues',
+          description: `${link.uploadCount} photo${(link.uploadCount ?? 0) > 1 ? 's ont' : ' a'} été ajoutée${(link.uploadCount ?? 0) > 1 ? 's' : ''} à ${travelLabel}.`,
+          timeLabel: this.formatDate(link.lastUploadAt ?? link.createdAt),
+          kind: 'account',
+          read: false,
+          link: ['/upload'],
         });
       }
     }

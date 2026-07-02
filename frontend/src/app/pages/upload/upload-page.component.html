@@ -152,6 +152,31 @@
       </ul>
     }
 
+    @if (uploadedPhotos().length) {
+      <div class="uploaded-preview-heading">
+        <strong>Photos déjà importées</strong>
+        <span>{{ uploadedPhotos().length }} photo{{ uploadedPhotos().length > 1 ? 's' : '' }} disponible{{ uploadedPhotos().length > 1 ? 's' : '' }} pour la génération</span>
+      </div>
+      <ul class="photo-previews" aria-label="Photos importées">
+        @for (photo of uploadedPhotos(); track photo.id) {
+          <li class="photo-preview">
+            <img [src]="photo.imageUrl" [alt]="'Aperçu de ' + photo.filename" />
+            <div>
+              <strong [title]="photo.filename">{{ photo.filename }}</strong>
+              <span>{{ formatFileSize(photo.size) }}</span>
+            </div>
+            <button
+              type="button"
+              [attr.aria-label]="'Supprimer ' + photo.filename"
+              (click)="removeUploadedPhoto(photo)"
+            >
+              ×
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
     <aside class="privacy-card">
       <span></span>
       <div>

@@ -1310,12 +1310,13 @@ img {
 
 .home-notice {
   align-items: center;
+  background: rgba(12, 12, 16, 0.86);
   display: grid;
   gap: 0.35rem 1rem;
   grid-template-columns: minmax(0, 1fr) auto;
-  margin: 1rem auto 0;
+  margin: 6.2rem auto 0;
   max-width: 1180px;
-  padding: 0.95rem 4.5vw;
+  padding: 0.95rem 1rem;
   position: relative;
   z-index: 2;
 }
@@ -2499,10 +2500,10 @@ img {
 .profile-hero-actions {
   align-content: center;
   align-items: center;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 0.7rem;
-  justify-content: flex-start;
+  grid-template-columns: 1fr;
+  justify-items: stretch;
   max-width: none;
 }
 
@@ -2512,9 +2513,9 @@ img {
 }
 
 .profile-hero-message {
-  align-self: end;
-  flex-basis: 100%;
-  margin-left: 0;
+  align-self: start;
+  margin: 0;
+  min-height: 1.25rem;
 }
 
 .profile-stat-grid {
@@ -2674,17 +2675,18 @@ img {
   }
 
   .profile-hero-actions {
-    justify-content: flex-end;
+    align-content: center;
+    justify-items: stretch;
     max-width: 24rem;
   }
 
   .profile-hero-actions .btn {
     min-width: 10.75rem;
-    width: auto;
+    width: 100%;
   }
 
   .profile-hero-message {
-    margin-left: calc(6rem + 1rem);
+    margin-left: 0;
   }
 
   .profile-stat-grid {
@@ -2774,6 +2776,7 @@ img {
   display: grid;
   gap: 1rem;
   grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
   padding: 1rem;
 }
 
@@ -3371,7 +3374,7 @@ img {
   }
 
   .profile-hero-actions {
-    justify-content: flex-start;
+    justify-items: stretch;
     max-width: none;
   }
 
@@ -3505,6 +3508,7 @@ img {
   .profile-details dd,
   .profile-account-list dd {
     justify-content: flex-start;
+    justify-items: stretch;
     text-align: left;
   }
 

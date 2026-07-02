@@ -162,18 +162,16 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   private beginProgressAnimation(): void {
     this.errorMessage.set('');
     this.isGenerating.set(true);
-    this.percent.set(Math.max(this.percent(), 7));
-    this.activeIndex.set(0);
-    this.completed.set([]);
+    const restoredPercent = this.restoredProgressPercent();
+    this.percent.set(Math.max(this.percent(), restoredPercent, 7));
+    this.updateStepState(this.percent());
     this.clearTimers();
 
     this.intervalId = setInterval(() => {
       const nextPercent = Math.min(this.percent() + 4, 92);
-      const nextStepIndex = Math.min(Math.floor(nextPercent / 22), this.steps.length - 1);
-
       this.percent.set(nextPercent);
-      this.activeIndex.set(nextStepIndex);
-      this.completed.set(this.steps.slice(0, nextStepIndex));
+      this.creationState.updateProgress(nextPercent);
+      this.updateStepState(nextPercent);
     }, 700);
   }
 
@@ -213,6 +211,28 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       videos: creation.resultVideoUrl ? [creation.resultVideoUrl] : [],
       workdir: '',
     };
+  }
+
+  private restoredProgressPercent(): number {
+    const creation = this.creationState.creation();
+    if (!creation || creation.status !== 'generating') {
+      return 7;
+    }
+
+    const storedProgress = creation.progressPercent ?? 0;
+    const startedAt = creation.progressStartedAt ? new Date(creation.progressStartedAt).getTime() : Number.NaN;
+    if (Number.isNaN(startedAt)) {
+      return Math.max(storedProgress, 7);
+    }
+
+    const elapsedTicks = Math.floor((Date.now() - startedAt) / 700);
+    return Math.min(Math.max(storedProgress, 7 + elapsedTicks * 4), 92);
+  }
+
+  private updateStepState(percent: number): void {
+    const nextStepIndex = Math.min(Math.floor(percent / 22), this.steps.length - 1);
+    this.activeIndex.set(nextStepIndex);
+    this.completed.set(this.steps.slice(0, nextStepIndex));
   }
 
   private clearTimers(): void {

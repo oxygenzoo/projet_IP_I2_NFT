@@ -12,6 +12,8 @@ interface StoredCreation {
   travelId?: string | null;
   episodeId?: string | null;
   status: CreationStatus;
+  progressPercent?: number;
+  progressStartedAt?: string | null;
   resultVideoUrl?: string | null;
   errorMessage?: string | null;
   updatedAt: string;
@@ -34,6 +36,9 @@ export class CreationStateService {
 
   constructor(@Inject(API_URL) private readonly apiUrl: string) {
     effect(() => this.persist(this.creation()));
+    if (this.creation()?.status === 'generating') {
+      this.startPolling();
+    }
   }
 
   refreshFromBackend(): void {
@@ -81,7 +86,7 @@ export class CreationStateService {
   }
 
   beginGeneration(images: DraftImage[], preferences: TravelPreferences, travelId?: string | null): void {
-    if (this.creation()?.status === 'generating' && this.generationSubscription) {
+    if (this.creation()?.status === 'generating' && (this.generationSubscription || this.pollingSubscription)) {
       return;
     }
 
@@ -91,7 +96,11 @@ export class CreationStateService {
       return;
     }
 
-    this.update('generating', { travelId });
+    this.update('generating', {
+      travelId,
+      progressStartedAt: this.creation()?.progressStartedAt ?? new Date().toISOString(),
+      progressPercent: Math.max(this.creation()?.progressPercent ?? 7, 7),
+    });
     this.generationSubscription?.unsubscribe();
     this.generationSubscription = this.generationApi.startPersistentGeneration(creation.id, travelId, preferences).subscribe({
       next: (session) => {
@@ -106,10 +115,24 @@ export class CreationStateService {
 
   routeForCurrent(): string[] {
     const status = this.creation()?.status;
-    if (status === 'generating' || status === 'error') {
+    if (status === 'generating' || status === 'error' || status === 'done') {
       return ['/generating'];
     }
     return ['/upload'];
+  }
+
+  updateProgress(progressPercent: number): void {
+    const creation = this.creation();
+    if (!creation || creation.status !== 'generating') {
+      return;
+    }
+
+    this.creation.set({
+      ...creation,
+      progressPercent: Math.max(0, Math.min(99, Math.round(progressPercent))),
+      progressStartedAt: creation.progressStartedAt ?? new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   acknowledgeFinished(): void {
@@ -166,6 +189,8 @@ export class CreationStateService {
       travelId: session.travelId ?? this.creation()?.travelId ?? null,
       episodeId: session.episodeId ?? this.creation()?.episodeId ?? null,
       status: session.status,
+      progressPercent: session.status === 'done' ? 100 : this.creation()?.progressPercent,
+      progressStartedAt: this.creation()?.progressStartedAt ?? (session.status === 'generating' ? new Date().toISOString() : null),
       resultVideoUrl: session.resultVideoUrl ?? this.creation()?.resultVideoUrl ?? null,
       errorMessage: session.errorMessage ?? null,
       updatedAt: session.updatedAt,

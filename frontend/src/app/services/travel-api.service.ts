@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { API_URL } from '../config/api.config';
 import { Episode, Photo, PricingPlan, Scene, Travel } from '../models/travel.models';
@@ -21,6 +22,9 @@ export interface ContributionLink {
   url: string;
   expiresAt: string;
   createdAt: string;
+  openedAt?: string | null;
+  uploadCount?: number | null;
+  lastUploadAt?: string | null;
 }
 
 @Injectable({
@@ -33,11 +37,15 @@ export class TravelApiService {
   ) {}
 
   getTravels(accessToken?: string): Observable<Travel[]> {
-    return this.http.get<Travel[]>(`${this.apiUrl}/api/travels`, this.authOptions(accessToken));
+    return this.http.get<Travel[]>(`${this.apiUrl}/api/travels`, this.authOptions(accessToken)).pipe(
+      map((travels) => travels.map((travel) => this.normalizeTravel(travel))),
+    );
   }
 
   getTravel(id: string, accessToken?: string): Observable<Travel> {
-    return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`, this.authOptions(accessToken));
+    return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`, this.authOptions(accessToken)).pipe(
+      map((travel) => this.normalizeTravel(travel)),
+    );
   }
 
   createTravel(payload: SaveTravelPayload, accessToken?: string): Observable<Travel> {
@@ -45,11 +53,15 @@ export class TravelApiService {
   }
 
   getEpisodes(): Observable<Episode[]> {
-    return this.http.get<Episode[]>(`${this.apiUrl}/api/episodes`);
+    return this.http.get<Episode[]>(`${this.apiUrl}/api/episodes`).pipe(
+      map((episodes) => episodes.map((episode) => this.normalizeEpisode(episode))),
+    );
   }
 
   getEpisode(id: string): Observable<Episode> {
-    return this.http.get<Episode>(`${this.apiUrl}/api/episodes/${id}`);
+    return this.http.get<Episode>(`${this.apiUrl}/api/episodes/${id}`).pipe(
+      map((episode) => this.normalizeEpisode(episode)),
+    );
   }
 
   getPublicEpisode(shareToken: string): Observable<Episode> {
@@ -61,18 +73,26 @@ export class TravelApiService {
   }
 
   getPhotos(travelId: string): Observable<Photo[]> {
-    return this.http.get<Photo[]>(`${this.apiUrl}/api/travels/${travelId}/photos`);
+    return this.http.get<Photo[]>(`${this.apiUrl}/api/travels/${travelId}/photos`).pipe(
+      map((photos) => photos.map((photo) => this.normalizePhoto(photo))),
+    );
   }
 
   uploadPhoto(travelId: string, file: File, consentRgpd = true): Observable<Photo> {
     const formData = new FormData();
     formData.append('file', file, file.name);
     formData.append('consentRgpd', String(consentRgpd));
-    return this.http.post<Photo>(`${this.apiUrl}/api/travels/${travelId}/photos`, formData);
+    return this.http.post<Photo>(`${this.apiUrl}/api/travels/${travelId}/photos`, formData).pipe(
+      map((photo) => this.normalizePhoto(photo)),
+    );
   }
 
   createContributionLink(travelId: string): Observable<ContributionLink> {
     return this.http.post<ContributionLink>(`${this.apiUrl}/api/travels/${travelId}/contribution-links`, {});
+  }
+
+  getContributionLinks(): Observable<ContributionLink[]> {
+    return this.http.get<ContributionLink[]>(`${this.apiUrl}/api/contribution-links`);
   }
 
   getContributionInfo(token: string): Observable<{ travelId: string; title: string; expiresAt: string }> {
@@ -119,5 +139,48 @@ export class TravelApiService {
     return token
       ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) }
       : {};
+  }
+
+  private normalizeTravel(travel: Travel): Travel {
+    const episodes = (travel.episodes ?? []).map((episode) => this.normalizeEpisode(episode));
+    return {
+      ...travel,
+      coverImage: this.assetUrl(travel.coverImage),
+      heroImage: this.assetUrl(travel.heroImage),
+      posterImage: this.assetUrl(travel.posterImage),
+      episodes,
+    };
+  }
+
+  private normalizeEpisode(episode: Episode): Episode {
+    return {
+      ...episode,
+      coverImage: this.assetUrl(episode.coverImage),
+      videoStill: this.assetUrl(episode.videoStill),
+      videoUrl: this.assetUrl(episode.videoUrl ?? ''),
+    };
+  }
+
+  private normalizePhoto(photo: Photo): Photo {
+    return {
+      ...photo,
+      imageUrl: this.assetUrl(photo.imageUrl),
+    };
+  }
+
+  private assetUrl(value?: string | null): string {
+    if (!value) {
+      return '';
+    }
+
+    if (/^(https?:|data:|blob:)/i.test(value)) {
+      return value;
+    }
+
+    if (value.startsWith('/')) {
+      return `${this.apiUrl.replace(/\/+$/, '')}${value}`;
+    }
+
+    return value;
   }
 }

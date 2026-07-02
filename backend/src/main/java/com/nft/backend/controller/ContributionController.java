@@ -1,6 +1,7 @@
 package com.nft.backend.controller;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import com.nft.backend.dto.contribution.ContributionLinkResponse;
@@ -31,6 +32,11 @@ public class ContributionController {
     public ResponseEntity<ContributionLinkResponse> createLink(@PathVariable UUID travelId) {
         ContributionLinkResponse link = contributionService.create(travelId);
         return ResponseEntity.created(URI.create("/api/contributions/" + link.token())).body(link);
+    }
+
+    @GetMapping("/contribution-links")
+    public List<ContributionLinkResponse> getMine() {
+        return contributionService.getMine();
     }
 
     @GetMapping("/contributions/{token}")

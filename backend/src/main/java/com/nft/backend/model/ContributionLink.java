@@ -34,6 +34,15 @@ public class ContributionLink {
     @Column(name = "expires_at")
     private Instant expiresAt;
 
+    @Column(name = "opened_at")
+    private Instant openedAt;
+
+    @Column(name = "upload_count", nullable = false)
+    private Integer uploadCount = 0;
+
+    @Column(name = "last_upload_at")
+    private Instant lastUploadAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -69,6 +78,29 @@ public class ContributionLink {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getOpenedAt() {
+        return openedAt;
+    }
+
+    public Integer getUploadCount() {
+        return uploadCount == null ? 0 : uploadCount;
+    }
+
+    public Instant getLastUploadAt() {
+        return lastUploadAt;
+    }
+
+    public void markOpened() {
+        if (openedAt == null) {
+            openedAt = Instant.now();
+        }
+    }
+
+    public void markUploaded() {
+        uploadCount = getUploadCount() + 1;
+        lastUploadAt = Instant.now();
     }
 
     public boolean isExpired() {

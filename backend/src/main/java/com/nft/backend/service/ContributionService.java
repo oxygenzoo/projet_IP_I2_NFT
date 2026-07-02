@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import com.nft.backend.dto.contribution.ContributionLinkResponse;
@@ -64,15 +65,27 @@ public class ContributionService {
     }
 
     @Transactional(readOnly = true)
+    public List<ContributionLinkResponse> getMine() {
+        UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        return contributionLinkRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)
+                .stream()
+                .map((link) -> ContributionLinkResponse.fromEntity(link, publicBaseUrl))
+                .toList();
+    }
+
+    @Transactional
     public PublicContributionResponse getPublicInfo(String token) {
         ContributionLink link = findActiveLink(token);
+        link.markOpened();
         return new PublicContributionResponse(link.getTravel().getId(), link.getTravel().getTitle(), link.getExpiresAt());
     }
 
     @Transactional
     public PhotoResponse upload(String token, MultipartFile file, boolean consentRgpd) {
         ContributionLink link = findActiveLink(token);
-        return photoService.uploadContribution(link.getTravel().getId(), file, consentRgpd);
+        PhotoResponse photo = photoService.uploadContribution(link.getTravel().getId(), file, consentRgpd);
+        link.markUploaded();
+        return photo;
     }
 
     private ContributionLink findActiveLink(String token) {

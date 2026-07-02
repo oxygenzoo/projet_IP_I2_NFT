@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
@@ -17,7 +17,7 @@ import { Photo } from '../../models/travel.models';
   templateUrl: './upload-page.component.html',
   styleUrl: './upload-page.component.scss',
 })
-export class UploadPageComponent {
+export class UploadPageComponent implements OnDestroy {
   static readonly MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   private readonly draft = inject(TravelDraftService);
@@ -28,6 +28,7 @@ export class UploadPageComponent {
   private readonly travelApi = inject(TravelApiService);
   private readonly auth = inject(AuthService);
   private draftTravelRequest: Promise<string> | null = null;
+  private photoRefreshId?: ReturnType<typeof setInterval>;
 
   protected readonly selectedImages = this.draft.selectedImages;
   protected readonly consentGiven = this.draft.consentRgpd;
@@ -49,6 +50,12 @@ export class UploadPageComponent {
       ]);
     }
     void this.initializeAuthenticatedFlow();
+  }
+
+  ngOnDestroy(): void {
+    if (this.photoRefreshId) {
+      clearInterval(this.photoRefreshId);
+    }
   }
 
   protected onFileSelection(event: Event): void {
@@ -79,6 +86,16 @@ export class UploadPageComponent {
 
   protected removeImage(index: number): void {
     this.draft.removeImage(index);
+  }
+
+  protected async removeUploadedPhoto(photo: Photo): Promise<void> {
+    try {
+      await firstValueFrom(this.travelApi.deletePhoto(photo.travelId, photo.id));
+      this.uploadedPhotos.update((photos) => photos.filter((current) => current.id !== photo.id));
+      this.contributionFeedback.set('Photo supprimée.');
+    } catch (error) {
+      this.errors.set([this.errorText(error, 'Impossible de supprimer cette photo.')]);
+    }
   }
 
   protected updateConsent(event: Event): void {
@@ -314,7 +331,13 @@ export class UploadPageComponent {
 
     this.draft.setTravelId(travelId);
     this.travelApi.getPhotos(travelId).subscribe({
-      next: (photos) => this.uploadedPhotos.set(photos),
+      next: (photos) => {
+        const previousCount = this.uploadedPhotos().length;
+        this.uploadedPhotos.set(photos);
+        if (previousCount && photos.length > previousCount) {
+          this.contributionFeedback.set(`${photos.length - previousCount} nouvelle photo reçue via le lien.`);
+        }
+      },
       error: () => this.uploadedPhotos.set([]),
     });
   }
@@ -327,6 +350,14 @@ export class UploadPageComponent {
 
     this.creationState.startUpload(this.draft.travelId());
     this.loadPersistedPhotos();
+    this.startPhotoRefresh();
+  }
+
+  private startPhotoRefresh(): void {
+    if (this.photoRefreshId) {
+      clearInterval(this.photoRefreshId);
+    }
+    this.photoRefreshId = setInterval(() => this.loadPersistedPhotos(), 5000);
   }
 
   private async requireAccessToken(): Promise<string> {
