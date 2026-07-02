@@ -71,6 +71,16 @@ export interface Travel {
   episodes: Episode[];
 }
 
+export interface Photo {
+  id: string;
+  travelId: string;
+  filename: string;
+  size: number;
+  type: string;
+  imageUrl: string;
+  uploadedAt?: string;
+}
+
 export interface PricingPlan {
   id: string;
   name: string;

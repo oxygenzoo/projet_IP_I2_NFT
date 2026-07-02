@@ -121,7 +121,7 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
 
   protected sceneStatus(scene: Scene): string {
     const status = scene.generationStatus as SceneGenerationStatus | undefined;
-    return status && status in STATUS_LABELS ? STATUS_LABELS[status] : (scene.generationStatus ?? 'Generee');
+    return status && status in STATUS_LABELS ? STATUS_LABELS[status] : (scene.generationStatus ?? 'Générée');
   }
 
   protected sceneVoiceOver(scene: Scene): string {

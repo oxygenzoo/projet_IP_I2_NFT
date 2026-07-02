@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
@@ -8,7 +7,7 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 @Component({
   selector: 'app-admin-page',
-  imports: [RouterLink, AppLogoComponent],
+  imports: [AppLogoComponent],
   templateUrl: './admin-page.component.html',
 })
 export class AdminPageComponent implements OnInit, OnDestroy {
@@ -65,7 +64,7 @@ export class AdminPageComponent implements OnInit, OnDestroy {
       return 'Aucune';
     }
 
-    return episode.exportStatus === 'failed' ? 'Export echoue' : 'Generation echouee';
+    return episode.exportStatus === 'failed' ? 'Export échoué' : 'Génération échouée';
   }
 
   private hasAiError(episode: Episode): boolean {

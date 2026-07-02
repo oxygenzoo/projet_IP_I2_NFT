@@ -1,12 +1,5 @@
 <main class="notifications-page">
-  <header class="stream-header stream-header--floating">
-    <app-logo [compact]="true"></app-logo>
-    <div class="stream-header__nav">
-      <a routerLink="/home">Accueil</a>
-      <a routerLink="/profile">Profil</a>
-      <a routerLink="/upload">Créer</a>
-    </div>
-  </header>
+  <app-logo class="page-logo" [compact]="true"></app-logo>
 
   <section class="notifications-shell">
     <div class="notifications-heading">
@@ -21,8 +14,20 @@
       </button>
     </div>
 
-    <div class="notifications-list">
-      @for (notification of notifications(); track notification.id) {
+    @if (isLoading()) {
+      <section class="api-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Chargement des notifications...</h1>
+      </section>
+    } @else if (errorMessage()) {
+      <section class="api-state api-state--error glass-panel" role="alert">
+        <h1>Notifications indisponibles</h1>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn--primary" type="button" (click)="loadNotifications()">Réessayer</button>
+      </section>
+    } @else {
+      <div class="notifications-list">
+        @for (notification of notifications(); track notification.id) {
         <article class="notification-item" [class.notification-item--unread]="!notification.read">
           <span
             class="notification-icon"
@@ -50,9 +55,10 @@
       } @empty {
         <section class="api-state glass-panel">
           <h1>Aucune notification</h1>
-          <p>Les alertes liées à vos vidéos et liens partagés apparaîtront ici.</p>
+          <p>Les alertes liées à vos souvenirs et liens partagés apparaîtront ici.</p>
         </section>
-      }
-    </div>
+        }
+      </div>
+    }
   </section>
 </main>

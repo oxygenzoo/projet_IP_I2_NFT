@@ -1,0 +1,54 @@
+<main class="library-page">
+  <app-logo class="page-logo" [compact]="true"></app-logo>
+
+  <section class="library-shell">
+    <div class="library-heading">
+      <p class="eyebrow">Photos</p>
+      <h1>Bibliothèque photos</h1>
+      <span>Vos images importées, classées par voyage.</span>
+    </div>
+
+    @if (isLoading()) {
+      <section class="api-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Chargement des photos...</h1>
+      </section>
+    } @else if (errorMessage()) {
+      <section class="api-state api-state--error glass-panel" role="alert">
+        <h1>Photos indisponibles</h1>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn--primary" type="button" (click)="loadPhotos()">Réessayer</button>
+      </section>
+    } @else if (groups().length) {
+      <div class="library-groups">
+        @for (group of groups(); track group.travel.id) {
+          <section class="library-group">
+            <div class="rail-heading">
+              <div>
+                <h2>{{ group.travel.title }}</h2>
+                <span>{{ group.photos.length }} photo{{ group.photos.length > 1 ? 's' : '' }}</span>
+              </div>
+            </div>
+            <div class="photo-library-grid">
+              @for (photo of group.photos; track photo.id) {
+                <article class="photo-library-card">
+                  <img [src]="imageUrl(photo)" [alt]="photo.filename" loading="lazy" />
+                  <div>
+                    <strong>{{ photo.filename }}</strong>
+                    <button type="button" (click)="deletePhoto(group, photo)">Supprimer</button>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    } @else {
+      <section class="library-empty glass-panel">
+        <strong>Aucune photo importée</strong>
+        <span>Vos photos apparaîtront ici après un import.</span>
+        <a class="btn btn--primary" routerLink="/upload">Importer des photos</a>
+      </section>
+    }
+  </section>
+</main>

@@ -30,6 +30,13 @@ export const routes: Routes = [
     title: 'Bibliothèque | NFT',
   },
   {
+    path: 'photos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/photo-library/photo-library-page.component').then((component) => component.PhotoLibraryPageComponent),
+    title: 'Photos | NFT',
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login-page.component').then((component) => component.LoginPageComponent),

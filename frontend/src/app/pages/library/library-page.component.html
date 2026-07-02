@@ -1,0 +1,49 @@
+<main class="library-page">
+  <app-logo class="page-logo" [compact]="true"></app-logo>
+
+  <section class="library-shell">
+    <div class="library-heading">
+      <p class="eyebrow">Bibliothèque</p>
+      <h1>Tous vos souvenirs</h1>
+      <span>{{ episodes().length ? episodes().length + ' souvenirs' : 'Pas encore de souvenirs ici' }}</span>
+    </div>
+
+    @if (isLoading()) {
+      <section class="api-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Chargement des souvenirs...</h1>
+      </section>
+    } @else if (errorMessage()) {
+      <section class="api-state api-state--error glass-panel" role="alert">
+        <h1>Bibliothèque indisponible</h1>
+        <p>{{ errorMessage() }}</p>
+        <button class="btn btn--primary" type="button" (click)="loadLibrary()">Réessayer</button>
+      </section>
+    } @else if (groupedMemories().length) {
+      <div class="library-groups">
+        @for (group of groupedMemories(); track group.travel.id) {
+          <section class="library-group">
+            <div class="rail-heading">
+              <div>
+                <h2>{{ group.travel.title }}</h2>
+                <span>{{ group.travel.destination || group.travel.country || 'Voyage' }}</span>
+              </div>
+              <span>{{ group.memories.length }} souvenir{{ group.memories.length > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="card-row">
+              @for (memory of group.memories; track memory.id) {
+                <app-episode-card [episode]="memory"></app-episode-card>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    } @else {
+      <section class="library-empty glass-panel">
+        <strong>Aucun souvenir pour l'instant</strong>
+        <span>Importez vos photos pour construire votre première bibliothèque de voyage.</span>
+        <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
+      </section>
+    }
+  </section>
+</main>

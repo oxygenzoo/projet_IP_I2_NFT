@@ -3,11 +3,13 @@
     <app-logo [compact]="true"></app-logo>
 
     <div class="stream-header__actions">
-      <div class="mentor-greeting">
-        <span>Bonjour {{ profileName() }} !</span>
-      </div>
       <a class="upgrade-button" routerLink="/pricing" aria-label="Voir les offres premium">
-        <span aria-hidden="true">↑</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M12 3l7 6-7 12L5 9l7-6Z" />
+          <path d="M5 9h14" />
+          <path d="M9 9l3 12 3-12" />
+          <path d="M9 9l3-6 3 6" />
+        </svg>
       </a>
       <a class="icon-button" routerLink="/notifications" aria-label="Notifications">
         <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -23,7 +25,8 @@
           <path d="M14 21h5a2 2 0 0 0 2-2" />
         </svg>
       </button>
-      <a class="profile-link" routerLink="/profile" aria-label="Ouvrir le profil">
+      <a class="profile-link profile-link--greeting" routerLink="/profile" aria-label="Ouvrir le profil">
+        <span>Bonjour {{ profileName() }} !</span>
         @if (profileAvatarUrl()) {
           <img [src]="profileAvatarUrl()" [alt]="profileName()" class="avatar" />
         } @else {
@@ -37,7 +40,7 @@
     <section class="home-video-hero home-video-hero--loading" aria-live="polite">
       <div class="video-empty-card video-empty-card--hero">
         <span class="spinner" aria-hidden="true"></span>
-        <strong>Chargement des vidéos...</strong>
+        <strong>Chargement des souvenirs...</strong>
         <p>Connexion au backend en cours.</p>
       </div>
     </section>
@@ -49,7 +52,7 @@
       </div>
       <div class="card-row">
         <article class="video-empty-card">
-          <strong>Aucune vidéo pour l'instant</strong>
+          <strong>Aucun souvenir pour l'instant</strong>
           <span>Vos souvenirs apparaîtront ici dès qu'ils seront générés.</span>
         </article>
       </div>
@@ -62,8 +65,8 @@
       </div>
       <div class="card-row">
         <article class="video-empty-card">
-          <strong>Aucune vidéo pour l'instant</strong>
-          <span>La section reste prête même avant votre première vidéo.</span>
+          <strong>Aucun souvenir pour l'instant</strong>
+          <span>La section reste prête même avant votre premier souvenir.</span>
         </article>
       </div>
     </section>
@@ -95,7 +98,7 @@
               </a>
               <a class="btn btn--glass" [routerLink]="['/episode', featuredEpisode.id]">Detail souvenir</a>
             } @else {
-              <a class="btn btn--primary" routerLink="/upload">Créer une vidéo</a>
+              <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
             }
           </div>
 
@@ -111,7 +114,7 @@
             </div>
           } @else {
             <div class="video-empty-card video-empty-card--inline">
-              <strong>Aucune vidéo pour l'instant</strong>
+              <strong>Aucun souvenir pour l'instant</strong>
               <span>Ce voyage est prêt à recevoir son premier souvenir.</span>
             </div>
           }
@@ -123,36 +126,30 @@
               <video [src]="previewEpisode.videoUrl" [poster]="previewEpisode.videoStill || previewEpisode.coverImage" muted playsinline preload="metadata"></video>
             } @else {
               <div class="video-empty-card">
-                <strong>Aucune vidéo pour l'instant</strong>
+                <strong>Aucun souvenir pour l'instant</strong>
                 <span>La preview apparaîtra après génération.</span>
               </div>
             }
             <div class="home-preview-card__body">
-              <p>Derniere video</p>
+              <p>Dernier souvenir</p>
               <strong>{{ previewEpisode.title }}</strong>
               <span>{{ previewEpisode.photoCount }} photos · {{ previewEpisode.duration }} · {{ previewEpisode.scenes.length }} scenes</span>
             </div>
           } @else {
             <div class="video-empty-card">
-              <strong>Aucune vidéo pour l'instant</strong>
-              <span>Importez vos photos pour créer une première vidéo.</span>
+              <strong>Aucun souvenir pour l'instant</strong>
+              <span>Importez vos photos pour créer un premier souvenir.</span>
             </div>
           }
         </aside>
       </section>
     } @else {
       <section class="home-video-hero">
-        <img
-          class="home-empty-landscape"
-          src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80"
-          alt="Paysage de voyage"
-          loading="lazy"
-        />
         <div class="home-video-hero__copy">
           <p class="eyebrow">Votre espace voyage</p>
-          <h1>Aucune vidéo pour l'instant</h1>
+          <h1>Aucun souvenir pour l'instant</h1>
           <p>Vos voyages et souvenirs apparaîtront ici dès que vous aurez importé vos premières photos.</p>
-          <a class="btn btn--primary" routerLink="/upload">Créer une vidéo</a>
+          <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
         </div>
       </section>
     }
@@ -160,7 +157,6 @@
     <section class="content-rail">
       <div class="rail-heading">
         <h2>Souvenirs recents</h2>
-        <span>{{ totalPhotos() }} photos analysees</span>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -168,13 +164,13 @@
         } @empty {
           <article class="video-empty-card video-empty-card--soft">
             <img
-              src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=80"
+              src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80"
               alt=""
               loading="lazy"
             />
-            <strong>Aucune vidéo pour l'instant</strong>
+            <strong>Aucun souvenir pour l'instant</strong>
             <span>Vos prochains souvenirs apparaîtront ici après la génération.</span>
-            <a class="btn btn--glass" routerLink="/upload">Créer une vidéo</a>
+            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
           </article>
         }
       </div>
@@ -183,7 +179,7 @@
     <section class="content-rail">
       <div class="rail-heading">
         <h2>Favoris</h2>
-        <span>Styles proches de vos voyages</span>
+        <a class="rail-link" routerLink="/library">Voir tout</a>
       </div>
       <div class="wide-card-row">
         @for (travel of recommendedTravels(); track travel.id) {
@@ -207,7 +203,7 @@
     <section class="content-rail content-rail--last">
       <div class="rail-heading">
         <h2>Mes souvenirs</h2>
-        <a class="rail-link" routerLink="/library">Voir tous les souvenirs</a>
+        <a class="rail-link" routerLink="/library">Voir tout</a>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
@@ -215,18 +211,18 @@
         } @empty {
           <article class="video-empty-card video-empty-card--soft">
             <img
-              src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=700&q=80"
+              src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80"
               alt=""
               loading="lazy"
             />
-            <strong>Aucune vidéo pour l'instant</strong>
+            <strong>Aucun souvenir pour l'instant</strong>
             <span>Quand vous en aurez, elles seront listées ici.</span>
-            <a class="btn btn--glass" routerLink="/upload">Créer une vidéo</a>
+            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
           </article>
         }
       </div>
     </section>
   }
 
-  <a class="floating-create" routerLink="/upload">+ Créer une vidéo</a>
+  <a class="floating-create" routerLink="/upload">+ Créer un souvenir</a>
 </main>

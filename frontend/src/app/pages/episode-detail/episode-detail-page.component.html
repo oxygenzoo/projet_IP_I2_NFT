@@ -1,12 +1,5 @@
 <main class="episode-page">
-  <nav class="stream-header stream-header--floating">
-    <app-logo [compact]="true"></app-logo>
-    <div class="stream-header__nav">
-      <a routerLink="/home">Accueil</a>
-      <a routerLink="/upload">Creer</a>
-      <a routerLink="/pricing">Tarifs</a>
-    </div>
-  </nav>
+  <app-logo class="page-logo page-logo--overlay" [compact]="true"></app-logo>
 
   @if (isLoading()) {
     <section class="api-state glass-panel" aria-live="polite">
@@ -57,7 +50,7 @@
         <p class="episode-action-state">{{ exportMessage() }}</p>
       }
       @if (episode.videoUrl && episode.exportStatus === 'ready') {
-        <a class="episode-action-state" [href]="episode.videoUrl">Video accessible</a>
+        <a class="episode-action-state" [href]="episode.videoUrl">Souvenir accessible</a>
       }
     </div>
   </section>

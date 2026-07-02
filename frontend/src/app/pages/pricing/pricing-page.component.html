@@ -5,7 +5,7 @@
 
   <section class="pricing-hero">
     <p class="eyebrow">Modele economique</p>
-    <h1>Un prix simple pour transformer les voyages en souvenirs vidéo.</h1>
+    <h1>Un prix simple pour transformer les voyages en souvenirs.</h1>
     <p>
       Les offres sont chargees depuis le backend pour garder les prix alignes avec la production.
     </p>
@@ -20,7 +20,7 @@
     <section class="api-state api-state--error glass-panel" role="alert">
       <h1>Offres indisponibles</h1>
       <p>{{ errorMessage() }}</p>
-      <button class="btn btn--primary" type="button" (click)="loadPlans()">Reessayer</button>
+      <button class="btn btn--primary" type="button" (click)="loadPlans()">Réessayer</button>
     </section>
   } @else {
     <section class="pricing-grid">
@@ -50,7 +50,7 @@
       } @empty {
         <article class="empty-rail empty-rail--wide">
           <strong>Aucune offre disponible</strong>
-          <span>Les offres apparaitront quand le backend les publiera.</span>
+          <span>Les offres apparaîtront quand le backend les publiera.</span>
         </article>
       }
     </section>

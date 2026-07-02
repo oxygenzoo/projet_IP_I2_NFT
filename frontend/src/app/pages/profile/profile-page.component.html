@@ -1,12 +1,5 @@
 <main class="profile-page">
-  <header class="stream-header stream-header--floating">
-    <app-logo [compact]="true"></app-logo>
-    <div class="stream-header__nav">
-      <a routerLink="/home">Accueil</a>
-      <a routerLink="/upload">Creer</a>
-      <a routerLink="/pricing">Tarifs</a>
-    </div>
-  </header>
+  <app-logo class="page-logo" [compact]="true"></app-logo>
 
   @if (isLoading()) {
     <section class="api-state glass-panel" aria-live="polite">
@@ -24,7 +17,7 @@
               <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ initials() }}</span>
             }
             <input type="file" accept="image/*" aria-label="Changer la photo de profil" (change)="onAvatarSelection($event)" />
-            <span>Changer</span>
+            <span class="profile-avatar-edit__label">Changer</span>
           </label>
 
           <div class="profile-identity-fields">
@@ -66,18 +59,18 @@
       </form>
 
       <section class="profile-stat-grid" aria-label="Statistiques du profil">
-        <article>
+        <a routerLink="/library">
           <strong>{{ travelCount() }}</strong>
           <span>Voyages</span>
-        </article>
-        <article>
+        </a>
+        <a routerLink="/library">
           <strong>{{ episodeCount() }}</strong>
           <span>Souvenirs</span>
-        </article>
-        <article>
+        </a>
+        <a routerLink="/photos">
           <strong>{{ photoCount() }}</strong>
           <span>Photos</span>
-        </article>
+        </a>
       </section>
 
       <section class="profile-grid">
@@ -87,7 +80,7 @@
             <span>{{ profile.plan }}</span>
           </div>
           <p class="profile-copy">Votre formule actuelle détermine le volume de souvenirs et d'exports disponibles.</p>
-          <a class="btn btn--glass" routerLink="/pricing">Augmenter mon abonnement</a>
+          <a class="btn btn--glass" routerLink="/pricing">Voir les offres</a>
         </article>
       </section>
     </section>

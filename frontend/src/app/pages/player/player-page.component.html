@@ -15,13 +15,13 @@
       <a class="btn btn--primary" routerLink="/home">Retour à l'accueil</a>
     </section>
   } @else if (episode(); as episode) {
-    <section class="video-player" aria-label="Lecteur video">
+    <section class="video-player" aria-label="Lecteur souvenir">
       @if (episode.videoUrl) {
         <video class="video-player__media" [src]="episode.videoUrl" [poster]="episode.videoStill" controls playsinline></video>
       } @else {
         <div class="video-player__empty glass-panel">
-          <strong>Video non disponible</strong>
-          <span>Le souvenir existe, mais aucun export video n'est encore fourni par le backend.</span>
+          <strong>Souvenir non disponible</strong>
+          <span>Le souvenir existe, mais aucun export n'est encore fourni par le backend.</span>
         </div>
       }
     </section>

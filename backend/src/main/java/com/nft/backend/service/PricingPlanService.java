@@ -25,7 +25,7 @@ public class PricingPlanService {
                         "9 EUR",
                         "par voyage",
                         "Un voyage transformé en souvenir partageable.",
-                        List.of("Jusqu'à 6 souvenirs", "Sélection IA", "Lien de partage", "Export vidéo si disponible"),
+                        List.of("Jusqu'à 6 souvenirs", "Sélection IA", "Lien de partage", "Export souvenir si disponible"),
                         true,
                         "Le plus choisi"),
                 new PricingPlanDto(

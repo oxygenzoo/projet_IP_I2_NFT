@@ -1,12 +1,5 @@
 <main class="admin-page">
-  <header class="stream-header stream-header--floating">
-    <app-logo [compact]="true"></app-logo>
-    <div class="stream-header__nav">
-      <a routerLink="/home">Accueil</a>
-      <a routerLink="/upload">Creer</a>
-      <a routerLink="/profile">Profil</a>
-    </div>
-  </header>
+  <app-logo class="page-logo" [compact]="true"></app-logo>
 
   <section class="admin-shell">
     <div class="admin-heading">
@@ -27,7 +20,7 @@
       <section class="api-state api-state--error glass-panel" role="alert">
         <h1>Admin indisponible</h1>
         <p>{{ errorMessage() }}</p>
-        <button class="btn btn--primary" type="button" (click)="loadDashboard()">Reessayer</button>
+        <button class="btn btn--primary" type="button" (click)="loadDashboard()">Réessayer</button>
       </section>
     } @else {
       <section class="admin-stat-grid" aria-label="Statistiques admin">
@@ -97,7 +90,7 @@
             } @empty {
               <div class="admin-empty">
                 <strong>Aucun souvenir</strong>
-                <span>Les statuts IA apparaitront apres generation.</span>
+                <span>Les statuts IA apparaîtront après génération.</span>
               </div>
             }
           </div>

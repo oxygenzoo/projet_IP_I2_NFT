@@ -25,7 +25,7 @@ export class UploadPageComponent {
   constructor() {
     if (this.route.snapshot.queryParamMap.get('reason') === 'missing-photos') {
       this.errors.set([
-        'Les photos doivent etre selectionnees dans cette session. Reimportez vos images pour relancer la generation.',
+        'Les photos doivent être sélectionnées dans cette session. Réimportez vos images pour relancer la génération.',
       ]);
     }
   }
