@@ -2462,7 +2462,8 @@ img {
   gap: 0.38rem;
 }
 
-.profile-identity-fields input {
+.profile-identity-fields input,
+.profile-identity-fields select {
   background: rgba(255, 255, 255, 0.09);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 0.8rem;
@@ -2472,10 +2473,17 @@ img {
   min-height: 3rem;
   outline: none;
   padding: 0 0.95rem;
+  width: 100%;
 }
 
-.profile-identity-fields input:focus {
+.profile-identity-fields input:focus,
+.profile-identity-fields select:focus {
   border-color: rgba(255, 197, 51, 0.55);
+}
+
+.profile-identity-fields select {
+  appearance: none;
+  cursor: pointer;
 }
 
 .profile-name-input {
@@ -2499,6 +2507,7 @@ img {
 }
 
 .profile-hero-actions .btn {
+  min-width: 10.75rem;
   width: 100%;
 }
 
@@ -2670,6 +2679,7 @@ img {
   }
 
   .profile-hero-actions .btn {
+    min-width: 10.75rem;
     width: auto;
   }
 
@@ -3366,6 +3376,7 @@ img {
   }
 
   .profile-hero-actions .btn {
+    min-width: 0;
     width: 100%;
   }
 

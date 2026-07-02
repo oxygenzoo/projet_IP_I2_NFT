@@ -41,6 +41,8 @@ services:
         sync: false
       - key: AI_SERVICE_URL
         value: https://projet-ip-i2-nft-1.onrender.com
+      - key: APP_PUBLIC_URL
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: SMTP_PASSWORD
@@ -54,11 +56,21 @@ services:
     healthCheckPath: /health
     envVars:
       - key: AI_RENDER_VIDEO
-        value: true
+        value: "true"
       - key: AI_TOP_PHOTOS
-        value: 50
+        value: "24"
       - key: AI_MAX_EPISODES
-        value: 6
+        value: "3"
+      - key: AI_RENDER_MAX_EPISODES
+        value: "1"
+      - key: AI_VIDEO_WIDTH
+        value: "640"
+      - key: AI_VIDEO_HEIGHT
+        value: "360"
+      - key: AI_VIDEO_FPS
+        value: "10"
+      - key: AI_VIDEO_MAX_SCENES
+        value: "5"
       - key: AI_LLM_API_KEY
         sync: false
       - key: GROQ_API_KEY

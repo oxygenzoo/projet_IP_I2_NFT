@@ -1,54 +1,45 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-export type AppLanguage = 'fr' | 'en' | 'es' | 'pt';
+import { APP_TRANSLATIONS, AppLanguage, LITERAL_TRANSLATIONS, TranslationParams } from '../i18n/translations';
 
-const TRANSLATIONS: Record<AppLanguage, Record<string, string>> = {
-  fr: {
-    createMemory: 'Créer un souvenir',
-    creationInProgress: 'Création en cours',
-    language: 'Langue',
-    save: 'Enregistrer',
-    saving: 'Sauvegarde...',
-  },
-  en: {
-    createMemory: 'Create a memory',
-    creationInProgress: 'Creation in progress',
-    language: 'Language',
-    save: 'Save',
-    saving: 'Saving...',
-  },
-  es: {
-    createMemory: 'Crear un recuerdo',
-    creationInProgress: 'Creación en curso',
-    language: 'Idioma',
-    save: 'Guardar',
-    saving: 'Guardando...',
-  },
-  pt: {
-    createMemory: 'Criar uma lembrança',
-    creationInProgress: 'Criação em curso',
-    language: 'Idioma',
-    save: 'Guardar',
-    saving: 'A guardar...',
-  },
-};
+export type { AppLanguage };
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly storageKey = 'nft.language';
   readonly language = signal<AppLanguage>(this.readLanguage());
-  readonly labels = computed(() => TRANSLATIONS[this.language()]);
+  readonly labels = computed(() => APP_TRANSLATIONS[this.language()]);
+
+  constructor() {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = this.language();
+    }
+  }
 
   setLanguage(language: string): AppLanguage {
     const next = this.normalize(language);
     this.language.set(next);
     localStorage.setItem(this.storageKey, next);
-    document.documentElement.lang = next;
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = next;
+    }
     return next;
   }
 
-  t(key: string): string {
-    return this.labels()[key] ?? TRANSLATIONS.fr[key] ?? key;
+  t(key: string, params: TranslationParams = {}): string {
+    return this.interpolate(this.labels()[key] ?? APP_TRANSLATIONS.fr[key] ?? key, params);
+  }
+
+  literal(text: string, params: TranslationParams = {}): string {
+    const language = this.language();
+    if (language === 'fr') {
+      return this.interpolate(text, params);
+    }
+    return this.interpolate(LITERAL_TRANSLATIONS[language][text] ?? text, params);
+  }
+
+  plural(count: number, singularKey: string, pluralKey: string): string {
+    return this.t(count === 1 ? singularKey : pluralKey);
   }
 
   private readLanguage(): AppLanguage {
@@ -57,5 +48,9 @@ export class I18nService {
 
   private normalize(language: string): AppLanguage {
     return ['fr', 'en', 'es', 'pt'].includes(language) ? language as AppLanguage : 'fr';
+  }
+
+  private interpolate(template: string, params: TranslationParams): string {
+    return template.replace(/\{(\w+)}/g, (_, key: string) => String(params[key] ?? `{${key}}`));
   }
 }

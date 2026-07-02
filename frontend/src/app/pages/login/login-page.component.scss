@@ -34,6 +34,12 @@
   z-index: 2;
 }
 
+.login-topbar__actions {
+  align-items: center;
+  display: flex;
+  gap: 0.8rem;
+}
+
 .back-link {
   color: #d8d8df;
   font-size: 0.88rem;
@@ -367,8 +373,12 @@ button:disabled {
     padding-inline: 1rem;
   }
 
+  .login-topbar__actions {
+    gap: 0.5rem;
+  }
+
   .back-link {
-    font-size: 0.8rem;
+    display: none;
   }
 
   .login-shell {

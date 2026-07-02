@@ -3,10 +3,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, SocialProvider } from '../../services/auth.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { LanguageSelectComponent } from '../../shared/language-select/language-select.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, RouterLink, AppLogoComponent],
+  imports: [ReactiveFormsModule, RouterLink, AppLogoComponent, LanguageSelectComponent],
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss',
 })

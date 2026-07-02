@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -35,6 +36,7 @@ export class UploadPageComponent {
   protected readonly isUploading = signal(false);
   protected readonly isCreatingLink = signal(false);
   protected readonly contributionLink = signal('');
+  protected readonly contributionFeedback = signal('');
 
   constructor() {
     if (this.route.snapshot.queryParamMap.get('reason') === 'missing-photos') {
@@ -95,21 +97,31 @@ export class UploadPageComponent {
   }
 
   protected async createContributionLink(): Promise<void> {
-    if (!this.consentGiven()) {
-      this.errors.set(['Acceptez le traitement privé des photos avant de créer un lien.']);
-      return;
-    }
-
     this.isCreatingLink.set(true);
     this.errors.set([]);
     try {
       const travelId = await this.ensureDraftTravel();
       const link = await firstValueFrom(this.travelApi.createContributionLink(travelId));
-      this.contributionLink.set(link.url);
+      this.contributionLink.set(this.publicContributionUrl(link));
+      this.contributionFeedback.set('Lien prêt à partager.');
     } catch (error) {
       this.errors.set([this.errorText(error, 'Impossible de créer le lien de contribution.')]);
     } finally {
       this.isCreatingLink.set(false);
+    }
+  }
+
+  protected async copyContributionLink(): Promise<void> {
+    const link = this.contributionLink();
+    if (!link) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(link);
+      this.contributionFeedback.set('Lien copié.');
+    } catch {
+      this.contributionFeedback.set('Copie indisponible : sélectionnez le lien manuellement.');
     }
   }
 
@@ -240,7 +252,24 @@ export class UploadPageComponent {
   }
 
   private errorText(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse) {
+      const payload = error.error;
+      if (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string') {
+        return payload.message;
+      }
+      if (typeof payload === 'string' && payload.trim()) {
+        return payload;
+      }
+    }
     return error instanceof Error && error.message ? error.message : fallback;
+  }
+
+  private publicContributionUrl(link: { token: string; url: string }): string {
+    if (typeof window === 'undefined') {
+      return link.url;
+    }
+
+    return `${window.location.origin}/contribute/${link.token}`;
   }
 }
 

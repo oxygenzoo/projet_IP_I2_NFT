@@ -108,7 +108,7 @@ def enrich_day(day_data: dict, travel_name: str, index: int) -> dict:
         time.sleep(1)
         context = wikipedia_context(place)
     else:
-        place = f"Etape {index + 1} - {travel_name}"
+        place = travel_name or f"Souvenir {index + 1}"
         context = ""
 
     day_data["main_place"] = place
@@ -213,7 +213,7 @@ def generate_with_gemini(prompt: str, api_key: str) -> dict:
 
 def fallback_episode(day: str, day_data: dict, travel_name: str, episode_number: int, preferences: dict) -> dict:
     style = (preferences or {}).get("style", "cinematographique")
-    place = day_data.get("main_place", f"Etape {episode_number}")
+    place = day_data.get("main_place") or travel_name or f"Souvenir {episode_number}"
     scenes = []
 
     for index, photo in enumerate(day_data.get("photos", [])[:12], start=1):
@@ -233,10 +233,10 @@ def fallback_episode(day: str, day_data: dict, travel_name: str, episode_number:
         "episode_numero": episode_number,
         "lieu": place,
         "date": day,
-        "intro": f"{travel_name} se reconstruit a travers les meilleurs souvenirs de cette journee.",
+        "intro": f"{travel_name} se reconstruit à travers les meilleurs souvenirs de cette journée.",
         "scenes": scenes,
-        "outro": "Ces images composent une memoire de voyage prete a revivre.",
-        "musique_ambiance": "ambient cinematographique doux",
+        "outro": "Ces images composent une mémoire de voyage prête à revivre.",
+        "musique_ambiance": "ambient cinématographique doux",
         "nb_photos_source": day_data.get("photo_count", len(scenes)),
     }
 

@@ -1,7 +1,10 @@
 <main class="login-page">
   <nav class="login-topbar">
     <app-logo link="/"></app-logo>
-    <a class="back-link" routerLink="/">Retour à l'accueil</a>
+    <div class="login-topbar__actions">
+      <a class="back-link" routerLink="/">Retour à l'accueil</a>
+      <app-language-select></app-language-select>
+    </div>
   </nav>
 
   <section class="login-shell" aria-labelledby="login-title">

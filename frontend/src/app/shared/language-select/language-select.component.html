@@ -1,0 +1,12 @@
+<label class="language-select">
+  <span>{{ i18n.t('language') }}</span>
+  <select
+    [attr.aria-label]="i18n.t('language')"
+    [value]="i18n.language()"
+    (change)="changeLanguage($event)"
+  >
+    @for (language of languages; track language.value) {
+      <option [value]="language.value" [selected]="language.value === i18n.language()">{{ language.label }}</option>
+    }
+  </select>
+</label>

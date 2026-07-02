@@ -3,8 +3,11 @@ package com.nft.backend.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,11 +20,14 @@ import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -31,6 +37,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AiGenerationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AiGenerationService.class);
 
     private final RestClient restClient;
     private final TravelCatalogService travelCatalogService;
@@ -44,12 +52,20 @@ public class AiGenerationService {
 
     public AiGenerationService(
             @Value("${app.ai.service-url:http://localhost:8000}") String aiServiceUrl,
+            @Value("${app.ai.connect-timeout-ms:8000}") long aiConnectTimeoutMs,
+            @Value("${app.ai.read-timeout-ms:90000}") long aiReadTimeoutMs,
             TravelCatalogService travelCatalogService,
             PhotoService photoService,
             EpisodeService episodeService,
             PhotoRepository photoRepository,
             TravelRepository travelRepository) {
-        this.restClient = RestClient.builder().baseUrl(aiServiceUrl).build();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofMillis(aiConnectTimeoutMs));
+        requestFactory.setReadTimeout(Duration.ofMillis(aiReadTimeoutMs));
+        this.restClient = RestClient.builder()
+                .baseUrl(aiServiceUrl)
+                .requestFactory(requestFactory)
+                .build();
         this.travelCatalogService = travelCatalogService;
         this.photoService = photoService;
         this.episodeService = episodeService;
@@ -154,15 +170,27 @@ public class AiGenerationService {
 
             return response;
         } catch (RestClientResponseException exception) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "Erreur du service IA: " + cleanOrDefault(exception.getResponseBodyAsString(), exception.getMessage()),
-                    exception);
+            LOGGER.warn("AI service returned {} for travel {}: {}", exception.getStatusCode(), travelId, exception.getResponseBodyAsString());
+            return fallbackGeneration(
+                    title,
+                    destination,
+                    preferences,
+                    travelId,
+                    images,
+                    persistPhotoMetadata,
+                    ownerId,
+                    "Le service IA Render a répondu en erreur. Un souvenir de secours a été créé pour la démo.");
         } catch (RestClientException exception) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "Le service IA est indisponible. Aucune generation locale n'a ete creee.",
-                    exception);
+            LOGGER.warn("AI service unavailable for travel {}: {}", travelId, exception.getMessage());
+            return fallbackGeneration(
+                    title,
+                    destination,
+                    preferences,
+                    travelId,
+                    images,
+                    persistPhotoMetadata,
+                    ownerId,
+                    "Le service IA Render est indisponible. Un souvenir de secours a été créé pour la démo.");
         }
     }
 
@@ -268,6 +296,101 @@ public class AiGenerationService {
         } else {
             episodeService.createForOwner(ownerId, travelUuid, request, firstVideoUrl(response), generatedScenes(episode), photos);
         }
+    }
+
+    private GenerationResponse fallbackGeneration(
+            String title,
+            String destination,
+            String preferences,
+            String travelId,
+            List<GenerationImage> images,
+            boolean persistPhotoMetadata,
+            UUID ownerId,
+            String message) {
+        GenerationResponse response = localGenerationResponse(title, destination, preferences, images, message);
+
+        if (travelId == null || travelId.isBlank()) {
+            travelCatalogService.registerGeneration(
+                    response,
+                    valueOrDefault(title, "Mon voyage"),
+                    valueOrDefault(destination, ""),
+                    images.size(),
+                    images.stream().map(GenerationImage::filename).toList());
+        } else {
+            registerTravelWorkflow(response, travelId, images, persistPhotoMetadata, ownerId);
+        }
+
+        return response;
+    }
+
+    private GenerationResponse localGenerationResponse(
+            String title,
+            String destination,
+            String preferences,
+            List<GenerationImage> images,
+            String message) {
+        String travelTitle = valueOrDefault(title, "Mon voyage");
+        String place = valueOrDefault(destination, "Voyage");
+        String episodeTitle = destination == null || destination.isBlank()
+                ? "Votre souvenir de voyage"
+                : "Souvenir de " + destination.trim();
+
+        List<Map<String, Object>> scenes = new ArrayList<>();
+        int sceneLimit = Math.min(images.size(), 8);
+        for (int index = 0; index < sceneLimit; index++) {
+            GenerationImage image = images.get(index);
+            Map<String, Object> scene = new LinkedHashMap<>();
+            scene.put("scene_numero", index + 1);
+            scene.put("photo_fichier", image.filename());
+            scene.put("voix_off", fallbackVoiceOver(place, index));
+            scene.put("texte_ecran", place + " · souvenir " + (index + 1));
+            scene.put("duree_secondes", 5);
+            scene.put("effet", index % 2 == 0 ? "ken_burns_zoom_in" : "ken_burns_zoom_out");
+            scenes.add(scene);
+        }
+
+        Map<String, Object> episode = new LinkedHashMap<>();
+        episode.put("episode_titre", episodeTitle);
+        episode.put("episode_numero", 1);
+        episode.put("lieu", place);
+        episode.put("date", LocalDate.now().toString());
+        episode.put("intro", travelTitle + " se raconte à travers les images les plus fortes de ce voyage.");
+        episode.put("scenes", scenes);
+        episode.put("outro", "Ces moments forment un souvenir prêt à retrouver dans votre espace voyage.");
+        episode.put("musique_ambiance", "cinématique doux");
+        episode.put("preferences", valueOrDefault(preferences, "{}"));
+
+        Map<String, Object> script = new LinkedHashMap<>();
+        script.put("voyage", travelTitle);
+        script.put("preferences", valueOrDefault(preferences, "{}"));
+        script.put("genere_le", LocalDate.now().toString());
+        script.put("nb_episodes", 1);
+        script.put("provider_llm", "fallback-demo");
+        script.put("episodes", List.of(episode));
+
+        Map<String, Object> selectionReport = new LinkedHashMap<>();
+        selectionReport.put("total_initial", images.size());
+        selectionReport.put("selection_finale", sceneLimit);
+        selectionReport.put("fallback", true);
+
+        return new GenerationResponse(
+                UUID.randomUUID().toString(),
+                "completed",
+                message,
+                selectionReport,
+                script,
+                List.of(),
+                "local-fallback");
+    }
+
+    private String fallbackVoiceOver(String place, int index) {
+        List<String> templates = List.of(
+                "On retrouve ici un moment simple, lumineux, qui donne le ton du voyage.",
+                "Cette image garde une trace vivante de " + place + ", entre mouvement et émotion.",
+                "Le souvenir avance avec ces détails que l'on aime revoir après le retour.",
+                "Ce passage rassemble les regards, les couleurs et l'ambiance du voyage."
+        );
+        return templates.get(index % templates.size());
     }
 
     private UUID parseTravelId(String travelId) {

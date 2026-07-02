@@ -49,8 +49,15 @@ def should_render_video() -> bool:
     return os.getenv("AI_RENDER_VIDEO", "false").lower() in {"1", "true", "yes", "on"}
 
 
+def env_int(name: str, fallback: int, minimum: int = 1) -> int:
+    try:
+        return max(minimum, int(os.getenv(name, str(fallback))))
+    except ValueError:
+        return fallback
+
+
 def max_rendered_episodes() -> int:
-    return max(1, int(os.getenv("AI_RENDER_MAX_EPISODES", "1")))
+    return env_int("AI_RENDER_MAX_EPISODES", 1)
 
 
 @app.get("/health")
@@ -90,8 +97,8 @@ async def generate_episode(
 
         parsed_preferences = parse_preferences(preferences)
         travel_name = title if not destination else f"{title} - {destination}"
-        top_n = int(os.getenv("AI_TOP_PHOTOS", "50"))
-        max_episodes = int(os.getenv("AI_MAX_EPISODES", "6"))
+        top_n = env_int("AI_TOP_PHOTOS", 50)
+        max_episodes = env_int("AI_MAX_EPISODES", 6)
         llm_key = os.getenv("AI_LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY")
 
         selection_report = photo_selector.run_pipeline(
@@ -109,13 +116,17 @@ async def generate_episode(
         )
 
         videos: list[str] = []
+        video_error = ""
         if should_render_video():
-            videos = video_generator.run_pipeline(
-                scripts_path=str(scripts_dir / "scripts_episodes.json"),
-                photos_dir=str(photos_dir),
-                output_dir=str(videos_dir),
-                max_episodes=min(max_episodes, max_rendered_episodes()),
-            )
+            try:
+                videos = video_generator.run_pipeline(
+                    scripts_path=str(scripts_dir / "scripts_episodes.json"),
+                    photos_dir=str(photos_dir),
+                    output_dir=str(videos_dir),
+                    max_episodes=min(max_episodes, max_rendered_episodes()),
+                )
+            except Exception as error:
+                video_error = f" Rendu vidéo différé: {error}"
 
         video_urls = [
             str(request.url_for("media", path=Path(video).resolve().relative_to(base_dir).as_posix()))
@@ -125,7 +136,7 @@ async def generate_episode(
         return GenerationResponse(
             job_id=job_id,
             status="completed",
-            message="Episode genere par le service IA.",
+            message=("Épisode généré par le service IA." + video_error).strip(),
             selection_report=selection_report,
             script=script,
             videos=video_urls,

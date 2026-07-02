@@ -361,7 +361,15 @@ def run_pipeline(input_dir: str, output_dir: str, top_n: int = 50,
             rejects[result["reject_reason"]] += 1
 
     if not usable_photos:
-        raise ValueError("Toutes les photos ont ete rejetees: floues, trop sombres ou surexposees.")
+        usable_photos = [{
+            "path": path,
+            "filename": Path(path).name,
+            "nom": Path(path).name,
+            "sharpness": sharpness_score(path),
+            "nettete": sharpness_score(path),
+            "brightness": brightness_score(path),
+            "luminosite": brightness_score(path),
+        } for path in all_photos]
 
     for photo in usable_photos:
         try:

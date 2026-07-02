@@ -27,7 +27,7 @@
     </section>
   } @else {
     <section class="pricing-grid">
-      @for (plan of plans(); track plan.id) {
+      @for (plan of localizedPlans(); track plan.id) {
         <article class="pricing-card" [class.pricing-card--featured]="plan.highlighted">
           @if (plan.highlighted) {
             <span class="plan-badge">Favoris</span>

@@ -1,0 +1,62 @@
+:host {
+  display: inline-flex;
+}
+
+.language-select {
+  align-items: center;
+  background: rgba(8, 12, 22, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  display: inline-flex;
+  gap: 0.55rem;
+  min-height: 2.55rem;
+  padding: 0.35rem 0.45rem 0.35rem 0.9rem;
+}
+
+.language-select span {
+  color: #d8d8df;
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.language-select select {
+  appearance: none;
+  background:
+    linear-gradient(135deg, rgba(74, 93, 255, 0.9), rgba(255, 79, 139, 0.76), rgba(255, 197, 51, 0.86));
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 850;
+  min-height: 1.95rem;
+  min-width: 7.1rem;
+  outline: 0;
+  padding: 0 1.9rem 0 0.8rem;
+}
+
+.language-select select:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 197, 51, 0.24);
+}
+
+.language-select option {
+  background: #12121a;
+  color: #ffffff;
+}
+
+@media (max-width: 620px) {
+  .language-select {
+    padding-left: 0.65rem;
+  }
+
+  .language-select span {
+    display: none;
+  }
+
+  .language-select select {
+    min-width: 6rem;
+  }
+}

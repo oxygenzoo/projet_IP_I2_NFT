@@ -106,7 +106,7 @@
         <h2>Recevoir les photos d'un proche</h2>
         <p>Le lien permet uniquement d'ajouter des photos à ce souvenir. Les préférences et la génération restent réservées au propriétaire.</p>
       </div>
-      <button class="btn btn--glass" type="button" [disabled]="!consentGiven() || isCreatingLink()" (click)="createContributionLink()">
+      <button class="btn btn--glass" type="button" [disabled]="isCreatingLink()" (click)="createContributionLink()">
         @if (isCreatingLink()) {
           <span class="spinner" aria-hidden="true"></span>
           Création...
@@ -115,7 +115,19 @@
         }
       </button>
       @if (contributionLink()) {
-        <p class="contribution-link" aria-live="polite">{{ contributionLink() }}</p>
+        <div class="contribution-link" aria-live="polite">
+          <label>
+            Lien de contribution
+            <input type="text" [value]="contributionLink()" readonly />
+          </label>
+          <div class="contribution-link__actions">
+            <a class="btn btn--glass" [href]="contributionLink()" target="_blank" rel="noreferrer">Ouvrir</a>
+            <button class="btn btn--primary" type="button" (click)="copyContributionLink()">Copier</button>
+          </div>
+          @if (contributionFeedback()) {
+            <span>{{ contributionFeedback() }}</span>
+          }
+        </div>
       }
     </section>
 

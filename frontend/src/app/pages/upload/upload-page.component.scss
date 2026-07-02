@@ -91,9 +91,48 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.7rem;
   color: #fff;
+  display: grid;
+  gap: 0.75rem;
   grid-column: 1 / -1;
-  overflow-wrap: anywhere;
   padding: 0.85rem;
+}
+
+.contribution-link label {
+  color: var(--muted);
+  display: grid;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  text-transform: uppercase;
+}
+
+.contribution-link input {
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.55rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  min-height: 2.7rem;
+  overflow: hidden;
+  padding: 0 0.8rem;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.contribution-link__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.contribution-link__actions .btn {
+  min-height: 2.6rem;
+}
+
+.contribution-link > span {
+  color: #86efac;
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .photo-previews {
@@ -162,5 +201,9 @@
   .cloud-actions,
   .contribution-panel {
     grid-template-columns: 1fr;
+  }
+
+  .contribution-link__actions .btn {
+    width: 100%;
   }
 }

@@ -5,6 +5,7 @@
       <a routerLink="/pricing">Tarifs</a>
       <a routerLink="/login">Se connecter</a>
     </div>
+    <app-language-select></app-language-select>
   </nav>
 
   <section class="landing-hero" [style.--hero-image]="heroImage">
@@ -64,7 +65,7 @@
     <p class="eyebrow">Pourquoi ça marche</p>
     <h2>Le souvenir devient un format que tout le monde comprend.</h2>
     <div class="benefit-grid">
-      @for (benefit of benefits; track benefit.title) {
+      @for (benefit of benefits(); track benefit.title) {
         <article class="benefit-card">
           <span></span>
           <h3>{{ benefit.title }}</h3>

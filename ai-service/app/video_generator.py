@@ -161,7 +161,7 @@ def render_video_from_frames(frames: list[tuple[Path, float]], output_path: str)
 def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | None:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     number = episode.get("episode_numero", 1)
-    title = episode.get("episode_titre", f"Episode {number}")
+    title = episode.get("episode_titre", f"Épisode {number}")
     place = episode.get("lieu", "")
     date = episode.get("date", "")
     frame_dir = Path(output_dir) / f"frames_episode_{number:02d}"
@@ -169,7 +169,7 @@ def generate_episode(episode: dict, photos_dir: str, output_dir: str) -> str | N
     frames: list[tuple[Path, float]] = []
 
     frames.append((write_frame(text_card([
-        (f"Episode {number}", (140, 120, 200), 24),
+        (f"Épisode {number}", (140, 120, 200), 24),
         (title, (255, 255, 255), 42),
         (place, (190, 185, 210), 26),
         (date, (140, 135, 160), 22),
