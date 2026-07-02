@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { PricingPlan } from '../../models/travel.models';
+import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -11,14 +12,21 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
   templateUrl: './pricing-page.component.html',
 })
 export class PricingPageComponent implements OnInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  protected readonly quota = inject(SubscriptionQuotaService);
   private readonly travelApiService = inject(TravelApiService);
   private pricingSubscription?: Subscription;
 
   protected readonly plans = signal<PricingPlan[]>([]);
   protected readonly isLoading = signal(true);
   protected readonly errorMessage = signal('');
+  protected readonly noticeMessage = signal('');
 
   ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('reason') === 'token-limit') {
+      this.noticeMessage.set('Vous avez utilisé vos 2 générations gratuites. Choisissez une offre pour continuer.');
+    }
+
     this.loadPlans();
   }
 

@@ -1,0 +1,99 @@
+<main class="payment-page">
+  <app-logo class="page-logo" [compact]="true"></app-logo>
+
+  @if (isLoading()) {
+    <section class="api-state glass-panel" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h1>Préparation du paiement...</h1>
+    </section>
+  } @else if (errorMessage() && !plan()) {
+    <section class="api-state api-state--error glass-panel" role="alert">
+      <h1>Paiement indisponible</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn btn--primary" routerLink="/pricing">Retour aux tarifs</a>
+    </section>
+  } @else if (plan(); as plan) {
+    @if (isPaid()) {
+      <section class="payment-success glass-panel" aria-live="polite">
+        <p class="eyebrow">Paiement accepté</p>
+        <h1>{{ plan.name }} est activé.</h1>
+        <p>Votre quota de démonstration a été réinitialisé et votre nouveau plan est visible dans le profil.</p>
+        <div class="payment-actions">
+          <a class="btn btn--primary" routerLink="/upload">Créer un souvenir</a>
+          <a class="btn btn--glass" routerLink="/profile">Voir mon profil</a>
+        </div>
+      </section>
+    } @else {
+      <section class="payment-shell">
+        <div class="payment-copy">
+          <p class="eyebrow">Paiement sécurisé</p>
+          <h1>Finaliser l'upgrade {{ plan.name }}</h1>
+          <p>Cette page est factice pour la démonstration, mais reprend le comportement d'un paiement réel.</p>
+        </div>
+
+        <form class="payment-form glass-panel" [formGroup]="paymentForm" (ngSubmit)="pay()" novalidate>
+          <div class="payment-card-preview">
+            <span>NFT Premium</span>
+            <strong>4242 4242 4242 4242</strong>
+            <small>{{ paymentForm.controls.cardName.value || 'Nom sur la carte' }}</small>
+          </div>
+
+          <label>
+            Email de facturation
+            <input type="email" formControlName="email" autocomplete="email" placeholder="vous@email.com" />
+          </label>
+
+          <label>
+            Nom sur la carte
+            <input type="text" formControlName="cardName" autocomplete="cc-name" placeholder="Enzo Guignabert" />
+          </label>
+
+          <label>
+            Numéro de carte
+            <input type="text" formControlName="cardNumber" inputmode="numeric" autocomplete="cc-number" />
+          </label>
+
+          <div class="payment-row">
+            <label>
+              Expiration
+              <input type="text" formControlName="expiry" inputmode="numeric" autocomplete="cc-exp" />
+            </label>
+            <label>
+              CVC
+              <input type="text" formControlName="cvc" inputmode="numeric" autocomplete="cc-csc" />
+            </label>
+            <label>
+              Code postal
+              <input type="text" formControlName="zipCode" autocomplete="postal-code" />
+            </label>
+          </div>
+
+          @if (paymentForm.touched && paymentForm.invalid) {
+            <p class="form-error">Complétez les informations de paiement pour continuer.</p>
+          }
+
+          <button class="btn btn--primary btn--wide" type="submit" [disabled]="isProcessing()">
+            {{ isProcessing() ? 'Validation...' : 'Payer ' + plan.price }}
+          </button>
+          <p class="payment-disclaimer">Aucune carte n'est débitée. Le paiement active uniquement le mode démo local.</p>
+        </form>
+
+        <aside class="payment-summary glass-panel" aria-label="Récapitulatif">
+          <span class="plan-badge">{{ plan.audience || 'Upgrade' }}</span>
+          <h2>{{ plan.name }}</h2>
+          <div class="price-line">
+            <strong>{{ plan.price }}</strong>
+            <span>{{ plan.cadence }}</span>
+          </div>
+          <p>{{ plan.description }}</p>
+          <ul>
+            @for (feature of plan.features; track feature) {
+              <li>{{ feature }}</li>
+            }
+          </ul>
+          <a class="btn btn--glass btn--wide" routerLink="/pricing">Changer d'offre</a>
+        </aside>
+      </section>
+    }
+  }
+</main>

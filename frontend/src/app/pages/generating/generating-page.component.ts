@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GenerationResponse } from '../../models/generation.models';
 import { GenerationApiService } from '../../services/generation-api.service';
+import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -16,6 +17,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly draft = inject(TravelDraftService);
   private readonly generationApi = inject(GenerationApiService);
+  private readonly quota = inject(SubscriptionQuotaService);
   private readonly router = inject(Router);
   private intervalId?: ReturnType<typeof setInterval>;
   private redirectId?: ReturnType<typeof setTimeout>;
@@ -96,6 +98,17 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.quota.canGenerateVideo()) {
+      this.router.navigate(['/pricing'], {
+        queryParams: { reason: 'token-limit' },
+        replaceUrl: true,
+      });
+      this.percent.set(0);
+      this.completed.set([]);
+      this.activeIndex.set(0);
+      return;
+    }
+
     this.errorMessage.set('');
     this.result.set(null);
     this.isGenerating.set(true);
@@ -120,6 +133,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       this.draft.travelId(),
     ).subscribe({
       next: (response) => {
+        this.quota.consumeVideoToken();
         this.result.set(response);
         this.percent.set(100);
         this.activeIndex.set(this.steps.length - 1);

@@ -71,15 +71,22 @@
           <strong>{{ photoCount() }}</strong>
           <span>Photos</span>
         </a>
+        <button class="profile-token-card" type="button" (click)="onTokenCardClick()">
+          <strong>{{ quota.remainingVideoTokens() }}</strong>
+          <span>Tokens vidéo restants</span>
+        </button>
       </section>
 
       <section class="profile-grid">
         <article class="profile-panel">
           <div class="profile-panel__heading">
             <h2>Abonnement</h2>
-            <span>{{ profile.plan }}</span>
+            <span>{{ quota.currentPlan().name }}</span>
           </div>
-          <p class="profile-copy">Votre formule actuelle détermine le volume de souvenirs et d'exports disponibles.</p>
+          <p class="profile-copy">
+            Votre formule actuelle détermine le volume de souvenirs et d'exports disponibles.
+            Il vous reste {{ quota.remainingVideoTokens() }} génération(s) vidéo.
+          </p>
           <a class="btn btn--glass" routerLink="/pricing">Voir les offres</a>
         </article>
       </section>

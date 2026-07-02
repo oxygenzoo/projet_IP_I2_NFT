@@ -114,6 +114,12 @@ export const routes: Routes = [
     title: 'NFT',
   },
   {
+    path: 'payment/:planId',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/payment/payment-page.component').then((component) => component.PaymentPageComponent),
+    title: 'Paiement | NFT',
+  },
+  {
     path: 'organisations',
     loadComponent: () =>
       import('./pages/organization/organization-page.component').then((component) => component.OrganizationPageComponent),

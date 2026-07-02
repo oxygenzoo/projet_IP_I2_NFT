@@ -234,6 +234,7 @@ img {
 .profile-page,
 .notifications-page,
 .pricing-page,
+.payment-page,
 .admin-page {
   min-height: 100dvh;
 }
@@ -2369,6 +2370,7 @@ img {
 
 .profile-stat-grid article,
 .profile-stat-grid a,
+.profile-stat-grid button,
 .profile-panel,
 .admin-stat-grid article,
 .admin-panel {
@@ -2378,11 +2380,18 @@ img {
 }
 
 .profile-stat-grid article,
-.profile-stat-grid a {
+.profile-stat-grid a,
+.profile-stat-grid button {
   color: inherit;
   display: block;
   padding: 1.2rem;
   text-decoration: none;
+}
+
+.profile-stat-grid button {
+  cursor: default;
+  font: inherit;
+  text-align: left;
 }
 
 .profile-stat-grid strong {
@@ -2798,6 +2807,17 @@ img {
   margin-inline: auto;
 }
 
+.pricing-notice {
+  background: rgba(255, 197, 51, 0.12);
+  border: 1px solid rgba(255, 197, 51, 0.34);
+  border-radius: 0.8rem;
+  color: #ffe5a3;
+  font-weight: 800;
+  margin: 1.4rem auto 0;
+  max-width: 42rem;
+  padding: 0.95rem 1rem;
+}
+
 .pricing-grid {
   display: grid;
   gap: 1rem;
@@ -2868,6 +2888,150 @@ img {
   content: "✓";
   font-weight: 900;
   margin-right: 0.55rem;
+}
+
+.plan-current {
+  cursor: default;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.payment-page {
+  padding: 2rem 4.5vw 5rem;
+}
+
+.payment-shell {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.65fr);
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.payment-copy {
+  align-self: start;
+  padding: 2rem 1rem 1rem 0;
+}
+
+.payment-copy h1,
+.payment-success h1 {
+  font-size: clamp(2.2rem, 5vw, 4.8rem);
+  letter-spacing: 0;
+  line-height: 0.96;
+  margin: 0;
+}
+
+.payment-copy p,
+.payment-success p,
+.payment-summary p,
+.payment-disclaimer {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.payment-form,
+.payment-summary,
+.payment-success {
+  border-radius: 1rem;
+  padding: 1.35rem;
+}
+
+.payment-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.payment-form label {
+  color: #ffffff;
+  display: grid;
+  font-size: 0.88rem;
+  font-weight: 800;
+  gap: 0.4rem;
+}
+
+.payment-form input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.65rem;
+  color: #ffffff;
+  min-height: 3rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.payment-row {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.payment-card-preview {
+  background:
+    linear-gradient(135deg, rgba(74, 93, 255, 0.92), rgba(255, 79, 139, 0.86)),
+    #15151b;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 1rem;
+  box-shadow: 0 24px 54px rgba(255, 79, 139, 0.18);
+  display: grid;
+  gap: 1.6rem;
+  margin-bottom: 0.3rem;
+  min-height: 12rem;
+  padding: 1.2rem;
+}
+
+.payment-card-preview span,
+.payment-card-preview small {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 800;
+}
+
+.payment-card-preview strong {
+  align-self: end;
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  letter-spacing: 0.04em;
+}
+
+.payment-summary {
+  align-self: start;
+}
+
+.payment-summary ul {
+  display: grid;
+  gap: 0.7rem;
+  list-style: none;
+  margin: 1.2rem 0;
+  padding: 0;
+}
+
+.payment-summary li {
+  color: #e5e5ea;
+}
+
+.payment-summary li::before {
+  color: var(--gold);
+  content: "✓";
+  font-weight: 900;
+  margin-right: 0.55rem;
+}
+
+.payment-disclaimer {
+  font-size: 0.82rem;
+  margin: 0;
+  text-align: center;
+}
+
+.payment-success {
+  display: grid;
+  gap: 1rem;
+  margin: 6rem auto 0;
+  max-width: 720px;
+  text-align: center;
+}
+
+.payment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
 }
 
 @keyframes mini-progress {

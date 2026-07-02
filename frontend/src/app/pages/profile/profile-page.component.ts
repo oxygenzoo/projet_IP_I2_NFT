@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Subscription, catchError, forkJoin, of } from 'rxjs';
 
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
+import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
@@ -15,9 +16,12 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 export class ProfilePageComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
+  protected readonly quota = inject(SubscriptionQuotaService);
   private readonly router = inject(Router);
   private readonly travelApiService = inject(TravelApiService);
   private statsSubscription?: Subscription;
+  private secretResetClicks = 0;
+  private secretResetTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly profile = signal<ConnectedProfile | null>(null);
   protected readonly isLoading = signal(true);
@@ -44,6 +48,10 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.statsSubscription?.unsubscribe();
+
+    if (this.secretResetTimer) {
+      clearTimeout(this.secretResetTimer);
+    }
   }
 
   protected async saveProfile(): Promise<void> {
@@ -103,6 +111,24 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     };
     reader.onerror = () => this.avatarError.set("Impossible de lire l'image.");
     reader.readAsDataURL(file);
+  }
+
+  protected onTokenCardClick(): void {
+    this.secretResetClicks += 1;
+
+    if (this.secretResetTimer) {
+      clearTimeout(this.secretResetTimer);
+    }
+
+    this.secretResetTimer = setTimeout(() => {
+      this.secretResetClicks = 0;
+    }, 1600);
+
+    if (this.secretResetClicks >= 5) {
+      this.quota.resetVideoTokens();
+      this.feedbackMessage.set('Tokens de démo réinitialisés.');
+      this.secretResetClicks = 0;
+    }
   }
 
   private async loadProfile(): Promise<void> {

@@ -9,6 +9,9 @@
     <p>
       Les offres sont chargees depuis le backend pour garder les prix alignes avec la production.
     </p>
+    @if (noticeMessage()) {
+      <div class="pricing-notice" role="status">{{ noticeMessage() }}</div>
+    }
   </section>
 
   @if (isLoading()) {
@@ -43,9 +46,18 @@
               <li>{{ feature }}</li>
             }
           </ul>
-          <a class="btn" [class.btn--primary]="plan.highlighted" [class.btn--glass]="!plan.highlighted" routerLink="/upload">
-            Upgrade
-          </a>
+          @if (quota.isCurrentPlan(plan.id)) {
+            <span class="btn btn--glass plan-current">Plan actuel</span>
+          } @else {
+            <a
+              class="btn"
+              [class.btn--primary]="plan.highlighted"
+              [class.btn--glass]="!plan.highlighted"
+              [routerLink]="['/payment', plan.id]"
+            >
+              Upgrade
+            </a>
+          }
         </article>
       } @empty {
         <article class="empty-rail empty-rail--wide">
