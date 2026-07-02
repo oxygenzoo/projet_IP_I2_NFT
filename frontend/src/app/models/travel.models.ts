@@ -47,6 +47,8 @@ export interface Episode {
   shareToken?: string;
   exportStatus?: 'idle' | 'pending' | 'ready' | 'failed' | string;
   videoUrl?: string;
+  favorite?: boolean;
+  sharedBy?: string;
   scenes: Scene[];
 }
 

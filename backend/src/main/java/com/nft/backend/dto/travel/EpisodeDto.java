@@ -20,6 +20,7 @@ public record EpisodeDto(
         String remaining,
         String exportStatus,
         String videoUrl,
+        boolean favorite,
         List<String> keyMoments,
         List<SceneDto> scenes) {
 }

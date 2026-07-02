@@ -69,11 +69,12 @@ public class EpisodeService {
             episode.updateExport("ready", videoUrl);
         }
 
-        for (GeneratedSceneRequest scene : scenes) {
+        for (int index = 0; index < scenes.size(); index++) {
+            GeneratedSceneRequest scene = scenes.get(index);
             episode.addScene(new EpisodeScene(
                     episode,
                     scene.order(),
-                    photoFor(scene.photoFilename(), photos),
+                    photoFor(scene.photoFilename(), photos, index),
                     null,
                     scene.voiceOverText(),
                     "souvenir",
@@ -122,6 +123,13 @@ public class EpisodeService {
     public EpisodeResponse changeStatus(UUID travelId, UUID episodeId, EpisodeStatus status) {
         Episode episode = findEpisodeForTravel(travelId, episodeId);
         episode.changeStatus(status);
+        return EpisodeResponse.fromEntity(episodeRepository.save(episode));
+    }
+
+    @Transactional
+    public EpisodeResponse changeFavorite(UUID travelId, UUID episodeId, boolean favorite) {
+        Episode episode = findEpisodeForTravel(travelId, episodeId);
+        episode.setFavorite(favorite);
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));
     }
 
@@ -191,14 +199,18 @@ public class EpisodeService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    private Photo photoFor(String filename, List<Photo> photos) {
-        if (filename == null || filename.isBlank()) {
+    private Photo photoFor(String filename, List<Photo> photos, int index) {
+        if (photos == null || photos.isEmpty()) {
             return null;
+        }
+
+        if (filename == null || filename.isBlank()) {
+            return photos.get(index % photos.size());
         }
 
         return photos.stream()
                 .filter((photo) -> filename.equalsIgnoreCase(photo.getFilename()))
                 .findFirst()
-                .orElse(null);
+                .orElse(photos.get(index % photos.size()));
     }
 }

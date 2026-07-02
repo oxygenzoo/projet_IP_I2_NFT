@@ -81,7 +81,7 @@
       <div class="home-video-hero__copy">
         <p class="eyebrow">Votre espace voyage</p>
         @if (totalEpisodes() > 0) {
-          <h1>Vos souvenirs sont prêts.</h1>
+          <h1>Revivez vos plus beaux voyages.</h1>
           <p>Retrouvez vos voyages, vos souvenirs générés et vos photos dans votre bibliothèque.</p>
           <div class="hero-actions">
             <a class="btn btn--primary" routerLink="/library">Voir mes souvenirs</a>
@@ -123,19 +123,12 @@
         <a class="rail-link" routerLink="/library">Voir tout</a>
       </div>
       <div class="wide-card-row">
-        @for (travel of recommendedTravels(); track travel.id) {
-          <a class="wide-card" [routerLink]="travelPlayerLink(travel)">
-            <img [src]="travel.coverImage" [alt]="travel.title" loading="lazy" />
-            <div>
-              <span>{{ travel.destination }}</span>
-              <strong>{{ travel.title }}</strong>
-              <p>{{ travel.description }}</p>
-            </div>
-          </a>
+        @for (episode of favoriteEpisodes(); track episode.id) {
+          <app-episode-card [episode]="episode"></app-episode-card>
         } @empty {
           <article class="empty-rail empty-rail--wide">
             <strong>Aucun favori pour le moment</strong>
-            <span>Ils seront calculés depuis vos voyages.</span>
+            <span>Ajoutez un souvenir en favori depuis sa page détail.</span>
           </article>
         }
       </div>

@@ -10,35 +10,42 @@
     <section class="api-state api-state--error glass-panel" role="alert">
       <h1>Souvenir indisponible</h1>
       <p>{{ errorMessage() }}</p>
-      <a class="btn btn--primary" routerLink="/">Retour</a>
     </section>
   } @else if (episode(); as episode) {
-    <section class="episode-hero" [style.--cover-image]="coverImage()">
+    <section class="episode-hero public-episode-hero" [style.--cover-image]="coverImage()">
       <div class="episode-hero__content">
-        <p class="eyebrow">Souvenir partage</p>
+        <p class="eyebrow">{{ sharedByLabel() }}</p>
         <h1>{{ episode.title }}</h1>
-        <p>{{ episode.summary || episode.introText }}</p>
-        <div class="metadata-row">
-          <span>{{ episode.location || episode.locationName }}</span>
-          @if (episode.videoUrl) {
-            <span>Souvenir disponible</span>
-          }
-          <span>Lecture seule</span>
-        </div>
-        <div class="hero-actions">
-          @if (episode.videoUrl) {
-            <a class="btn btn--primary" [href]="episode.videoUrl" target="_blank" rel="noreferrer">
+        <p>{{ summary(episode) }}</p>
+        @if (metadataItems(episode).length) {
+          <div class="metadata-row">
+            @for (item of metadataItems(episode); track item) {
+              <span>{{ item }}</span>
+            }
+          </div>
+        }
+        @if (episode.videoUrl) {
+          <div class="hero-actions">
+            <a class="btn btn--primary" href="#souvenir-public">
               <span class="play-icon"></span>
-              Regarder
+              Regarder le souvenir
             </a>
-          }
-        </div>
+          </div>
+        } @else {
+          <p class="episode-action-state">Ce souvenir a été partagé, mais la vidéo n'est pas encore disponible.</p>
+        }
       </div>
     </section>
 
     @if (episode.videoUrl) {
-      <section class="public-video-shell">
+      <section id="souvenir-public" class="public-video-shell glass-panel">
         <video class="video-player__media" [src]="episode.videoUrl" controls playsinline preload="metadata"></video>
+        <div class="public-video-shell__caption">
+          <strong>{{ episode.title }}</strong>
+          @if (episode.sharedBy) {
+            <span>Partagé par {{ episode.sharedBy }}</span>
+          }
+        </div>
       </section>
     }
   }

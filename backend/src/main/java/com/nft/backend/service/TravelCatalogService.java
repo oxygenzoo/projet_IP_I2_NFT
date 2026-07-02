@@ -14,6 +14,7 @@ import com.nft.backend.dto.travel.TravelDto;
 import com.nft.backend.model.Episode;
 import com.nft.backend.model.EpisodeScene;
 import com.nft.backend.model.EpisodeStatus;
+import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.TravelRepository;
@@ -135,10 +136,11 @@ public class TravelCatalogService {
 
     private EpisodeDto toEpisodeDto(Episode episode, boolean includeScenes) {
         int sceneCount = episode.getScenes() == null ? 0 : episode.getScenes().size();
-        int photoCount = episode.getTravel().getPhotos() == null ? sceneCount : episode.getTravel().getPhotos().size();
-        String cover = episode.getTravel().getPhotos() == null || episode.getTravel().getPhotos().isEmpty()
+        List<Photo> photos = episode.getTravel().getPhotos() == null ? List.of() : episode.getTravel().getPhotos();
+        int photoCount = photos.isEmpty() ? sceneCount : photos.size();
+        String cover = photos.isEmpty()
                 ? ""
-                : episode.getTravel().getPhotos().getFirst().getImageUrl();
+                : photos.getFirst().getImageUrl();
 
         return new EpisodeDto(
                 episode.getId().toString(),
@@ -158,15 +160,16 @@ public class TravelCatalogService {
                 "",
                 exportStatusFor(episode),
                 valueOrDefault(episode.getVideoUrl(), ""),
+                episode.isFavorite(),
                 List.of(),
                 includeScenes
                         ? episode.getScenes().stream()
-                                .map(this::toSceneDto)
+                                .map((scene) -> toSceneDto(scene, fallbackPhotoUrl(photos, scene.getOrder())))
                                 .toList()
                         : List.of());
     }
 
-    private SceneDto toSceneDto(EpisodeScene scene) {
+    private SceneDto toSceneDto(EpisodeScene scene, String fallbackImageUrl) {
         return new SceneDto(
                 scene.getId().toString(),
                 scene.getOrder(),
@@ -175,9 +178,18 @@ public class TravelCatalogService {
                 scene.getVoiceOverText(),
                 scene.getType(),
                 scene.getGenerationStatus(),
-                scene.getPhotoUrl(),
+                valueOrDefault(scene.getPhotoUrl(), fallbackImageUrl),
                 scene.isAiReconstructed(),
                 scene.getAiPrompt());
+    }
+
+    private String fallbackPhotoUrl(List<Photo> photos, int sceneOrder) {
+        if (photos == null || photos.isEmpty()) {
+            return "";
+        }
+
+        int index = Math.max(0, sceneOrder - 1) % photos.size();
+        return photos.get(index).getImageUrl();
     }
 
     private Optional<UUID> parseUuid(String id) {

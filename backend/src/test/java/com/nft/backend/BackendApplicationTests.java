@@ -41,6 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -561,5 +562,29 @@ class BackendApplicationTests {
                         .param("fail", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exportStatus").value("failed"));
+    }
+
+    @Test
+    void updatesEpisodeFavoriteState() throws Exception {
+        Episode episode = episodeRepository.save(new Episode(
+                travelRepository.save(new Travel("Bali", "Bali", "Production")),
+                1,
+                "Arrivee",
+                "Ubud",
+                null,
+                "Resume",
+                "",
+                "Cinematographique",
+                EpisodeStatus.READY));
+
+        mockMvc.perform(patch("/api/travels/{travelId}/episodes/{episodeId}/favorite",
+                        episode.getTravel().getId(), episode.getId())
+                        .param("favorite", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.favorite").value(true));
+
+        mockMvc.perform(get("/api/episodes/{id}", episode.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.favorite").value(true));
     }
 }

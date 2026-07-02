@@ -92,6 +92,12 @@ img {
   transform: translateY(-2px);
 }
 
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.62;
+  transform: none;
+}
+
 .btn--primary {
   background: linear-gradient(135deg, var(--blue), var(--violet) 28%, var(--pink) 58%, var(--gold));
   box-shadow: 0 18px 44px rgba(255, 79, 139, 0.32);
@@ -107,6 +113,11 @@ img {
 
 .btn--ghost {
   background: transparent;
+}
+
+.btn--danger {
+  border-color: rgba(255, 95, 95, 0.42);
+  color: #ffb5b5;
 }
 
 .btn--wide {
@@ -2166,7 +2177,37 @@ img {
 .public-video-shell {
   margin: 0 auto;
   max-width: 1100px;
-  padding: 0 4.5vw 5rem;
+  padding: 1rem;
+  width: calc(100% - 9vw);
+}
+
+.public-video-shell .video-player__media {
+  border-radius: 0.85rem;
+  max-height: none;
+  max-width: none;
+  width: 100%;
+}
+
+.public-video-shell__caption {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  justify-content: space-between;
+  padding-top: 1rem;
+}
+
+.public-video-shell__caption strong {
+  font-size: 1.1rem;
+}
+
+.public-video-shell__caption span {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.public-episode-hero {
+  min-height: 66dvh;
 }
 
 .profile-page {

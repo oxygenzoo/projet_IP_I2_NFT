@@ -5,7 +5,7 @@
     <div class="library-heading">
       <p class="eyebrow">Photos</p>
       <h1>Bibliothèque photos</h1>
-      <span>Vos images importées, classées par voyage.</span>
+      <span>Les photos ne sont conservées que si leur stockage est explicitement prévu.</span>
     </div>
 
     @if (isLoading()) {
@@ -45,8 +45,11 @@
       </div>
     } @else {
       <section class="library-empty glass-panel">
-        <strong>Aucune photo importée</strong>
-        <span>Vos photos apparaîtront ici après un import.</span>
+        <strong>Aucune photo conservée ici</strong>
+        <span>
+          Conformément aux règles RGPD du projet, les photos importées servent uniquement à créer votre souvenir.
+          Elles sont envoyées temporairement pendant la génération, puis ne sont pas gardées dans cette bibliothèque.
+        </span>
         <a class="btn btn--primary" routerLink="/upload">Importer des photos</a>
       </section>
     }

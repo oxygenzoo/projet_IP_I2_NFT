@@ -21,6 +21,8 @@ public record EpisodeResponse(
         String shareToken,
         String exportStatus,
         String videoUrl,
+        boolean favorite,
+        String sharedBy,
         Instant generatedAt) {
 
     public static EpisodeResponse fromEntity(Episode episode) {
@@ -38,6 +40,22 @@ public record EpisodeResponse(
                 episode.getShareToken(),
                 episode.getVideoUrl() == null || episode.getVideoUrl().isBlank() ? episode.getExportStatus() : "ready",
                 episode.getVideoUrl(),
+                episode.isFavorite(),
+                sharedBy(episode),
                 episode.getGeneratedAt());
+    }
+
+    private static String sharedBy(Episode episode) {
+        if (episode.getTravel().getUser() == null) {
+            return "";
+        }
+
+        String email = episode.getTravel().getUser().getEmail();
+        if (email == null || email.isBlank()) {
+            return "";
+        }
+
+        int atIndex = email.indexOf('@');
+        return atIndex > 0 ? email.substring(0, atIndex) : email;
     }
 }

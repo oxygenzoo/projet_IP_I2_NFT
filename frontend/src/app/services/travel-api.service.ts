@@ -57,4 +57,16 @@ export class TravelApiService {
       { params: { fail } },
     );
   }
+
+  updateEpisodeFavorite(travelId: string, episodeId: string, favorite: boolean): Observable<Episode> {
+    return this.http.patch<Episode>(
+      `${this.apiUrl}/api/travels/${travelId}/episodes/${episodeId}/favorite`,
+      {},
+      { params: { favorite } },
+    );
+  }
+
+  deleteEpisode(travelId: string, episodeId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/travels/${travelId}/episodes/${episodeId}`);
+  }
 }

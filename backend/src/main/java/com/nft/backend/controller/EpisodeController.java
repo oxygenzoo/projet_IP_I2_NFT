@@ -68,6 +68,14 @@ public class EpisodeController {
         return episodeService.changeStatus(travelId, episodeId, request.status());
     }
 
+    @PatchMapping("/{episodeId}/favorite")
+    public EpisodeResponse changeEpisodeFavorite(
+            @PathVariable UUID travelId,
+            @PathVariable UUID episodeId,
+            @RequestParam boolean favorite) {
+        return episodeService.changeFavorite(travelId, episodeId, favorite);
+    }
+
     @DeleteMapping("/{episodeId}")
     public ResponseEntity<Void> deleteEpisode(@PathVariable UUID travelId, @PathVariable UUID episodeId) {
         episodeService.delete(travelId, episodeId);

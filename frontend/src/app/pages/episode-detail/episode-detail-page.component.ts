@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { API_URL } from '../../config/api.config';
 import { Episode, Scene, SceneGenerationStatus, Travel } from '../../models/travel.models';
@@ -20,12 +20,15 @@ const STATUS_LABELS: Record<SceneGenerationStatus, string> = {
 })
 export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly travelApiService = inject(TravelApiService);
   private readonly apiUrl = inject(API_URL);
   private episodeSubscription?: Subscription;
   private travelSubscription?: Subscription;
   private shareSubscription?: Subscription;
   private exportSubscription?: Subscription;
+  private favoriteSubscription?: Subscription;
+  private deleteSubscription?: Subscription;
 
   protected readonly episode = signal<Episode | null>(null);
   protected readonly travel = signal<Travel | null>(null);
@@ -33,7 +36,10 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
   protected readonly errorMessage = signal('');
   protected readonly shareMessage = signal('');
   protected readonly exportMessage = signal('');
+  protected readonly actionMessage = signal('');
   protected readonly isExporting = signal(false);
+  protected readonly isSavingFavorite = signal(false);
+  protected readonly isDeleting = signal(false);
   protected readonly coverImage = computed(() => `url(${this.episode()?.coverImage ?? ''})`);
   protected readonly sortedScenes = computed(() =>
     [...(this.episode()?.scenes ?? [])].sort(
@@ -68,6 +74,8 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
     this.travelSubscription?.unsubscribe();
     this.shareSubscription?.unsubscribe();
     this.exportSubscription?.unsubscribe();
+    this.favoriteSubscription?.unsubscribe();
+    this.deleteSubscription?.unsubscribe();
   }
 
   protected shareEpisode(): void {
@@ -109,6 +117,57 @@ export class EpisodeDetailPageComponent implements OnInit, OnDestroy {
       error: () => {
         this.isExporting.set(false);
         this.exportMessage.set('L’export a échoué.');
+      },
+    });
+  }
+
+  protected toggleFavorite(): void {
+    const episode = this.episode();
+
+    if (!episode || this.isSavingFavorite()) {
+      return;
+    }
+
+    const nextFavorite = !episode.favorite;
+    this.isSavingFavorite.set(true);
+    this.actionMessage.set('');
+    this.favoriteSubscription?.unsubscribe();
+    this.favoriteSubscription = this.travelApiService.updateEpisodeFavorite(
+      episode.travelId,
+      episode.id,
+      nextFavorite,
+    ).subscribe({
+      next: (updatedEpisode) => {
+        this.episode.set({ ...episode, ...updatedEpisode, favorite: nextFavorite });
+        this.isSavingFavorite.set(false);
+        this.actionMessage.set(nextFavorite ? 'Ajouté aux favoris.' : 'Retiré des favoris.');
+      },
+      error: () => {
+        this.isSavingFavorite.set(false);
+        this.actionMessage.set('Impossible de modifier le favori.');
+      },
+    });
+  }
+
+  protected deleteEpisode(): void {
+    const episode = this.episode();
+
+    if (!episode || this.isDeleting()) {
+      return;
+    }
+
+    if (typeof window !== 'undefined' && !window.confirm('Supprimer définitivement ce souvenir ?')) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+    this.actionMessage.set('Suppression en cours...');
+    this.deleteSubscription?.unsubscribe();
+    this.deleteSubscription = this.travelApiService.deleteEpisode(episode.travelId, episode.id).subscribe({
+      next: () => void this.router.navigate(['/library']),
+      error: () => {
+        this.isDeleting.set(false);
+        this.actionMessage.set('Suppression impossible pour le moment.');
       },
     });
   }

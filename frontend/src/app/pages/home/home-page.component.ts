@@ -26,7 +26,7 @@ export class HomePageComponent implements OnInit {
   protected readonly featured = computed(() => this.travels().find((travel) => travel.featured) ?? this.travels()[0] ?? null);
   protected readonly featuredEpisode = computed(() => this.featured()?.episodes[0] ?? null);
   protected readonly recentEpisodes = computed(() => this.episodes().slice(0, 6));
-  protected readonly recommendedTravels = computed(() => this.travels().filter((travel) => !travel.featured));
+  protected readonly favoriteEpisodes = computed(() => this.episodes().filter((episode) => episode.favorite).slice(0, 6));
   protected readonly heroImage = computed(() => `url(${this.featured()?.heroImage ?? ''})`);
   protected readonly profileName = computed(() => this.profile()?.name ?? 'Voyageur');
   protected readonly profileInitials = computed(() => this.profile()?.initials ?? 'NF');

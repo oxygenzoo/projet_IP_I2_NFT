@@ -62,6 +62,9 @@ public class Episode {
     @Column(name = "video_path")
     private String videoUrl;
 
+    @Column(name = "favorite", nullable = false)
+    private boolean favorite;
+
     @Convert(converter = EpisodeStatusConverter.class)
     @Column(name = "video_status", nullable = false, length = 20)
     private EpisodeStatus status = EpisodeStatus.DRAFT;
@@ -144,6 +147,10 @@ public class Episode {
         return videoUrl;
     }
 
+    public boolean isFavorite() {
+        return favorite;
+    }
+
     public EpisodeStatus getStatus() {
         return status;
     }
@@ -190,5 +197,9 @@ public class Episode {
     public void updateExport(String exportStatus, String videoUrl) {
         this.exportStatus = exportStatus;
         this.videoUrl = videoUrl;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 }
