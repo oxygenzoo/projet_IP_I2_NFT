@@ -24,30 +24,46 @@ public class TravelService {
 
     private final TravelRepository travelRepository;
     private final AuthenticatedUserService authenticatedUserService;
+    private final UserIdentityService userIdentityService;
     private final EpisodeCollaboratorRepository collaboratorRepository;
 
     public TravelService(
             TravelRepository travelRepository,
             AuthenticatedUserService authenticatedUserService,
+            UserIdentityService userIdentityService,
             EpisodeCollaboratorRepository collaboratorRepository) {
         this.travelRepository = travelRepository;
         this.authenticatedUserService = authenticatedUserService;
+        this.userIdentityService = userIdentityService;
         this.collaboratorRepository = collaboratorRepository;
     }
 
     @Transactional
     public TravelDto create(SaveTravelRequest request) {
-        UUID userId = resolveOwnerId();
-        LOGGER.info("Creating travel draft for userId={} title='{}'", userId, request.title().trim());
-        Travel travel = new Travel(
-                userId,
-                request.title().trim(),
-                clean(request.destination()),
-                request.startDate(),
-                request.endDate(),
-                clean(request.description()));
+        UUID userId = null;
+        String title = clean(request.title());
+        try {
+            userId = resolveOwnerId();
+            LOGGER.info("Creating travel draft for userId={} title='{}'", userId, title);
+            Travel travel = new Travel(
+                    userId,
+                    title,
+                    clean(request.destination()),
+                    request.startDate(),
+                    request.endDate(),
+                    clean(request.description()));
 
-        return toDto(travelRepository.save(travel));
+            return toDto(travelRepository.saveAndFlush(travel));
+        } catch (RuntimeException exception) {
+            LOGGER.error(
+                    "POST /api/travels failed userId={} title='{}' destinationPresent={} descriptionPresent={}",
+                    userId,
+                    title,
+                    request.destination() != null && !request.destination().isBlank(),
+                    request.description() != null && !request.description().isBlank(),
+                    exception);
+            throw exception;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -106,8 +122,7 @@ public class TravelService {
     }
 
     private UUID resolveOwnerId() {
-        AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.requireCurrentUser();
-        return user.id();
+        return userIdentityService.ensureCurrentUser().getId();
     }
 
     private void assertOwner(Travel travel) {

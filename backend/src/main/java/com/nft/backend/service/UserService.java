@@ -17,11 +17,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final AuthenticatedUserService authenticatedUserService;
+    private final UserIdentityService userIdentityService;
 
-    public UserService(UserRepository userRepository, AuthenticatedUserService authenticatedUserService) {
+    public UserService(UserRepository userRepository, UserIdentityService userIdentityService) {
         this.userRepository = userRepository;
-        this.authenticatedUserService = authenticatedUserService;
+        this.userIdentityService = userIdentityService;
     }
 
     @Transactional
@@ -45,30 +45,13 @@ public class UserService {
 
     @Transactional
     public UserDto me() {
-        AuthenticatedUserService.AuthenticatedUser current = authenticatedUserService.currentUser()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
-        return userRepository.findById(current.id())
-                .map(UserDto::fromEntity)
-                .orElseGet(() -> UserDto.fromEntity(userRepository.save(new User(
-                        current.id(),
-                        current.email().isBlank() ? current.id() + "@external.local" : current.email(),
-                        "external",
-                        true))));
+        return UserDto.fromEntity(userIdentityService.ensureCurrentUser());
     }
 
     @Transactional
     public UserDto updateLanguage(UpdateLanguageRequest request) {
-        AuthenticatedUserService.AuthenticatedUser current = authenticatedUserService.currentUser()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
         String language = request == null ? "fr" : cleanLanguage(request.language());
-        User user = userRepository.findById(current.id())
-                .orElseGet(() -> userRepository.save(new User(
-                        current.id(),
-                        current.email().isBlank() ? current.id() + "@external.local" : current.email(),
-                        "external",
-                        true)));
-        user.updateLanguage(language);
-        return UserDto.fromEntity(userRepository.save(user));
+        return UserDto.fromEntity(userIdentityService.updateLanguage(language));
     }
 
     private String cleanLanguage(String language) {

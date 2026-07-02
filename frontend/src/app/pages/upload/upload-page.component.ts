@@ -27,6 +27,7 @@ export class UploadPageComponent {
   private readonly creationState = inject(CreationStateService);
   private readonly travelApi = inject(TravelApiService);
   private readonly auth = inject(AuthService);
+  private draftTravelRequest: Promise<string> | null = null;
 
   protected readonly selectedImages = this.draft.selectedImages;
   protected readonly consentGiven = this.draft.consentRgpd;
@@ -101,8 +102,12 @@ export class UploadPageComponent {
   protected async createContributionLink(): Promise<void> {
     this.isCreatingLink.set(true);
     this.errors.set([]);
+    this.contributionFeedback.set('');
     try {
       const travelId = await this.ensureDraftTravel();
+      if (!travelId) {
+        throw new Error('Impossible de préparer un souvenir valide.');
+      }
       const link = await firstValueFrom(this.travelApi.createContributionLink(travelId));
       this.contributionLink.set(this.publicContributionUrl(link));
       this.contributionFeedback.set('Lien prêt à partager.');
@@ -222,34 +227,71 @@ export class UploadPageComponent {
   }
 
   private async ensureDraftTravel(): Promise<string> {
-    const existingTravelId = this.draft.travelId();
-    if (existingTravelId) {
-      return existingTravelId;
+    if (!this.draftTravelRequest) {
+      this.draftTravelRequest = this.resolveDraftTravel().finally(() => {
+        this.draftTravelRequest = null;
+      });
     }
 
+    return this.draftTravelRequest;
+  }
+
+  private async resolveDraftTravel(): Promise<string> {
     const accessToken = await this.requireAccessToken();
 
-    const activeTravelId = this.creationState.creation()?.travelId ?? null;
-    if (activeTravelId) {
-      this.draft.setTravelId(activeTravelId);
-      return activeTravelId;
+    for (const candidate of this.draftTravelCandidates()) {
+      if (await this.canUseTravel(candidate, accessToken)) {
+        this.activateDraftTravel(candidate);
+        return candidate;
+      }
     }
 
     const existingDraft = await this.findExistingDraftTravel(accessToken);
     if (existingDraft) {
-      this.draft.setTravelId(existingDraft.id);
-      this.creationState.startUpload(existingDraft.id);
+      this.activateDraftTravel(existingDraft.id);
       return existingDraft.id;
     }
 
     const travel = await firstValueFrom(this.travelApi.createTravel({
       title: 'Nouveau souvenir',
-      destination: '',
+      destination: null,
+      startDate: null,
+      endDate: null,
       description: 'Création en cours',
     }, accessToken));
-    this.draft.setTravelId(travel.id);
-    this.creationState.startUpload(travel.id);
+
+    if (!travel?.id) {
+      throw new Error("Le backend n'a pas retourné d'identifiant de souvenir.");
+    }
+
+    this.activateDraftTravel(travel.id);
     return travel.id;
+  }
+
+  private draftTravelCandidates(): string[] {
+    return [
+      this.draft.travelId(),
+      this.creationState.creation()?.travelId ?? null,
+    ].filter((travelId, index, all): travelId is string =>
+      Boolean(travelId) && all.indexOf(travelId) === index,
+    );
+  }
+
+  private activateDraftTravel(travelId: string): void {
+    this.draft.setTravelId(travelId);
+    this.creationState.startUpload(travelId);
+  }
+
+  private async canUseTravel(travelId: string, accessToken: string): Promise<boolean> {
+    try {
+      const travel = await firstValueFrom(this.travelApi.getTravel(travelId, accessToken));
+      return Boolean(travel?.id);
+    } catch {
+      if (this.draft.travelId() === travelId) {
+        this.draft.setTravelId(null);
+      }
+      return false;
+    }
   }
 
   private async findExistingDraftTravel(accessToken: string): Promise<{ id: string } | null> {
@@ -257,7 +299,6 @@ export class UploadPageComponent {
       const travels = await firstValueFrom(this.travelApi.getTravels(accessToken));
       return travels.find((travel) =>
         travel.title === 'Nouveau souvenir'
-        && travel.description === 'CrÃ©ation en cours'
         && travel.episodeCount === 0
       ) ?? null;
     } catch {
@@ -338,4 +379,3 @@ export class UploadPageComponent {
 function selectedGuard(selectedCount: number, consentGiven: boolean): boolean {
   return selectedCount === 0 || !consentGiven;
 }
-

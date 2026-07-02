@@ -8,10 +8,10 @@ import { Episode, Photo, PricingPlan, Scene, Travel } from '../models/travel.mod
 export interface SaveTravelPayload {
   userId?: string | null;
   title: string;
-  destination?: string;
+  destination?: string | null;
   startDate?: string | null;
   endDate?: string | null;
-  description?: string;
+  description?: string | null;
 }
 
 export interface ContributionLink {
@@ -36,8 +36,8 @@ export class TravelApiService {
     return this.http.get<Travel[]>(`${this.apiUrl}/api/travels`, this.authOptions(accessToken));
   }
 
-  getTravel(id: string): Observable<Travel> {
-    return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`);
+  getTravel(id: string, accessToken?: string): Observable<Travel> {
+    return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`, this.authOptions(accessToken));
   }
 
   createTravel(payload: SaveTravelPayload, accessToken?: string): Observable<Travel> {

@@ -29,14 +29,17 @@ public class TravelCatalogService {
     private final TravelRepository travelRepository;
     private final EpisodeRepository episodeRepository;
     private final AuthenticatedUserService authenticatedUserService;
+    private final UserIdentityService userIdentityService;
 
     public TravelCatalogService(
             TravelRepository travelRepository,
             EpisodeRepository episodeRepository,
-            AuthenticatedUserService authenticatedUserService) {
+            AuthenticatedUserService authenticatedUserService,
+            UserIdentityService userIdentityService) {
         this.travelRepository = travelRepository;
         this.episodeRepository = episodeRepository;
         this.authenticatedUserService = authenticatedUserService;
+        this.userIdentityService = userIdentityService;
     }
 
     @Transactional(readOnly = true)
@@ -356,8 +359,6 @@ public class TravelCatalogService {
     }
 
     private UUID currentOwnerId() {
-        AuthenticatedUserService.AuthenticatedUser current = authenticatedUserService.currentUser()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
-        return current.id();
+        return userIdentityService.ensureCurrentUser().getId();
     }
 }
