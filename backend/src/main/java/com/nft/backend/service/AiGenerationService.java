@@ -20,7 +20,6 @@ import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
-import com.nft.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +46,6 @@ public class AiGenerationService {
     private final EpisodeService episodeService;
     private final PhotoRepository photoRepository;
     private final TravelRepository travelRepository;
-    private final UserRepository userRepository;
     private final AuthenticatedUserService authenticatedUserService;
 
     private record GenerationImage(String filename, String contentType, byte[] bytes, long size) {
@@ -62,7 +60,6 @@ public class AiGenerationService {
             EpisodeService episodeService,
             PhotoRepository photoRepository,
             TravelRepository travelRepository,
-            UserRepository userRepository,
             AuthenticatedUserService authenticatedUserService) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofMillis(aiConnectTimeoutMs));
@@ -76,7 +73,6 @@ public class AiGenerationService {
         this.episodeService = episodeService;
         this.photoRepository = photoRepository;
         this.travelRepository = travelRepository;
-        this.userRepository = userRepository;
         this.authenticatedUserService = authenticatedUserService;
     }
 
@@ -103,7 +99,7 @@ public class AiGenerationService {
         Travel travel = travelRepository.findById(travelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
 
-        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
 
@@ -492,15 +488,13 @@ public class AiGenerationService {
     private void assertTravelOwner(UUID travelId, UUID ownerId) {
         Travel travel = travelRepository.findById(travelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
-        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
     }
 
     private String languageFor(UUID ownerId) {
-        return userRepository.findById(ownerId)
-                .map((user) -> valueOrDefault(user.getLanguage(), "fr"))
-                .orElse("fr");
+        return "fr";
     }
 
     private String extractPreferenceValue(String preferences, String key) {

@@ -190,10 +190,13 @@ export class UploadPageComponent {
         );
         this.uploadedPhotos.update((current) => [...current, ...uploaded]);
       } catch (error) {
-        this.errors.update((current) => [
-          ...current,
-          this.errorText(error, "Certaines photos n'ont pas pu être envoyées au backend."),
-        ]);
+        console.warn('Photo upload sync failed; keeping local selection for continuation.', error);
+        if (this.selectedCount() === 0) {
+          this.errors.update((current) => [
+            ...current,
+            this.errorText(error, "Certaines photos n'ont pas pu être envoyées au backend."),
+          ]);
+        }
       } finally {
         this.isUploading.set(false);
       }

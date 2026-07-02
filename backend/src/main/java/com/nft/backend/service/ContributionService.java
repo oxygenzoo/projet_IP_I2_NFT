@@ -50,7 +50,7 @@ public class ContributionService {
         Travel travel = travelRepository.findById(travelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
 
-        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
 

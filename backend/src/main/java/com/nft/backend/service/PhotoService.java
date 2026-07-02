@@ -17,6 +17,8 @@ import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.PhotoRepository;
 import com.nft.backend.repository.TravelRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -28,6 +30,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PhotoService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PhotoService.class);
 
     private static final Set<String> SUPPORTED_TYPES = Set.of(
             "image/jpeg",
@@ -83,6 +87,7 @@ public class PhotoService {
     public PhotoResponse upload(UUID travelId, MultipartFile file, boolean consentRgpd) {
         Travel travel = findTravel(travelId);
         assertOwner(travel);
+        LOGGER.info("Uploading photo for travelId={} filename={} sizeBytes={}", travelId, file == null ? "" : file.getOriginalFilename(), file == null ? 0 : file.getSize());
         return uploadForTravel(travel, file, consentRgpd);
     }
 
@@ -237,7 +242,7 @@ public class PhotoService {
         }
 
         if (file.getSize() > maxFileSize) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Photo file is too large");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Photo file is too large");
         }
 
         String type = normalizeType(file.getContentType());
@@ -268,7 +273,7 @@ public class PhotoService {
 
     private void assertOwner(Travel travel) {
         UUID currentUserId = authenticatedUserService.requireCurrentUserId();
-        if (travel.getUser() == null || !currentUserId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(currentUserId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
     }

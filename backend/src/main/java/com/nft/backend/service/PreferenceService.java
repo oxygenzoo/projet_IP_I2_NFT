@@ -64,7 +64,7 @@ public class PreferenceService {
         try {
             Travel travel = travelRepository.findById(java.util.UUID.fromString(travelId))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
-            if (travel.getUser() != null && user.id().equals(travel.getUser().getId())) {
+            if (travel.isOwnedBy(user.id())) {
                 return;
             }
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");

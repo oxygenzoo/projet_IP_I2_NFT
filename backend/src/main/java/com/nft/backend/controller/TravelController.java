@@ -10,6 +10,8 @@ import com.nft.backend.dto.travel.TravelDto;
 import com.nft.backend.service.TravelCatalogService;
 import com.nft.backend.service.TravelService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class TravelController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TravelController.class);
+
     private final TravelCatalogService travelCatalogService;
     private final TravelService travelService;
 
@@ -34,6 +38,7 @@ public class TravelController {
 
     @GetMapping("/travels")
     public List<TravelDto> getTravels() {
+        LOGGER.info("GET /api/travels");
         return travelService.getTravels();
     }
 

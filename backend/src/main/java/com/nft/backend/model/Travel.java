@@ -11,10 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -26,9 +23,8 @@ public class Travel {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id")
+    private UUID userId;
 
     @Column(nullable = false, length = 200)
     private String title;
@@ -61,8 +57,8 @@ public class Travel {
         this(null, title, destination, null, null, description);
     }
 
-    public Travel(User user, String title, String destination, LocalDate startDate, LocalDate endDate, String description) {
-        this.user = user;
+    public Travel(UUID userId, String title, String destination, LocalDate startDate, LocalDate endDate, String description) {
+        this.userId = userId;
         this.title = title;
         this.destination = destination;
         this.startDate = startDate;
@@ -78,8 +74,8 @@ public class Travel {
         return title;
     }
 
-    public User getUser() {
-        return user;
+    public UUID getUserId() {
+        return userId;
     }
 
     public String getDestination() {
@@ -110,8 +106,12 @@ public class Travel {
         return photos;
     }
 
-    public void update(User user, String title, String destination, LocalDate startDate, LocalDate endDate, String description) {
-        this.user = user;
+    public boolean isOwnedBy(UUID userId) {
+        return this.userId != null && this.userId.equals(userId);
+    }
+
+    public void update(UUID userId, String title, String destination, LocalDate startDate, LocalDate endDate, String description) {
+        this.userId = userId;
         this.title = title;
         this.destination = destination;
         this.startDate = startDate;

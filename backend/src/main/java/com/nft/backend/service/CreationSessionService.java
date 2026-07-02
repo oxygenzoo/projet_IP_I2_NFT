@@ -1,6 +1,7 @@
 package com.nft.backend.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.nft.backend.dto.creation.CreationSessionRequest;
@@ -45,16 +46,17 @@ public class CreationSessionService {
     }
 
     @Transactional(readOnly = true)
-    public CreationSessionResponse current() {
+    public Optional<CreationSessionResponse> current() {
         UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        LOGGER.info("Fetching current creation for userId={}", ownerId);
         return creationSessionRepository.findTopByOwnerIdAndStatusInOrderByUpdatedAtDesc(ownerId, ACTIVE_STATUSES)
-                .map(CreationSessionResponse::fromEntity)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No active creation"));
+                .map(CreationSessionResponse::fromEntity);
     }
 
     @Transactional
     public CreationSessionResponse start(CreationSessionRequest request) {
         UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        LOGGER.info("Creating creation session for userId={} travelId={} status={}", ownerId, request.travelId(), request.status());
         CreationSession session = new CreationSession(ownerId, request.travelId(), cleanStatus(request.status(), "uploading"));
         return CreationSessionResponse.fromEntity(creationSessionRepository.save(session));
     }
@@ -87,7 +89,7 @@ public class CreationSessionService {
 
         Travel travel = travelRepository.findById(resolvedTravelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found"));
-        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
         if (photoRepository.findByTravelIdOrderByIdAsc(resolvedTravelId).isEmpty()) {

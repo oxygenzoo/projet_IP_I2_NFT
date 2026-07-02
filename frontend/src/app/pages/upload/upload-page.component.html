@@ -165,7 +165,7 @@
       class="btn btn--primary btn--wide"
       [class.btn--disabled]="selectedCount() === 0 || !consentGiven() || isUploading() || isContinuing()"
       [attr.aria-disabled]="selectedCount() === 0 || !consentGiven() || isUploading() || isContinuing()"
-      [disabled]="isUploading() || isContinuing()"
+      [disabled]="selectedCount() === 0 || !consentGiven() || isUploading() || isContinuing()"
       (click)="continueToPreferences()"
     >
       {{ isUploading() ? 'Préparation...' : 'Continuer' }}

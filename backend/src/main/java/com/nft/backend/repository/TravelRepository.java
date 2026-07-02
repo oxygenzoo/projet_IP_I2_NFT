@@ -17,7 +17,7 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
             from Travel t
             left join t.episodes e
             left join EpisodeCollaborator c on c.episode = e
-            where t.user.id = :userId
+            where t.userId = :userId
                or c.userId = :userId
                or (:email <> '' and lower(c.email) = lower(:email))
             order by t.createdAt desc

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +28,8 @@ public class CreationSessionController {
     }
 
     @GetMapping("/current")
-    public CreationSessionResponse current() {
-        return creationSessionService.current();
+    public ResponseEntity<CreationSessionResponse> current() {
+        return ResponseEntity.of(creationSessionService.current());
     }
 
     @PostMapping
@@ -42,8 +43,18 @@ public class CreationSessionController {
         return creationSessionService.update(id, request);
     }
 
+    @PutMapping("/{id}")
+    public CreationSessionResponse replace(@PathVariable UUID id, @RequestBody CreationSessionRequest request) {
+        return creationSessionService.update(id, request);
+    }
+
     @PostMapping("/{id}/generate")
     public CreationSessionResponse generate(@PathVariable UUID id, @RequestBody CreationGenerationRequest request) {
+        return creationSessionService.launchGeneration(id, request.travelId(), request.preferences());
+    }
+
+    @PostMapping("/{id}/start-generation")
+    public CreationSessionResponse startGeneration(@PathVariable UUID id, @RequestBody CreationGenerationRequest request) {
         return creationSessionService.launchGeneration(id, request.travelId(), request.preferences());
     }
 }

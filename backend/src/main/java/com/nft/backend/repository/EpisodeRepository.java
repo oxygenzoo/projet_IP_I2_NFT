@@ -19,7 +19,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
             select distinct e
             from Episode e
             left join EpisodeCollaborator c on c.episode = e
-            where e.travel.user.id = :userId
+            where e.travel.userId = :userId
                or c.userId = :userId
                or (:email <> '' and lower(c.email) = lower(:email))
             order by e.generatedAt desc
@@ -32,7 +32,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, UUID> {
             left join EpisodeCollaborator c on c.episode = e
             where e.id = :episodeId
               and (
-                e.travel.user.id = :userId
+                e.travel.userId = :userId
                 or c.userId = :userId
                 or (:email <> '' and lower(c.email) = lower(:email))
               )

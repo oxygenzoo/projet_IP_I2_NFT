@@ -76,7 +76,7 @@ public class EpisodeService {
             List<GeneratedSceneRequest> scenes,
             List<Photo> photos) {
         Travel travel = findTravel(travelId);
-        if (travel.getUser() == null || !ownerId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(ownerId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
         return createForTravel(travel, request, videoUrl, scenes, photos);
@@ -224,7 +224,7 @@ public class EpisodeService {
 
     private void assertOwner(Travel travel) {
         UUID currentUserId = authenticatedUserService.requireCurrentUserId();
-        if (travel.getUser() == null || !currentUserId.equals(travel.getUser().getId())) {
+        if (!travel.isOwnedBy(currentUserId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }
     }
@@ -232,7 +232,7 @@ public class EpisodeService {
     private void assertCanRead(Travel travel) {
         AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.currentUser()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
-        boolean owner = travel.getUser() != null && user.id().equals(travel.getUser().getId());
+        boolean owner = travel.isOwnedBy(user.id());
         if (!owner && !collaboratorRepository.existsByTravelAndIdentity(travel.getId(), user.id(), user.email())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
         }

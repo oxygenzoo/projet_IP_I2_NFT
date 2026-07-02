@@ -1,15 +1,11 @@
 package com.nft.backend.model;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -36,9 +32,6 @@ public class User {
 
     @Column(nullable = false, length = 8)
     private String language = "fr";
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Travel> travels = new ArrayList<>();
 
     protected User() {
     }
@@ -82,10 +75,6 @@ public class User {
 
     public String getLanguage() {
         return language;
-    }
-
-    public List<Travel> getTravels() {
-        return travels;
     }
 
     public void updateLanguage(String language) {
