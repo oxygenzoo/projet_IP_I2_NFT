@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TravelPreferences } from '../../models/generation.models';
+import { CreationStateService } from '../../services/creation-state.service';
 import { PreferenceApiService } from '../../services/preference-api.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
@@ -20,6 +21,7 @@ interface PreferenceQuestion {
 })
 export class PreferencesPageComponent implements OnInit, OnDestroy {
   private readonly draft = inject(TravelDraftService);
+  private readonly creationState = inject(CreationStateService);
   private readonly preferenceApi = inject(PreferenceApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -122,6 +124,7 @@ export class PreferencesPageComponent implements OnInit, OnDestroy {
     }
 
     this.draft.setPreferences(preferences);
+    this.creationState.markPreferences(this.resolveTravelId());
 
     const travelId = this.resolveTravelId();
 

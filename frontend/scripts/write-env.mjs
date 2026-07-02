@@ -39,11 +39,15 @@ try {
 const apiUrl = process.env.API_URL || process.env.NG_APP_API_URL || 'http://localhost:8080';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NG_APP_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NG_APP_SUPABASE_ANON_KEY || '';
+const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.NG_APP_GOOGLE_CLIENT_ID || '';
+const googleApiKey = process.env.GOOGLE_API_KEY || process.env.NG_APP_GOOGLE_API_KEY || '';
 
 const content = `export const generatedEnvironment = {
   apiUrl: ${JSON.stringify(apiUrl)},
   supabaseUrl: ${JSON.stringify(supabaseUrl)},
   supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},
+  googleClientId: ${JSON.stringify(googleClientId)},
+  googleApiKey: ${JSON.stringify(googleApiKey)},
 } as const;
 `;
 

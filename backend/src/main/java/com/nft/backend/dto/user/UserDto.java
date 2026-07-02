@@ -10,7 +10,8 @@ public record UserDto(
         String email,
         Instant lastLogin,
         Boolean consentRgpd,
-        Instant consentDate) {
+        Instant consentDate,
+        String language) {
 
     public static UserDto fromEntity(User user) {
         return new UserDto(
@@ -18,6 +19,7 @@ public record UserDto(
                 user.getEmail(),
                 user.getLastLogin(),
                 user.getConsentRgpd(),
-                user.getConsentDate());
+                user.getConsentDate(),
+                user.getLanguage());
     }
 }

@@ -53,7 +53,7 @@ public class Episode {
     @Column(name = "music_mood", length = 200)
     private String musicMood;
 
-    @Transient
+    @Column(name = "share_token", unique = true, length = 96)
     private String shareToken;
 
     @Transient

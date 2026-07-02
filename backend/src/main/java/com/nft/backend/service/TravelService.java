@@ -8,6 +8,7 @@ import com.nft.backend.dto.travel.SaveTravelRequest;
 import com.nft.backend.dto.travel.TravelDto;
 import com.nft.backend.model.Travel;
 import com.nft.backend.model.User;
+import com.nft.backend.repository.EpisodeCollaboratorRepository;
 import com.nft.backend.repository.TravelRepository;
 import com.nft.backend.repository.UserRepository;
 import org.springframework.data.domain.Sort;
@@ -23,15 +24,23 @@ public class TravelService {
 
     private final TravelRepository travelRepository;
     private final UserRepository userRepository;
+    private final AuthenticatedUserService authenticatedUserService;
+    private final EpisodeCollaboratorRepository collaboratorRepository;
 
-    public TravelService(TravelRepository travelRepository, UserRepository userRepository) {
+    public TravelService(
+            TravelRepository travelRepository,
+            UserRepository userRepository,
+            AuthenticatedUserService authenticatedUserService,
+            EpisodeCollaboratorRepository collaboratorRepository) {
         this.travelRepository = travelRepository;
         this.userRepository = userRepository;
+        this.authenticatedUserService = authenticatedUserService;
+        this.collaboratorRepository = collaboratorRepository;
     }
 
     @Transactional
     public TravelDto create(SaveTravelRequest request) {
-        User user = findUser(request.userId());
+        User user = resolveOwner(request);
         Travel travel = new Travel(
                 user,
                 request.title().trim(),
@@ -45,7 +54,9 @@ public class TravelService {
 
     @Transactional(readOnly = true)
     public List<TravelDto> getTravels() {
-        return travelRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+        return authenticatedUserService.currentUser()
+                .map((user) -> travelRepository.findAccessibleByIdentity(user.id(), user.email()))
+                .orElse(List.of())
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -53,13 +64,16 @@ public class TravelService {
 
     @Transactional(readOnly = true)
     public TravelDto getTravel(UUID id) {
-        return toDto(findTravel(id));
+        Travel travel = findTravel(id);
+        assertCanRead(travel);
+        return toDto(travel);
     }
 
     @Transactional
     public TravelDto update(UUID id, SaveTravelRequest request) {
         Travel travel = findTravel(id);
-        User user = findUser(request.userId());
+        assertOwner(travel);
+        User user = resolveOwner(request);
         travel.update(
                 user,
                 request.title().trim(),
@@ -73,7 +87,9 @@ public class TravelService {
 
     @Transactional
     public void delete(UUID id) {
-        travelRepository.delete(findTravel(id));
+        Travel travel = findTravel(id);
+        assertOwner(travel);
+        travelRepository.delete(travel);
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +109,33 @@ public class TravelService {
 
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    private User resolveOwner(SaveTravelRequest request) {
+        return authenticatedUserService.currentUser()
+                .map((user) -> userRepository.findById(user.id())
+                        .orElseGet(() -> userRepository.save(new User(
+                                user.id(),
+                                user.email().isBlank() ? user.id() + "@external.local" : user.email(),
+                                "external",
+                                true))))
+                .orElseGet(() -> findUser(request.userId()));
+    }
+
+    private void assertOwner(Travel travel) {
+        UUID currentUserId = authenticatedUserService.requireCurrentUserId();
+        if (travel.getUser() == null || !currentUserId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
+    }
+
+    private void assertCanRead(Travel travel) {
+        AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+        boolean owner = travel.getUser() != null && user.id().equals(travel.getUser().getId());
+        if (!owner && !collaboratorRepository.existsByTravelAndIdentity(travel.getId(), user.id(), user.email())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
     }
 
     private TravelDto toDto(Travel travel) {

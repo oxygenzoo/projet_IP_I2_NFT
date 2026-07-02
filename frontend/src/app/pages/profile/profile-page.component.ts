@@ -1,11 +1,13 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Subscription, catchError, forkJoin, of } from 'rxjs';
+import { Subscription, catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
+import { AppLanguage, I18nService } from '../../services/i18n.service';
 import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelApiService } from '../../services/travel-api.service';
+import { UserProfileApiService } from '../../services/user-profile-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 
 @Component({
@@ -16,9 +18,11 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 export class ProfilePageComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
+  protected readonly i18n = inject(I18nService);
   protected readonly quota = inject(SubscriptionQuotaService);
   private readonly router = inject(Router);
   private readonly travelApiService = inject(TravelApiService);
+  private readonly userProfileApi = inject(UserProfileApiService);
   private statsSubscription?: Subscription;
   private secretResetClicks = 0;
   private secretResetTimer?: ReturnType<typeof setTimeout>;
@@ -39,6 +43,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     fullName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     avatarUrl: [''],
+    language: ['fr' as AppLanguage],
   });
 
   ngOnInit(): void {
@@ -64,7 +69,9 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     this.feedbackMessage.set('');
     this.errorMessage.set('');
 
-    const result = await this.authService.updateProfile(this.profileForm.getRawValue());
+    const formValue = this.profileForm.getRawValue();
+    const language = this.i18n.setLanguage(formValue.language);
+    const result = await this.authService.updateProfile({ ...formValue, language });
 
     if (!result.success) {
       this.errorMessage.set(result.message ?? 'Impossible de mettre à jour le profil.');
@@ -72,6 +79,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    await firstValueFrom(this.userProfileApi.updateLanguage(language)).catch(() => null);
     await this.loadProfile();
     this.feedbackMessage.set(result.message ?? 'Profil mis à jour.');
     this.isSaving.set(false);
@@ -144,6 +152,7 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
       fullName: profile.name,
       email: profile.email,
       avatarUrl: profile.avatarUrl ?? '',
+      language: this.i18n.setLanguage(profile.language),
     });
     this.isLoading.set(false);
   }

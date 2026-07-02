@@ -18,45 +18,65 @@ import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.TravelRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TravelCatalogService {
 
     private final TravelRepository travelRepository;
     private final EpisodeRepository episodeRepository;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public TravelCatalogService(TravelRepository travelRepository, EpisodeRepository episodeRepository) {
+    public TravelCatalogService(
+            TravelRepository travelRepository,
+            EpisodeRepository episodeRepository,
+            AuthenticatedUserService authenticatedUserService) {
         this.travelRepository = travelRepository;
         this.episodeRepository = episodeRepository;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     @Transactional(readOnly = true)
     public List<TravelDto> getTravels() {
-        return travelRepository.findAll().stream()
+        return authenticatedUserService.currentUser()
+                .map((user) -> travelRepository.findAccessibleByIdentity(user.id(), user.email()))
+                .orElse(List.of())
+                .stream()
                 .map(this::toTravelDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<TravelDto> getTravel(String id) {
+        AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
         return parseUuid(id)
-                .flatMap(travelRepository::findById)
+                .flatMap((uuid) -> travelRepository.findAccessibleByIdentity(user.id(), user.email())
+                        .stream()
+                        .filter((travel) -> travel.getId().equals(uuid))
+                        .findFirst())
                 .map(this::toTravelDto);
     }
 
     @Transactional(readOnly = true)
     public List<EpisodeDto> getEpisodes() {
-        return episodeRepository.findAll().stream()
+        return authenticatedUserService.currentUser()
+                .map((user) -> episodeRepository.findAccessibleByIdentity(user.id(), user.email()))
+                .orElse(List.of())
+                .stream()
                 .map((episode) -> toEpisodeDto(episode, false))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<EpisodeDto> getEpisode(String id) {
+        AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
         return parseUuid(id)
-                .flatMap(episodeRepository::findById)
+                .flatMap((uuid) -> episodeRepository.findAccessibleByIdentityAndId(uuid, user.id(), user.email()))
                 .map(this::toEpisodeDto);
     }
 

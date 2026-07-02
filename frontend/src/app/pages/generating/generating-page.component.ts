@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angu
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { GenerationResponse } from '../../models/generation.models';
-import { GenerationApiService } from '../../services/generation-api.service';
+import { CreationStateService } from '../../services/creation-state.service';
 import { SubscriptionQuotaService } from '../../services/subscription-quota.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
@@ -16,7 +16,7 @@ import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 export class GeneratingPageComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly draft = inject(TravelDraftService);
-  private readonly generationApi = inject(GenerationApiService);
+  private readonly creationState = inject(CreationStateService);
   private readonly quota = inject(SubscriptionQuotaService);
   private readonly router = inject(Router);
   private intervalId?: ReturnType<typeof setInterval>;
@@ -36,7 +36,7 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   protected readonly activeIndex = signal(0);
   protected readonly completed = signal<string[]>([]);
   protected readonly errorMessage = signal('');
-  protected readonly result = signal<GenerationResponse | null>(null);
+  protected readonly result = signal<GenerationResponse | null>(this.creationState.creation()?.result ?? null);
   protected readonly isGenerating = signal(false);
 
   ngOnInit(): void {
@@ -108,6 +108,23 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
   }
 
   private startGeneration(): void {
+    const existingCreation = this.creationState.creation();
+    if (existingCreation?.status === 'done') {
+      this.result.set(existingCreation.result ?? {
+        job_id: existingCreation.id ?? 'creation',
+        status: 'done',
+        message: 'Souvenir termine.',
+        selection_report: {},
+        script: { nb_episodes: 1, episodes: [{ episode_titre: 'Souvenir termine', scenes: [] }] },
+        videos: existingCreation.resultVideoUrl ? [existingCreation.resultVideoUrl] : [],
+        workdir: '',
+      });
+      this.percent.set(100);
+      this.completed.set(this.steps);
+      this.activeIndex.set(this.steps.length - 1);
+      return;
+    }
+
     const images = this.draft.selectedImages();
 
     if (images.length === 0) {
@@ -133,7 +150,6 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
     }
 
     this.errorMessage.set('');
-    this.result.set(null);
     this.isGenerating.set(true);
     this.percent.set(7);
     this.activeIndex.set(0);
@@ -149,27 +165,30 @@ export class GeneratingPageComponent implements OnInit, OnDestroy {
       this.completed.set(this.steps.slice(0, nextStepIndex));
     }, 700);
 
+    this.creationState.beginGeneration(images, this.draft.preferences(), this.draft.travelId());
     this.generationSubscription?.unsubscribe();
-    this.generationSubscription = this.generationApi.createEpisode(
-      images,
-      this.draft.preferences(),
-      this.draft.travelId(),
-    ).subscribe({
-      next: (response) => {
+    this.generationSubscription = new Subscription();
+
+    const watchId = setInterval(() => {
+      const creation = this.creationState.creation();
+      if (creation?.status === 'done') {
         this.quota.consumeVideoToken();
-        this.result.set(response);
+        this.result.set(creation.result ?? null);
         this.percent.set(100);
         this.activeIndex.set(this.steps.length - 1);
         this.completed.set(this.steps);
         this.isGenerating.set(false);
         this.clearTimers();
-      },
-      error: (error: Error) => {
-        this.errorMessage.set(error.message);
+        clearInterval(watchId);
+      }
+      if (creation?.status === 'error') {
+        this.errorMessage.set(creation.errorMessage ?? 'La génération a échoué.');
         this.isGenerating.set(false);
         this.clearTimers();
-      },
-    });
+        clearInterval(watchId);
+      }
+    }, 500);
+    this.generationSubscription.add(() => clearInterval(watchId));
   }
 
   private clearTimers(): void {

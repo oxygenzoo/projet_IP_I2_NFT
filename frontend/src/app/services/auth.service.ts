@@ -26,12 +26,14 @@ export interface ConnectedProfile {
   avatarUrl: string | null;
   initials: string;
   plan: string;
+  language: 'fr' | 'en' | 'es' | 'pt';
 }
 
 export interface UpdateProfileInput {
   fullName: string;
   email: string;
   avatarUrl: string;
+  language?: 'fr' | 'en' | 'es' | 'pt';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -170,6 +172,7 @@ export class AuthService {
           name: fullName,
           avatar_url: avatarUrl,
           picture: avatarUrl,
+          language: profile.language ?? 'fr',
         },
       });
 
@@ -306,7 +309,13 @@ export class AuthService {
       avatarUrl: avatarUrl || null,
       initials: this.initialsFromName(name),
       plan: this.firstText(metadata, ['plan']) || 'Découverte',
+      language: this.languageFromMetadata(metadata),
     };
+  }
+
+  private languageFromMetadata(metadata: Record<string, unknown>): 'fr' | 'en' | 'es' | 'pt' {
+    const language = this.firstText(metadata, ['language', 'locale']).slice(0, 2).toLowerCase();
+    return language === 'en' || language === 'es' || language === 'pt' ? language : 'fr';
   }
 
   private firstText(metadata: Record<string, unknown>, keys: string[]): string {

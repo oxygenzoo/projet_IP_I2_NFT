@@ -1,0 +1,55 @@
+<main class="flow-page">
+  <nav class="topbar topbar--flow">
+    <app-logo></app-logo>
+  </nav>
+
+  <section class="flow-shell contribute-shell">
+    @if (isLoading()) {
+      <section class="api-state glass-panel" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1>Vérification du lien...</h1>
+      </section>
+    } @else {
+      <div class="flow-heading">
+        <p class="eyebrow">Contribution photo</p>
+        <h1>Ajoutez vos photos à {{ title() }}.</h1>
+        <p>Ce lien permet uniquement de déposer des photos. Le propriétaire garde le contrôle de la suite.</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="upload-errors" role="alert">{{ errorMessage() }}</div>
+      }
+      @if (successMessage()) {
+        <p class="form-success">{{ successMessage() }}</p>
+      }
+
+      <article class="upload-zone glass-panel">
+        <div class="upload-zone__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3v12" />
+            <path d="m7 8 5-5 5 5" />
+            <path d="M5 16v3h14v-3" />
+          </svg>
+        </div>
+        <h2>Sélectionnez vos photos</h2>
+        <p>Images uniquement, 10 Mo maximum par fichier.</p>
+        <label class="btn btn--primary" for="contribution-photo-input">Choisir des photos</label>
+        <input id="contribution-photo-input" class="file-input" type="file" accept="image/*" multiple (change)="onFileSelection($event)" />
+      </article>
+
+      @if (selectedFiles().length) {
+        <div class="contribution-panel glass-panel">
+          <strong>{{ selectedFiles().length }} photo{{ selectedFiles().length > 1 ? 's' : '' }} prête{{ selectedFiles().length > 1 ? 's' : '' }}</strong>
+          <button class="btn btn--primary" type="button" [disabled]="isUploading()" (click)="upload()">
+            @if (isUploading()) {
+              <span class="spinner" aria-hidden="true"></span>
+              Envoi...
+            } @else {
+              Envoyer les photos
+            }
+          </button>
+        </div>
+      }
+    }
+  </section>
+</main>

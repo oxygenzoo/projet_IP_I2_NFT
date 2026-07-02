@@ -1,0 +1,67 @@
+package com.nft.backend.service;
+
+import java.util.List;
+import java.util.UUID;
+
+import com.nft.backend.dto.creation.CreationSessionRequest;
+import com.nft.backend.dto.creation.CreationSessionResponse;
+import com.nft.backend.model.CreationSession;
+import com.nft.backend.repository.CreationSessionRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
+public class CreationSessionService {
+
+    private static final List<String> ACTIVE_STATUSES = List.of("uploading", "preferences", "generating", "done", "error");
+
+    private final CreationSessionRepository creationSessionRepository;
+    private final AuthenticatedUserService authenticatedUserService;
+
+    public CreationSessionService(
+            CreationSessionRepository creationSessionRepository,
+            AuthenticatedUserService authenticatedUserService) {
+        this.creationSessionRepository = creationSessionRepository;
+        this.authenticatedUserService = authenticatedUserService;
+    }
+
+    @Transactional(readOnly = true)
+    public CreationSessionResponse current() {
+        UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        return creationSessionRepository.findTopByOwnerIdAndStatusInOrderByUpdatedAtDesc(ownerId, ACTIVE_STATUSES)
+                .map(CreationSessionResponse::fromEntity)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No active creation"));
+    }
+
+    @Transactional
+    public CreationSessionResponse start(CreationSessionRequest request) {
+        UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        CreationSession session = new CreationSession(ownerId, request.travelId(), cleanStatus(request.status(), "uploading"));
+        return CreationSessionResponse.fromEntity(creationSessionRepository.save(session));
+    }
+
+    @Transactional
+    public CreationSessionResponse update(UUID id, CreationSessionRequest request) {
+        UUID ownerId = authenticatedUserService.requireCurrentUserId();
+        CreationSession session = creationSessionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Creation not found"));
+        if (!ownerId.equals(session.getOwnerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Creation access denied");
+        }
+        session.update(cleanStatus(request.status(), null), request.travelId(), request.episodeId(), request.resultVideoUrl(), request.errorMessage());
+        return CreationSessionResponse.fromEntity(creationSessionRepository.save(session));
+    }
+
+    private String cleanStatus(String status, String fallback) {
+        if (status == null || status.isBlank()) {
+            return fallback;
+        }
+        String clean = status.trim().toLowerCase();
+        if (!ACTIVE_STATUSES.contains(clean)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid creation status");
+        }
+        return clean;
+    }
+}

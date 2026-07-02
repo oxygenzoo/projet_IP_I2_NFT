@@ -5,4 +5,6 @@ export const environment = {
   apiUrl: generatedEnvironment.apiUrl,
   supabaseUrl: generatedEnvironment.supabaseUrl,
   supabaseAnonKey: generatedEnvironment.supabaseAnonKey,
+  googleClientId: generatedEnvironment.googleClientId,
+  googleApiKey: generatedEnvironment.googleApiKey,
 } as const;

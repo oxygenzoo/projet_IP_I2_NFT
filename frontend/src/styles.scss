@@ -1296,6 +1296,15 @@ img {
   z-index: 40;
 }
 
+.floating-create--loading {
+  gap: 0.55rem;
+}
+
+.floating-create--loading .spinner {
+  height: 0.9rem;
+  width: 0.9rem;
+}
+
 .library-page {
   min-height: 100dvh;
 }
@@ -2576,7 +2585,8 @@ img {
   gap: 0.4rem;
 }
 
-.profile-form input {
+.profile-form input,
+.profile-identity-fields select {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0.8rem;
@@ -2586,7 +2596,16 @@ img {
   padding: 0 0.95rem;
 }
 
-.profile-form input:focus {
+.profile-identity-fields select {
+  width: 100%;
+}
+
+.profile-identity-fields option {
+  color: #111827;
+}
+
+.profile-form input:focus,
+.profile-identity-fields select:focus {
   border-color: rgba(255, 197, 51, 0.55);
 }
 

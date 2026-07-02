@@ -48,6 +48,30 @@
         (change)="onFileSelection($event)"
       />
 
+      <div class="cloud-actions" aria-label="Imports cloud">
+        <button class="btn btn--glass" type="button" [disabled]="!consentGiven() || isCloudImporting()" (click)="importFromDrive()">
+          @if (isCloudImporting()) {
+            <span class="spinner" aria-hidden="true"></span>
+          }
+          Importer depuis Google Drive
+        </button>
+        <button class="btn btn--glass" type="button" [disabled]="!consentGiven() || isCloudImporting()" (click)="importFromGooglePhotos()">
+          Importer depuis Google Photos
+        </button>
+        <button class="btn btn--glass" type="button" [disabled]="!consentGiven()" (click)="openICloudPicker(icloudInput)">
+          Importer depuis iCloud
+        </button>
+        <input
+          #icloudInput
+          class="file-input"
+          type="file"
+          accept="image/*"
+          multiple
+          [disabled]="!consentGiven()"
+          (change)="onICloudSelection($event)"
+        />
+      </div>
+
       <div class="upload-counter" aria-live="polite">
         @if (selectedCount() > 0) {
           <strong>
@@ -72,6 +96,25 @@
         </ul>
       </div>
     }
+
+    <section class="contribution-panel glass-panel">
+      <div>
+        <p class="eyebrow">Contribution</p>
+        <h2>Recevoir les photos d'un proche</h2>
+        <p>Le lien permet uniquement d'ajouter des photos à ce souvenir. Les préférences et la génération restent réservées au propriétaire.</p>
+      </div>
+      <button class="btn btn--glass" type="button" [disabled]="!consentGiven() || isCreatingLink()" (click)="createContributionLink()">
+        @if (isCreatingLink()) {
+          <span class="spinner" aria-hidden="true"></span>
+          Création...
+        } @else {
+          Créer un lien
+        }
+      </button>
+      @if (contributionLink()) {
+        <p class="contribution-link" aria-live="polite">{{ contributionLink() }}</p>
+      }
+    </section>
 
     @if (selectedImages().length) {
       <ul class="photo-previews" aria-label="Photos sélectionnées">
@@ -102,13 +145,14 @@
       </div>
     </aside>
 
-    <a
+    <button
+      type="button"
       class="btn btn--primary btn--wide"
       [class.btn--disabled]="selectedCount() === 0 || !consentGiven()"
       [attr.aria-disabled]="selectedCount() === 0 || !consentGiven()"
-      [routerLink]="selectedCount() > 0 && consentGiven() ? preferencesLink() : null"
+      (click)="continueToPreferences()"
     >
       Continuer
-    </a>
+    </button>
   </section>
 </main>

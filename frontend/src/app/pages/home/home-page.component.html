@@ -67,31 +67,6 @@
       </div>
     </section>
 
-    <section class="content-rail">
-      <div class="rail-heading">
-        <h2>Souvenirs récents</h2>
-        <span>Chargement</span>
-      </div>
-      <div class="card-row">
-        <article class="video-empty-card">
-          <strong>Aucun souvenir pour l'instant</strong>
-          <span>Vos souvenirs apparaîtront ici dès qu'ils seront générés.</span>
-        </article>
-      </div>
-    </section>
-
-    <section class="content-rail content-rail--last">
-      <div class="rail-heading">
-        <h2>Mes souvenirs</h2>
-        <span>Chargement</span>
-      </div>
-      <div class="card-row">
-        <article class="video-empty-card">
-          <strong>Aucun souvenir pour l'instant</strong>
-          <span>La section reste prête même avant votre premier souvenir.</span>
-        </article>
-      </div>
-    </section>
   } @else if (errorMessage()) {
     <section class="api-state api-state--error glass-panel" role="alert">
       <h1>API indisponible</h1>
@@ -117,28 +92,20 @@
       </div>
     </section>
 
+    @if (recentEpisodes().length) {
     <section class="content-rail">
       <div class="rail-heading">
-        <h2>Souvenirs recents</h2>
+          <h2>Souvenirs récents</h2>
       </div>
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
           <app-episode-card [episode]="episode"></app-episode-card>
-        } @empty {
-          <article class="video-empty-card video-empty-card--soft">
-            <img
-              src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80"
-              alt=""
-              loading="lazy"
-            />
-            <strong>Aucun souvenir pour l'instant</strong>
-            <span>Vos prochains souvenirs apparaîtront ici après la génération.</span>
-            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
-          </article>
         }
       </div>
     </section>
+    }
 
+    @if (favoriteEpisodes().length) {
     <section class="content-rail">
       <div class="rail-heading">
         <h2>Favoris</h2>
@@ -147,15 +114,12 @@
       <div class="wide-card-row">
         @for (episode of favoriteEpisodes(); track episode.id) {
           <app-episode-card [episode]="episode"></app-episode-card>
-        } @empty {
-          <article class="empty-rail empty-rail--wide">
-            <strong>Aucun favori pour le moment</strong>
-            <span>Ajoutez un souvenir en favori depuis sa page détail.</span>
-          </article>
         }
       </div>
     </section>
+    }
 
+    @if (recentEpisodes().length) {
     <section class="content-rail content-rail--last">
       <div class="rail-heading">
         <h2>Mes souvenirs</h2>
@@ -164,21 +128,16 @@
       <div class="card-row">
         @for (episode of recentEpisodes(); track episode.id) {
           <app-episode-card [episode]="episode" [compact]="true" destination="player"></app-episode-card>
-        } @empty {
-          <article class="video-empty-card video-empty-card--soft">
-            <img
-              src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=80"
-              alt=""
-              loading="lazy"
-            />
-            <strong>Aucun souvenir pour l'instant</strong>
-            <span>Quand vous en aurez, ils seront listés ici.</span>
-            <a class="btn btn--glass" routerLink="/upload">Créer un souvenir</a>
-          </article>
         }
       </div>
     </section>
+    }
   }
 
-  <a class="floating-create" routerLink="/upload">+ Créer un souvenir</a>
+  <a class="floating-create" [routerLink]="createButtonLink()" [class.floating-create--loading]="creationState.isActive()">
+    @if (creationState.isActive()) {
+      <span class="spinner" aria-hidden="true"></span>
+    }
+    {{ createButtonLabel() }}
+  </a>
 </main>

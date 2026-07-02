@@ -40,16 +40,19 @@ public class PhotoService {
 
     private final PhotoRepository photoRepository;
     private final TravelRepository travelRepository;
+    private final AuthenticatedUserService authenticatedUserService;
     private final Path uploadRoot;
     private final long maxFileSize;
 
     public PhotoService(
             PhotoRepository photoRepository,
             TravelRepository travelRepository,
+            AuthenticatedUserService authenticatedUserService,
             @Value("${app.upload.dir:uploads/}") String uploadDir,
             @Value("${app.upload.max-file-size-bytes:10485760}") long maxFileSize) {
         this.photoRepository = photoRepository;
         this.travelRepository = travelRepository;
+        this.authenticatedUserService = authenticatedUserService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
         this.maxFileSize = maxFileSize;
     }
@@ -57,6 +60,7 @@ public class PhotoService {
     @Transactional
     public PhotoResponse create(UUID travelId, PhotoMetadataRequest request) {
         Travel travel = findTravel(travelId);
+        assertOwner(travel);
         Photo photo = toPhoto(travel, request);
         return PhotoResponse.fromEntity(photoRepository.save(photo));
     }
@@ -64,6 +68,7 @@ public class PhotoService {
     @Transactional
     public List<PhotoResponse> createAll(UUID travelId, List<PhotoMetadataRequest> requests) {
         Travel travel = findTravel(travelId);
+        assertOwner(travel);
         List<Photo> photos = requests.stream()
                 .map((request) -> toPhoto(travel, request))
                 .toList();
@@ -77,6 +82,18 @@ public class PhotoService {
     @Transactional
     public PhotoResponse upload(UUID travelId, MultipartFile file, boolean consentRgpd) {
         Travel travel = findTravel(travelId);
+        assertOwner(travel);
+        return uploadForTravel(travel, file, consentRgpd);
+    }
+
+    @Transactional
+    public PhotoResponse uploadContribution(UUID travelId, MultipartFile file, boolean consentRgpd) {
+        Travel travel = findTravel(travelId);
+        return uploadForTravel(travel, file, consentRgpd);
+    }
+
+    private PhotoResponse uploadForTravel(Travel travel, MultipartFile file, boolean consentRgpd) {
+        UUID travelId = travel.getId();
         validateConsent(consentRgpd);
         validateFile(file);
 
@@ -113,9 +130,7 @@ public class PhotoService {
 
     @Transactional(readOnly = true)
     public List<PhotoResponse> getByTravel(UUID travelId) {
-        if (!travelRepository.existsById(travelId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found");
-        }
+        assertOwner(findTravel(travelId));
 
         return photoRepository.findByTravelIdOrderByIdAsc(travelId)
                 .stream()
@@ -150,6 +165,7 @@ public class PhotoService {
 
     @Transactional
     public void delete(UUID travelId, UUID photoId) {
+        assertOwner(findTravel(travelId));
         Photo photo = findPhotoForTravel(travelId, photoId);
 
         try {
@@ -248,5 +264,12 @@ public class PhotoService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private void assertOwner(Travel travel) {
+        UUID currentUserId = authenticatedUserService.requireCurrentUserId();
+        if (travel.getUser() == null || !currentUserId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
     }
 }

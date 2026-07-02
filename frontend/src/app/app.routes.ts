@@ -108,6 +108,12 @@ export const routes: Routes = [
     title: 'Episode partagé | NFT',
   },
   {
+    path: 'contribute/:token',
+    loadComponent: () =>
+      import('./pages/contribute/contribute-page.component').then((component) => component.ContributePageComponent),
+    title: 'Contribution | NFT',
+  },
+  {
     path: 'pricing',
     loadComponent: () =>
       import('./pages/pricing/pricing-page.component').then((component) => component.PricingPageComponent),

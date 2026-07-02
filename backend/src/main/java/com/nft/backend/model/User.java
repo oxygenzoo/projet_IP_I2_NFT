@@ -37,6 +37,9 @@ public class User {
     @Column(name = "consent_date")
     private Instant consentDate;
 
+    @Column(nullable = false, length = 8)
+    private String language = "fr";
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Travel> travels = new ArrayList<>();
 
@@ -48,6 +51,11 @@ public class User {
         this.passwordHash = passwordHash;
         this.consentRgpd = consentRgpd;
         this.consentDate = Boolean.TRUE.equals(consentRgpd) ? Instant.now() : null;
+    }
+
+    public User(UUID id, String email, String passwordHash, Boolean consentRgpd) {
+        this(email, passwordHash, consentRgpd);
+        this.id = id;
     }
 
     public UUID getId() {
@@ -74,7 +82,17 @@ public class User {
         return consentDate;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
     public List<Travel> getTravels() {
         return travels;
+    }
+
+    public void updateLanguage(String language) {
+        if (language != null && !language.isBlank()) {
+            this.language = language.trim().toLowerCase();
+        }
     }
 }

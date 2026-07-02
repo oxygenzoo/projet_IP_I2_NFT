@@ -4,11 +4,13 @@ import java.net.URI;
 import java.util.UUID;
 
 import com.nft.backend.dto.user.CreateUserRequest;
+import com.nft.backend.dto.user.UpdateLanguageRequest;
 import com.nft.backend.dto.user.UserDto;
 import com.nft.backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,5 +36,15 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable UUID id) {
         return userService.get(id);
+    }
+
+    @GetMapping("/me")
+    public UserDto getCurrentUser() {
+        return userService.me();
+    }
+
+    @PatchMapping("/me/language")
+    public UserDto updateLanguage(@RequestBody UpdateLanguageRequest request) {
+        return userService.updateLanguage(request);
     }
 }

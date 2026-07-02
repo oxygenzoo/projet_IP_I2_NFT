@@ -4,6 +4,8 @@ import { catchError, forkJoin, of } from 'rxjs';
 
 import { Episode, Travel } from '../../models/travel.models';
 import { AuthService, ConnectedProfile } from '../../services/auth.service';
+import { CreationStateService } from '../../services/creation-state.service';
+import { I18nService } from '../../services/i18n.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
 import { EpisodeCardComponent } from '../../shared/episode-card/episode-card.component';
@@ -36,6 +38,8 @@ const RENDER_SERVICES: RenderServiceStatus[] = [
 })
 export class HomePageComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  protected readonly creationState = inject(CreationStateService);
+  private readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private readonly travelApiService = inject(TravelApiService);
 
@@ -55,14 +59,23 @@ export class HomePageComponent implements OnInit {
   protected readonly profileAvatarUrl = computed(() => this.profile()?.avatarUrl ?? '');
   protected readonly totalPhotos = computed(() => this.travels().reduce((total, travel) => total + travel.photoCount, 0));
   protected readonly totalEpisodes = computed(() => this.episodes().length);
+  protected readonly createButtonLabel = computed(() =>
+    this.creationState.isActive() ? this.i18n.t('creationInProgress') : `+ ${this.i18n.t('createMemory')}`,
+  );
+  protected readonly createButtonLink = computed(() => this.creationState.routeForCurrent());
 
   ngOnInit(): void {
+    this.creationState.refreshFromBackend();
     void this.loadProfile();
     this.loadDashboard();
   }
 
   private async loadProfile(): Promise<void> {
-    this.profile.set(await this.authService.getCurrentProfile());
+    const profile = await this.authService.getCurrentProfile();
+    if (profile) {
+      this.i18n.setLanguage(profile.language);
+    }
+    this.profile.set(profile);
   }
 
   protected loadDashboard(): void {

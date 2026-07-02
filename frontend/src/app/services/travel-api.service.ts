@@ -5,6 +5,24 @@ import { Observable } from 'rxjs';
 import { API_URL } from '../config/api.config';
 import { Episode, Photo, PricingPlan, Scene, Travel } from '../models/travel.models';
 
+export interface SaveTravelPayload {
+  userId?: string | null;
+  title: string;
+  destination?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  description?: string;
+}
+
+export interface ContributionLink {
+  id: string;
+  travelId: string;
+  token: string;
+  url: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -20,6 +38,10 @@ export class TravelApiService {
 
   getTravel(id: string): Observable<Travel> {
     return this.http.get<Travel>(`${this.apiUrl}/api/travels/${id}`);
+  }
+
+  createTravel(payload: SaveTravelPayload): Observable<Travel> {
+    return this.http.post<Travel>(`${this.apiUrl}/api/travels`, payload);
   }
 
   getEpisodes(): Observable<Episode[]> {
@@ -40,6 +62,28 @@ export class TravelApiService {
 
   getPhotos(travelId: string): Observable<Photo[]> {
     return this.http.get<Photo[]>(`${this.apiUrl}/api/travels/${travelId}/photos`);
+  }
+
+  uploadPhoto(travelId: string, file: File, consentRgpd = true): Observable<Photo> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('consentRgpd', String(consentRgpd));
+    return this.http.post<Photo>(`${this.apiUrl}/api/travels/${travelId}/photos`, formData);
+  }
+
+  createContributionLink(travelId: string): Observable<ContributionLink> {
+    return this.http.post<ContributionLink>(`${this.apiUrl}/api/travels/${travelId}/contribution-links`, {});
+  }
+
+  getContributionInfo(token: string): Observable<{ travelId: string; title: string; expiresAt: string }> {
+    return this.http.get<{ travelId: string; title: string; expiresAt: string }>(`${this.apiUrl}/api/contributions/${token}`);
+  }
+
+  uploadContributionPhoto(token: string, file: File, consentRgpd = true): Observable<Photo> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('consentRgpd', String(consentRgpd));
+    return this.http.post<Photo>(`${this.apiUrl}/api/contributions/${token}/photos`, formData);
   }
 
   deletePhoto(travelId: string, photoId: string): Observable<void> {

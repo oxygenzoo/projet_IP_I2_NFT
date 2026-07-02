@@ -37,6 +37,15 @@
             @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
               <p class="form-error">Indiquez un email valide.</p>
             }
+            <label>
+              {{ i18n.t('language') }}
+              <select formControlName="language">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
+              </select>
+            </label>
             @if (avatarError()) {
               <p class="form-error">{{ avatarError() }}</p>
             }
@@ -45,7 +54,7 @@
 
         <div class="profile-hero-actions">
           <button class="btn btn--primary" type="submit" [disabled]="isSaving()">
-            {{ isSaving() ? 'Sauvegarde...' : 'Enregistrer' }}
+            {{ isSaving() ? i18n.t('saving') : i18n.t('save') }}
           </button>
           <button class="btn btn--ghost" type="button" (click)="logout()">Déconnexion</button>
         </div>

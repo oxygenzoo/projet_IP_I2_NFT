@@ -29,6 +29,20 @@ export interface GenerationResponse {
   workdir: string;
 }
 
+export type CreationStatus = 'uploading' | 'preferences' | 'generating' | 'done' | 'error';
+
+export interface CreationSession {
+  id: string;
+  ownerId: string;
+  travelId?: string | null;
+  episodeId?: string | null;
+  status: CreationStatus;
+  resultVideoUrl?: string | null;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TravelPreferenceResponse extends TravelPreferences {
   id: string;
   travelId: string;

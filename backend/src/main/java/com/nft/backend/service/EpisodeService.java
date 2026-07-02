@@ -13,6 +13,7 @@ import com.nft.backend.model.EpisodeScene;
 import com.nft.backend.model.EpisodeStatus;
 import com.nft.backend.model.Photo;
 import com.nft.backend.model.Travel;
+import com.nft.backend.repository.EpisodeCollaboratorRepository;
 import com.nft.backend.repository.EpisodeRepository;
 import com.nft.backend.repository.TravelRepository;
 import org.springframework.http.HttpStatus;
@@ -27,13 +28,21 @@ public class EpisodeService {
 
     private final EpisodeRepository episodeRepository;
     private final TravelRepository travelRepository;
+    private final AuthenticatedUserService authenticatedUserService;
+    private final EpisodeCollaboratorRepository collaboratorRepository;
 
     public record GeneratedSceneRequest(int order, String photoFilename, String voiceOverText) {
     }
 
-    public EpisodeService(EpisodeRepository episodeRepository, TravelRepository travelRepository) {
+    public EpisodeService(
+            EpisodeRepository episodeRepository,
+            TravelRepository travelRepository,
+            AuthenticatedUserService authenticatedUserService,
+            EpisodeCollaboratorRepository collaboratorRepository) {
         this.episodeRepository = episodeRepository;
         this.travelRepository = travelRepository;
+        this.authenticatedUserService = authenticatedUserService;
+        this.collaboratorRepository = collaboratorRepository;
     }
 
     @Transactional
@@ -54,6 +63,7 @@ public class EpisodeService {
             List<GeneratedSceneRequest> scenes,
             List<Photo> photos) {
         Travel travel = findTravel(travelId);
+        assertOwner(travel);
         Episode episode = new Episode(
                 travel,
                 request.episodeNumber(),
@@ -88,9 +98,7 @@ public class EpisodeService {
 
     @Transactional(readOnly = true)
     public List<EpisodeResponse> getByTravel(UUID travelId) {
-        if (!travelRepository.existsById(travelId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Travel not found");
-        }
+        assertCanRead(findTravel(travelId));
 
         return episodeRepository.findByTravelIdOrderByEpisodeNumberAsc(travelId)
                 .stream()
@@ -144,7 +152,7 @@ public class EpisodeService {
         Episode episode = findEpisodeForTravel(travelId, episodeId);
 
         if (episode.getShareToken() == null || episode.getShareToken().isBlank()) {
-            episode.enableSharing(episode.getId().toString());
+            episode.enableSharing(newShareToken());
         }
 
         return EpisodeResponse.fromEntity(episodeRepository.save(episode));
@@ -152,12 +160,8 @@ public class EpisodeService {
 
     @Transactional(readOnly = true)
     public EpisodeResponse getPublicEpisode(String shareToken) {
-        try {
-            return EpisodeResponse.fromEntity(episodeRepository.findById(UUID.fromString(shareToken))
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found")));
-        } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found", exception);
-        }
+        return EpisodeResponse.fromEntity(episodeRepository.findByShareToken(shareToken)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared episode not found")));
     }
 
     @Transactional
@@ -183,6 +187,7 @@ public class EpisodeService {
     }
 
     private Episode findEpisodeForTravel(UUID travelId, UUID episodeId) {
+        assertCanRead(findTravel(travelId));
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Episode not found"));
 
@@ -191,6 +196,22 @@ public class EpisodeService {
         }
 
         return episode;
+    }
+
+    private void assertOwner(Travel travel) {
+        UUID currentUserId = authenticatedUserService.requireCurrentUserId();
+        if (travel.getUser() == null || !currentUserId.equals(travel.getUser().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
+    }
+
+    private void assertCanRead(Travel travel) {
+        AuthenticatedUserService.AuthenticatedUser user = authenticatedUserService.currentUser()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required"));
+        boolean owner = travel.getUser() != null && user.id().equals(travel.getUser().getId());
+        if (!owner && !collaboratorRepository.existsByTravelAndIdentity(travel.getId(), user.id(), user.email())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Travel access denied");
+        }
     }
 
     private String newShareToken() {
