@@ -1,20 +1,8 @@
 <figure class="qr-code">
-  <svg
-    role="img"
-    [attr.aria-label]="label()"
-    [attr.viewBox]="viewBox()"
-    shape-rendering="crispEdges"
-  >
-    <rect
-      class="qr-code__background"
-      [attr.x]="backgroundOrigin()"
-      [attr.y]="backgroundOrigin()"
-      [attr.width]="backgroundSize()"
-      [attr.height]="backgroundSize()"
-    ></rect>
-    @for (cell of cells(); track cell.x + '-' + cell.y) {
-      <rect class="qr-code__module" [attr.x]="cell.x" [attr.y]="cell.y" width="1" height="1"></rect>
-    }
-  </svg>
+  @if (dataUrl()) {
+    <img [src]="dataUrl()" [alt]="label()" />
+  } @else {
+    <span class="qr-code__loading" aria-hidden="true"></span>
+  }
   <figcaption>Scannez pour ajouter des photos</figcaption>
 </figure>

@@ -408,6 +408,10 @@ export class UploadPageComponent implements OnDestroy {
       return link.url;
     }
 
+    if (link.url && !isLocalUrl(link.url)) {
+      return link.url;
+    }
+
     return `${window.location.origin}/contribute/${link.token}`;
   }
 }
@@ -422,5 +426,14 @@ function contributionPath(link: string): string {
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return link.startsWith('/contribute/') ? link : '';
+  }
+}
+
+function isLocalUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return ['localhost', '127.0.0.1', '0.0.0.0'].includes(url.hostname);
+  } catch {
+    return true;
   }
 }

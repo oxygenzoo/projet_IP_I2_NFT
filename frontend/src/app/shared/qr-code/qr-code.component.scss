@@ -15,18 +15,17 @@
   width: fit-content;
 }
 
-svg {
+img,
+.qr-code__loading {
   display: block;
   height: 10rem;
   width: 10rem;
 }
 
-.qr-code__background {
-  fill: #ffffff;
-}
-
-.qr-code__module {
-  fill: #050505;
+.qr-code__loading {
+  background:
+    linear-gradient(90deg, #050505 25%, transparent 25% 75%, #050505 75%) 0 0 / 1.5rem 1.5rem,
+    #ffffff;
 }
 
 figcaption {
