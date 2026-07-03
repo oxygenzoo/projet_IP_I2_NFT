@@ -16,6 +16,16 @@
         <p>Ce lien permet uniquement de déposer des photos. Le propriétaire garde le contrôle de la suite.</p>
       </div>
 
+      @if (contributionUrl()) {
+        <aside class="contribution-qr glass-panel" aria-label="QR code du lien de contribution">
+          <div>
+            <p class="eyebrow">Accès rapide</p>
+            <h2>Scannez ce QR code pour ouvrir ce lien sur un téléphone.</h2>
+          </div>
+          <app-qr-code [value]="contributionUrl()" label="QR code du lien de contribution"></app-qr-code>
+        </aside>
+      }
+
       @if (errorMessage()) {
         <div class="upload-errors" role="alert">{{ errorMessage() }}</div>
       }

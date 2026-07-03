@@ -9,11 +9,12 @@ import { CreationStateService } from '../../services/creation-state.service';
 import { TravelDraftService } from '../../services/travel-draft.service';
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { QrCodeComponent } from '../../shared/qr-code/qr-code.component';
 import { Photo } from '../../models/travel.models';
 
 @Component({
   selector: 'app-upload-page',
-  imports: [AppLogoComponent],
+  imports: [AppLogoComponent, QrCodeComponent],
   templateUrl: './upload-page.component.html',
   styleUrl: './upload-page.component.scss',
 })

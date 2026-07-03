@@ -4,10 +4,11 @@ import { firstValueFrom } from 'rxjs';
 
 import { TravelApiService } from '../../services/travel-api.service';
 import { AppLogoComponent } from '../../shared/app-logo/app-logo.component';
+import { QrCodeComponent } from '../../shared/qr-code/qr-code.component';
 
 @Component({
   selector: 'app-contribute-page',
-  imports: [AppLogoComponent],
+  imports: [AppLogoComponent, QrCodeComponent],
   templateUrl: './contribute-page.component.html',
   styleUrl: '../upload/upload-page.component.scss',
 })
@@ -21,8 +22,10 @@ export class ContributePageComponent implements OnInit {
   protected readonly isUploading = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly successMessage = signal('');
+  protected readonly contributionUrl = signal('');
 
   ngOnInit(): void {
+    this.contributionUrl.set(window.location.href);
     void this.loadContribution();
   }
 

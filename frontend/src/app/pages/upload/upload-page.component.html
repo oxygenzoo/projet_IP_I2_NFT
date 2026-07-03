@@ -116,17 +116,20 @@
       </button>
       @if (contributionLink()) {
         <div class="contribution-link" aria-live="polite">
-          <label>
-            Lien de contribution
-            <input type="text" [value]="contributionLink()" readonly />
-          </label>
-          <div class="contribution-link__actions">
-            <a class="btn btn--glass" [href]="contributionLink()" target="_blank" rel="noreferrer">Ouvrir</a>
-            <button class="btn btn--primary" type="button" (click)="copyContributionLink()">Copier</button>
+          <app-qr-code [value]="contributionLink()" label="QR code du lien de contribution"></app-qr-code>
+          <div class="contribution-link__details">
+            <label>
+              Lien de contribution
+              <input type="text" [value]="contributionLink()" readonly />
+            </label>
+            <div class="contribution-link__actions">
+              <a class="btn btn--glass" [href]="contributionLink()" target="_blank" rel="noreferrer">Ouvrir</a>
+              <button class="btn btn--primary" type="button" (click)="copyContributionLink()">Copier</button>
+            </div>
+            @if (contributionFeedback()) {
+              <span>{{ contributionFeedback() }}</span>
+            }
           </div>
-          @if (contributionFeedback()) {
-            <span>{{ contributionFeedback() }}</span>
-          }
         </div>
       }
     </section>
