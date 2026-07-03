@@ -304,9 +304,9 @@ public class AiGenerationService {
                 cleanOrDefault(stringValue(episode.get("episode_titre")), "Souvenir généré"),
                 cleanOrDefault(stringValue(episode.get("lieu")), ""),
                 parseDate(stringValue(episode.get("date"))),
-                cleanOrDefault(response.message(), ""),
-                "Génération IA terminée.",
-                cleanOrDefault(stringValue(response.script() == null ? null : response.script().get("preferences")), ""),
+                cleanOrDefault(narrativeSummary(episode), "Votre souvenir se raconte à travers les images sélectionnées."),
+                cleanOrDefault(stringValue(episode.get("outro")), ""),
+                cleanOrDefault(stringValue(episode.get("musique_ambiance")), "Cinematographique"),
                 EpisodeStatus.DONE);
 
         if (ownerId == null) {
@@ -458,6 +458,38 @@ public class AiGenerationService {
         }
 
         return cleanOrDefault(response.videos().getFirst(), "");
+    }
+
+    @SuppressWarnings("unchecked")
+    private String narrativeSummary(Map<String, Object> episode) {
+        String existingSummary = stringValue(episode.get("resume"));
+        if (!existingSummary.isBlank()) {
+            return existingSummary;
+        }
+
+        List<String> parts = new ArrayList<>();
+        String intro = stringValue(episode.get("intro"));
+        if (!intro.isBlank()) {
+            parts.add(intro);
+        }
+
+        Object scenesValue = episode.get("scenes");
+        if (scenesValue instanceof List<?> scenes) {
+            scenes.stream()
+                    .filter((scene) -> scene instanceof Map<?, ?>)
+                    .map((scene) -> (Map<String, Object>) scene)
+                    .map((scene) -> stringValue(scene.get("voix_off")))
+                    .filter((voiceOver) -> !voiceOver.isBlank())
+                    .limit(3)
+                    .forEach(parts::add);
+        }
+
+        String outro = stringValue(episode.get("outro"));
+        if (!outro.isBlank()) {
+            parts.add(outro);
+        }
+
+        return String.join(" ", parts).trim();
     }
 
     @SuppressWarnings("unchecked")

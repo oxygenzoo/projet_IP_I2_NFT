@@ -97,7 +97,7 @@ public class TravelCatalogService {
                 valueOrDefault(destination, ""),
                 null,
                 null,
-                response == null ? "" : valueOrDefault(response.message(), "Souvenir généré par IA.")));
+                response == null ? "" : valueOrDefault(firstEpisodeSummary(response), "Souvenir généré par IA.")));
 
         Episode episode = episodeRepository.save(new Episode(
                 travel,
@@ -174,7 +174,7 @@ public class TravelCatalogService {
                 episode.getEpisodeNumber(),
                 episode.getTitle(),
                 valueOrDefault(episode.getMusicMood(), ""),
-                valueOrDefault(episode.getIntroText(), ""),
+                displaySummaryFor(episode),
                 durationFor(episode),
                 valueOrDefault(episode.getLocationName(), ""),
                 formatDate(episode.getEpisodeDate()),
@@ -262,14 +262,84 @@ public class TravelCatalogService {
     }
 
     private String firstEpisodeSummary(GenerationResponse response) {
-        Map<String, Object> episode = firstEpisode(response);
-        Object value = episode.get("resume");
-        if (value instanceof String summary && !summary.isBlank()) {
+        return narrativeSummary(firstEpisode(response));
+    }
+
+    private String displaySummaryFor(Episode episode) {
+        String introText = valueOrDefault(episode.getIntroText(), "");
+        if (!isTechnicalGenerationMessage(introText)) {
+            return introText;
+        }
+
+        String rebuilt = narrativeSummaryFromScenes(episode);
+        return rebuilt.isBlank() ? introText : rebuilt;
+    }
+
+    private boolean isTechnicalGenerationMessage(String value) {
+        String normalized = value == null ? "" : value.strip().toLowerCase();
+        return normalized.equals("épisode généré par le service ia.")
+                || normalized.equals("episode généré par le service ia.")
+                || normalized.equals("episode genere par le service ia.")
+                || normalized.startsWith("le service ia render ");
+    }
+
+    private String narrativeSummaryFromScenes(Episode episode) {
+        StringBuilder builder = new StringBuilder();
+        int voiceOverCount = 0;
+        for (EpisodeScene scene : episode.getScenes()) {
+            if (voiceOverCount >= 3) {
+                break;
+            }
+            String voiceOver = valueOrDefault(scene.getVoiceOverText(), "");
+            if (!voiceOver.isBlank()) {
+                appendSentence(builder, voiceOver);
+                voiceOverCount++;
+            }
+        }
+        appendSentence(builder, valueOrDefault(episode.getOutroText(), ""));
+        return builder.toString().trim();
+    }
+
+    @SuppressWarnings("unchecked")
+    private String narrativeSummary(Map<String, Object> episode) {
+        String summary = stringValue(episode.get("resume"));
+        if (!summary.isBlank()) {
             return summary;
         }
 
-        Object intro = episode.get("intro");
-        return intro instanceof String introText ? introText : "";
+        StringBuilder builder = new StringBuilder();
+        appendSentence(builder, stringValue(episode.get("intro")));
+
+        Object scenesValue = episode.get("scenes");
+        int voiceOverCount = 0;
+        if (scenesValue instanceof List<?> scenes) {
+            for (Object sceneValue : scenes) {
+                if (voiceOverCount >= 3) {
+                    break;
+                }
+                if (sceneValue instanceof Map<?, ?> rawScene) {
+                    Map<String, Object> scene = (Map<String, Object>) rawScene;
+                    String voiceOver = stringValue(scene.get("voix_off"));
+                    if (!voiceOver.isBlank()) {
+                        appendSentence(builder, voiceOver);
+                        voiceOverCount++;
+                    }
+                }
+            }
+        }
+
+        appendSentence(builder, stringValue(episode.get("outro")));
+        return builder.toString().trim();
+    }
+
+    private void appendSentence(StringBuilder builder, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        if (!builder.isEmpty()) {
+            builder.append(' ');
+        }
+        builder.append(value.trim());
     }
 
     @SuppressWarnings("unchecked")
