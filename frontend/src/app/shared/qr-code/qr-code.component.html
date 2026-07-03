@@ -5,7 +5,13 @@
     [attr.viewBox]="viewBox()"
     shape-rendering="crispEdges"
   >
-    <rect class="qr-code__background" width="100%" height="100%"></rect>
+    <rect
+      class="qr-code__background"
+      [attr.x]="backgroundOrigin()"
+      [attr.y]="backgroundOrigin()"
+      [attr.width]="backgroundSize()"
+      [attr.height]="backgroundSize()"
+    ></rect>
     @for (cell of cells(); track cell.x + '-' + cell.y) {
       <rect class="qr-code__module" [attr.x]="cell.x" [attr.y]="cell.y" width="1" height="1"></rect>
     }

@@ -150,6 +150,10 @@ export class UploadPageComponent implements OnDestroy {
     }
   }
 
+  protected contributionPath(): string {
+    return contributionPath(this.contributionLink());
+  }
+
   protected async continueToPreferences(): Promise<void> {
     if (selectedGuard(this.selectedCount(), this.consentGiven())) {
       this.errors.set(['Ajoutez au moins une photo et acceptez le traitement privé avant de continuer.']);
@@ -410,4 +414,13 @@ export class UploadPageComponent implements OnDestroy {
 
 function selectedGuard(selectedCount: number, consentGiven: boolean): boolean {
   return selectedCount === 0 || !consentGiven;
+}
+
+function contributionPath(link: string): string {
+  try {
+    const url = new URL(link);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return link.startsWith('/contribute/') ? link : '';
+  }
 }

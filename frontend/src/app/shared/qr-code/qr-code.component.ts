@@ -47,9 +47,12 @@ export class QrCodeComponent {
   readonly value = input.required<string>();
   readonly label = input('QR code');
 
+  protected readonly quietZone = 4;
   protected readonly matrix = computed(() => makeQr(this.value()));
   protected readonly cells = computed(() => matrixCells(this.matrix()));
-  protected readonly viewBox = computed(() => `0 0 ${this.matrix().length} ${this.matrix().length}`);
+  protected readonly backgroundOrigin = computed(() => -this.quietZone);
+  protected readonly backgroundSize = computed(() => this.matrix().length + this.quietZone * 2);
+  protected readonly viewBox = computed(() => `${-this.quietZone} ${-this.quietZone} ${this.backgroundSize()} ${this.backgroundSize()}`);
 }
 
 function matrixCells(matrix: boolean[][]): QrCell[] {
@@ -326,7 +329,7 @@ function drawFormat(modules: (boolean | null)[][], reserved: boolean[][], mask: 
   const size = modules.length;
   const bits = formatBits(mask);
   const positionsA = [[8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5], [8, 7], [8, 8], [7, 8], [5, 8], [4, 8], [3, 8], [2, 8], [1, 8], [0, 8]];
-  const positionsB = [[size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8], [size - 5, 8], [size - 6, 8], [size - 7, 8], [8, size - 8], [8, size - 7], [8, size - 6], [8, size - 5], [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]];
+  const positionsB = [[size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8], [size - 5, 8], [size - 6, 8], [size - 7, 8], [size - 8, 8], [8, size - 7], [8, size - 6], [8, size - 5], [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]];
   positionsA.forEach(([x, y], index) => setModule(modules, reserved, x, y, ((bits >>> index) & 1) !== 0));
   positionsB.forEach(([x, y], index) => setModule(modules, reserved, x, y, ((bits >>> index) & 1) !== 0));
 }

@@ -122,6 +122,10 @@
               Lien de contribution
               <input type="text" [value]="contributionLink()" readonly />
             </label>
+            <div class="contribution-link__path">
+              <span>Chemin à ouvrir dans l’app</span>
+              <code>{{ contributionPath() }}</code>
+            </div>
             <div class="contribution-link__actions">
               <a class="btn btn--glass" [href]="contributionLink()" target="_blank" rel="noreferrer">Ouvrir</a>
               <button class="btn btn--primary" type="button" (click)="copyContributionLink()">Copier</button>

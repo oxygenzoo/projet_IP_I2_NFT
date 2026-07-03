@@ -137,6 +137,30 @@
   min-height: 2.6rem;
 }
 
+.contribution-link__path {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.55rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.75rem;
+
+  span {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  code {
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+  }
+}
+
 .contribution-link__details > span {
   color: #86efac;
   font-size: 0.86rem;
@@ -160,6 +184,16 @@
     color: #ffffff;
     font-size: clamp(1rem, 2vw, 1.25rem);
     line-height: 1.25;
+  }
+
+  code {
+    color: #ffffff;
+    display: block;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 850;
+    margin-top: 0.55rem;
+    overflow-wrap: anywhere;
   }
 }
 

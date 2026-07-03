@@ -60,6 +60,15 @@ export class ContributePageComponent implements OnInit {
     }
   }
 
+  protected contributionPath(): string {
+    try {
+      const url = new URL(this.contributionUrl());
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+      return '';
+    }
+  }
+
   private async loadContribution(): Promise<void> {
     const token = this.token();
     if (!token) {

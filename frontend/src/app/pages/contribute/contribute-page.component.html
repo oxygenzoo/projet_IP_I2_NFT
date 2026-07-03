@@ -21,6 +21,7 @@
           <div>
             <p class="eyebrow">Accès rapide</p>
             <h2>Scannez ce QR code pour ouvrir ce lien sur un téléphone.</h2>
+            <code>{{ contributionPath() }}</code>
           </div>
           <app-qr-code [value]="contributionUrl()" label="QR code du lien de contribution"></app-qr-code>
         </aside>
